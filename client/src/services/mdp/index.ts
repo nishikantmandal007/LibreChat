@@ -1,3 +1,4 @@
+export { installApiInterceptor } from './intercept';
 export { mdpClient } from './client';
 export { MDP_ENDPOINTS } from './endpoints';
 export { sendChat } from './chat';
