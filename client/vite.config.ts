@@ -29,10 +29,7 @@ const NODE_POLYFILL_SHIMS: Record<string, string> = {
 };
 
 // https://vitejs.dev/config/
-const backendPort = (process.env.BACKEND_PORT && Number(process.env.BACKEND_PORT)) || 3080;
-const backendURL = process.env.HOST
-  ? `http://${process.env.HOST}:${backendPort}`
-  : `http://localhost:${backendPort}`;
+const mdpApiUrl = process.env.VITE_MDP_API_URL || 'http://localhost:5000';
 
 export default defineConfig(({ command }) => ({
   base: '',
@@ -43,12 +40,8 @@ export default defineConfig(({ command }) => ({
     port: (process.env.PORT && Number(process.env.PORT)) || 3090,
     strictPort: false,
     proxy: {
-      '/api': {
-        target: backendURL,
-        changeOrigin: true,
-      },
-      '/oauth': {
-        target: backendURL,
+      '/mdp': {
+        target: mdpApiUrl,
         changeOrigin: true,
       },
     },
@@ -84,12 +77,12 @@ export default defineConfig(({ command }) => ({
         ],
         globIgnores: ['images/**/*', '**/*.map', 'index.html'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
-        navigateFallbackDenylist: [/^\/oauth/, /^\/api/],
+        navigateFallbackDenylist: [/^\/mdp/],
       },
       includeAssets: [],
       manifest: {
-        name: 'LibreChat',
-        short_name: 'LibreChat',
+        name: 'Maya AI',
+        short_name: 'Maya AI',
         display: 'standalone',
         background_color: '#000000',
         theme_color: '#009688',

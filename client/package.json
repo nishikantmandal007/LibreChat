@@ -1,7 +1,7 @@
 {
-  "name": "@librechat/frontend",
-  "version": "v0.8.6-rc1",
-  "description": "",
+  "name": "@maya/frontend",
+  "version": "0.1.0",
+  "description": "Maya Data Privacy - AI Chat Frontend",
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,17 +17,9 @@
     "b:build": "NODE_ENV=production bun --bun vite build",
     "b:dev": "NODE_ENV=development bunx vite"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/danny-avila/LibreChat.git"
-  },
   "keywords": [],
-  "author": "",
+  "author": "Maya Data Privacy",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/danny-avila/LibreChat/issues"
-  },
-  "homepage": "https://librechat.ai",
   "dependencies": {
     "@ariakit/react": "^0.4.15",
     "@ariakit/react-core": "^0.4.17",
