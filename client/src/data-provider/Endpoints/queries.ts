@@ -31,21 +31,46 @@ export const useGetEndpointsQuery = <TData = t.TEndpointsConfig>(
 export const startupConfigKey = (isAuthenticated: boolean) =>
   [QueryKeys.startupConfig, isAuthenticated] as const;
 
+const MDP_DEFAULT_STARTUP_CONFIG: t.TStartupConfig = {
+  appTitle: 'Maya AI',
+  socialLogins: [],
+  discordLoginEnabled: false,
+  facebookLoginEnabled: false,
+  githubLoginEnabled: false,
+  googleLoginEnabled: false,
+  openidLoginEnabled: false,
+  openidLabel: '',
+  openidImageUrl: '',
+  appleLoginEnabled: false,
+  samlLoginEnabled: false,
+  ldap: { enabled: false },
+  serverDomain: '',
+  emailLoginEnabled: true,
+  registrationEnabled: true,
+  socialLoginEnabled: false,
+  emailEnabled: false,
+  checkBalance: false,
+  showBirthdayIcon: false,
+  helpAndFaqURL: '',
+  modelSpecs: undefined,
+  interface: {},
+  balance: undefined,
+  isFreeTier: false,
+};
+
 export const useGetStartupConfig = (
   config?: UseQueryOptions<t.TStartupConfig>,
 ): QueryObserverResult<t.TStartupConfig> => {
-  const queriesEnabled = useRecoilValue<boolean>(store.queriesEnabled);
-  const user = useRecoilValue<t.TUser | undefined>(store.user);
   return useQuery<t.TStartupConfig>(
-    startupConfigKey(!!user),
-    () => dataService.getStartupConfig(),
+    startupConfigKey(false),
+    () => Promise.resolve(MDP_DEFAULT_STARTUP_CONFIG),
     {
       staleTime: Infinity,
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
       ...config,
-      enabled: (config?.enabled ?? true) === true && queriesEnabled,
+      enabled: config?.enabled ?? true,
     },
   );
 };
