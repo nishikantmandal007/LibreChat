@@ -1,0 +1,16 @@
+export const FEATURES = {
+  AGENTS: false,
+  MARKETPLACE: false,
+  PROMPTS: false,
+  SKILLS: false,
+  MCP: false,
+  PRESETS: false,
+  SEARCH: false,
+  SHARE: false,
+  PLUGINS: false,
+  TWO_FACTOR: false,
+  TAGS: false,
+  ARTIFACTS: false,
+  ANONYMIZATION: true,
+  AGENT_CHAT: true,
+};
