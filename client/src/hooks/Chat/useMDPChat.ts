@@ -31,6 +31,11 @@ type MDPChatHelpers = {
 const CHARS_PER_TICK = 8;
 const TICK_MS = 20;
 const NO_PARENT = '00000000-0000-0000-0000-000000000000';
+const DOCUMENT_EXPORT_SKILL = {
+  name: 'document_create',
+  description: 'Create privacy-safe Markdown and downloadable document artifacts.',
+  body: 'When this skill is selected, write the response as a polished Markdown document with a clear title, section headings, concise paragraphs, and practical structure. Prefer document-ready wording over casual chat prose. The backend will materialize downloadable safe artifacts from the anonymized response.',
+};
 
 function getDisplayModelName(model?: string | null, fallback?: string | null): string {
   const label = fallback || model || MAYA_DEFAULT_MODEL;
@@ -76,6 +81,7 @@ export default function useMDPChat(
   const queryClient = useQueryClient();
   const setLatestMessage = useSetRecoilState(store.latestMessageFamily(index));
   const isImageGen = useRecoilValue(store.imageGenEnabled);
+  const isDocumentExport = useRecoilValue(store.documentExportEnabled);
   const mdpLanguage = normalizeMdpLanguage(useRecoilValue(store.mdpAnonymizationLanguage));
   const processingRef = useRef(false);
   const lastSubmissionIdRef = useRef<string | null>(null);
@@ -139,15 +145,31 @@ export default function useMDPChat(
         submission.conversation?.modelLabel ?? submission.endpointOption?.modelLabel,
       );
       const provisionalConversationId = normalizedSessionId || sessionId || Constants.NEW_CONVO;
-      const manualSkills = isImageGen ? [] : drainPendingManualSkills(provisionalConversationId);
-      const skillInstructions =
+      const pendingManualSkills = isImageGen
+        ? []
+        : drainPendingManualSkills(provisionalConversationId);
+      const manualSkills = isImageGen
+        ? []
+        : Array.from(
+            new Set([
+              ...pendingManualSkills,
+              ...(isDocumentExport ? [DOCUMENT_EXPORT_SKILL.name] : []),
+            ]),
+          );
+      const workspaceSkillInstructions =
         manualSkills.length > 0
-          ? getWorkspaceSkillsByNames(manualSkills).map((skill) => ({
+          ? getWorkspaceSkillsByNames(
+              manualSkills.filter((skillName) => skillName !== DOCUMENT_EXPORT_SKILL.name),
+            ).map((skill) => ({
               name: skill.name,
               description: skill.description,
               body: skill.body,
             }))
           : [];
+      const skillInstructions = [
+        ...workspaceSkillInstructions,
+        ...(manualSkills.includes(DOCUMENT_EXPORT_SKILL.name) ? [DOCUMENT_EXPORT_SKILL] : []),
+      ];
       const blockedSafeFile = submittedFiles?.find((file) => {
         const safeFile = getMayaSafeFileState(file);
         return safeFile && safeFile.status !== 'ready';
@@ -408,6 +430,7 @@ export default function useMDPChat(
     setLatestMessage,
     navigate,
     isImageGen,
+    isDocumentExport,
     mdpLanguage,
     drainPendingManualSkills,
   ]);

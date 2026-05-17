@@ -71,6 +71,13 @@ const imageGenEnabled = atom<boolean>({
 
 const imageGenPinned = atomWithLocalStorage<boolean>('imageGenPinned', false);
 
+const documentExportEnabled = atom<boolean>({
+  key: 'documentExportEnabled',
+  default: false,
+});
+
+const documentExportPinned = atomWithLocalStorage<boolean>('documentExportPinned', false);
+
 const mdpAnonymizationLanguage = atomWithLocalStorage<string>('mdpAnonymizationLanguage', 'en');
 
 export default {
@@ -82,5 +89,7 @@ export default {
   chatBadges,
   imageGenEnabled,
   imageGenPinned,
+  documentExportEnabled,
+  documentExportPinned,
   mdpAnonymizationLanguage,
 };
