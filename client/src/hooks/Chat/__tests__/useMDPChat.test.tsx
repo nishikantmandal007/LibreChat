@@ -235,4 +235,48 @@ describe('useMDPChat', () => {
       }),
     );
   });
+
+  it('attaches the built-in document skill when document export mode is enabled', async () => {
+    const helpers = createChatHelpers();
+    const submission = createSubmission('Prepare this as a project report');
+
+    (getWorkspaceSkillsByNames as jest.Mock).mockReturnValue([]);
+    (anonymizeText as jest.Mock).mockResolvedValue({
+      anonymized_prompt: 'Prepare this as a project report',
+      anonymized_values: {},
+      detected_values: {},
+    });
+    (sendChat as jest.Mock).mockResolvedValue({
+      sessionId: 'session-1',
+      userMessage: {
+        messageId: 'user-message-1',
+        text: 'Prepare this as a project report',
+      },
+      assistantMessage: {
+        messageId: 'assistant-message-1',
+        text: '',
+      },
+      rawResponse: {},
+    });
+
+    renderHook(() => useMDPChat(submission, helpers), {
+      wrapper: createWrapper((snapshot) => {
+        snapshot.set(store.documentExportEnabled, true);
+      }),
+    });
+
+    await waitFor(() => expect(sendChat).toHaveBeenCalledTimes(1));
+
+    expect(sendChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        manualSkills: ['document_create'],
+        skillInstructions: [
+          expect.objectContaining({
+            name: 'document_create',
+            description: 'Create privacy-safe Markdown and downloadable document artifacts.',
+          }),
+        ],
+      }),
+    );
+  });
 });

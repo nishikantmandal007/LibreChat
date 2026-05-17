@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { TooltipAnchor, DropdownPopup, PinIcon } from '@librechat/client';
-import { Globe, ImageIcon, Languages, Settings, Settings2 } from 'lucide-react';
+import { FileText, Globe, ImageIcon, Languages, Settings, Settings2 } from 'lucide-react';
 import type { MenuItemProps } from '~/common';
 import {
   AuthType,
@@ -38,6 +38,10 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   const [isPopoverActive, setIsPopoverActive] = useState(false);
   const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
   const [isImageGenPinned, setIsImageGenPinned] = useRecoilState(store.imageGenPinned);
+  const setDocumentExportEnabled = useSetRecoilState(store.documentExportEnabled);
+  const [isDocumentExportPinned, setIsDocumentExportPinned] = useRecoilState(
+    store.documentExportPinned,
+  );
   const [mdpLanguage, setMdpLanguage] = useRecoilState(store.mdpAnonymizationLanguage);
   const selectedMdpLanguage = normalizeMdpLanguage(mdpLanguage);
   const isDisabled = disabled ?? false;
@@ -65,6 +69,10 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   const handleImageGenToggle = useCallback(() => {
     setImageGenEnabled((prev) => !prev);
   }, [setImageGenEnabled]);
+
+  const handleDocumentExportToggle = useCallback(() => {
+    setDocumentExportEnabled((prev) => !prev);
+  }, [setDocumentExportEnabled]);
 
   useEffect(() => {
     if (mdpLanguage !== selectedMdpLanguage) {
@@ -196,6 +204,38 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
           >
             <div className="h-4 w-4">
               <PinIcon unpin={isImageGenPinned} />
+            </div>
+          </button>
+        </div>
+      </div>
+    ),
+  });
+
+  dropdownItems.push({
+    onClick: handleDocumentExportToggle,
+    hideOnClick: false,
+    render: (props) => (
+      <div {...props}>
+        <div className="flex items-center gap-2">
+          <FileText className="icon-md" aria-hidden="true" />
+          <span>{localize('com_ui_document_export')}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsDocumentExportPinned((prev) => !prev);
+            }}
+            className={cn(
+              'rounded p-1 transition-all duration-200',
+              'hover:bg-surface-secondary hover:shadow-sm',
+              !isDocumentExportPinned && 'text-text-secondary hover:text-text-primary',
+            )}
+            aria-label={isDocumentExportPinned ? 'Unpin' : 'Pin'}
+          >
+            <div className="h-4 w-4">
+              <PinIcon unpin={isDocumentExportPinned} />
             </div>
           </button>
         </div>
