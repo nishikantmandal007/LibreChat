@@ -17,12 +17,23 @@ jest.mock('~/store', () => {
     key: 'mock-newChatSwitchToHistory',
     default: true,
   });
+  const searchAtom = atom({
+    key: 'mock-search',
+    default: {
+      enabled: null,
+      query: '',
+      debouncedQuery: '',
+      isSearching: false,
+      isTyping: false,
+    },
+  });
   return {
     __esModule: true,
     default: {
       conversationByIndex: () =>
         atom({ key: `mock-conversationByIndex-${counter++}`, default: null }),
       newChatSwitchToHistory: switchAtom,
+      search: searchAtom,
     },
   };
 });
@@ -106,10 +117,9 @@ describe('ExpandedPanel', () => {
   });
 
   describe('NavIconButton collapse toggle', () => {
-    it('collapses sidebar when clicking the active icon while expanded', () => {
+    it('collapses sidebar when clicking the close button while expanded', () => {
       const { onCollapse } = renderPanel({ expanded: true });
-      const activeButton = screen.getByRole('button', { name: 'com_ui_chat_history' });
-      fireEvent.click(activeButton);
+      fireEvent.click(screen.getByTestId('close-sidebar-button'));
       expect(onCollapse).toHaveBeenCalledTimes(1);
     });
 
@@ -123,7 +133,7 @@ describe('ExpandedPanel', () => {
 
     it('expands sidebar when clicking any icon while collapsed', () => {
       const { onExpand } = renderPanel({ expanded: false });
-      const activeButton = screen.getByRole('button', { name: 'com_ui_chat_history' });
+      const activeButton = screen.getByRole('button', { name: 'com_ui_chats' });
       fireEvent.click(activeButton);
       expect(onExpand).toHaveBeenCalledTimes(1);
     });

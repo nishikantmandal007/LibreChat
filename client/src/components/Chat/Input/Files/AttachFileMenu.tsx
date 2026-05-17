@@ -69,22 +69,19 @@ const AttachFileMenu = ({
 
   const [isSharePointDialogOpen, setIsSharePointDialogOpen] = useState(false);
 
-  const handleUploadClick = useCallback(
-    (fileType?: FileUploadType) => {
-      if (!inputRef.current) {
-        return;
-      }
-      inputRef.current.value = '';
-      if (fileType === 'image') {
-        inputRef.current.accept = 'image/*,.heif,.heic';
-      } else {
-        inputRef.current.accept = '';
-      }
-      inputRef.current.click();
+  const handleUploadClick = useCallback((fileType?: FileUploadType) => {
+    if (!inputRef.current) {
+      return;
+    }
+    inputRef.current.value = '';
+    if (fileType === 'image') {
+      inputRef.current.accept = 'image/*,.heif,.heic';
+    } else {
       inputRef.current.accept = '';
-    },
-    [],
-  );
+    }
+    inputRef.current.click();
+    inputRef.current.accept = '';
+  }, []);
 
   const dropdownItems = useMemo(() => {
     const createMenuItems = (onAction: (fileType?: FileUploadType) => void) => {
@@ -127,12 +124,7 @@ const AttachFileMenu = ({
     }
 
     return localItems;
-  }, [
-    localize,
-    handleUploadClick,
-    sharePointEnabled,
-    setIsSharePointDialogOpen,
-  ]);
+  }, [localize, handleUploadClick, sharePointEnabled, setIsSharePointDialogOpen]);
 
   const menuTrigger = (
     <TooltipAnchor
@@ -142,7 +134,7 @@ const AttachFileMenu = ({
           id="attach-file-menu-button"
           aria-label="Attach File Options"
           className={cn(
-            'flex size-9 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
+            'flex size-10 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
             isPopoverActive && 'bg-surface-hover',
           )}
         >

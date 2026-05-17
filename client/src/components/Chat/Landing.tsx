@@ -6,15 +6,15 @@ import { useLocalize, useAuthContext } from '~/hooks';
 
 function getTextSizeClass(text: string | undefined | null) {
   if (!text) {
-    return 'text-xl sm:text-2xl';
+    return 'text-2xl sm:text-3xl';
   }
   if (text.length < 40) {
-    return 'text-2xl sm:text-4xl';
+    return 'text-3xl sm:text-5xl';
   }
   if (text.length < 70) {
-    return 'text-xl sm:text-2xl';
+    return 'text-2xl sm:text-3xl';
   }
-  return 'text-lg sm:text-md';
+  return 'text-xl sm:text-2xl';
 }
 
 export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: boolean }) {
@@ -75,8 +75,8 @@ export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: 
             onLineCountChange={handleLineCountChange}
           />
         </div>
-        <div className="animate-fadeIn mt-4 max-w-md text-center text-sm font-normal text-text-secondary">
-          Your AI assistant with built-in data privacy protection
+        <div className="animate-fadeIn mt-4 max-w-md text-center text-base font-normal text-text-secondary">
+          {localize('com_ui_privacy_assistant_tagline')}
         </div>
       </div>
     </div>

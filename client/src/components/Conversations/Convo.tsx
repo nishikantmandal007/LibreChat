@@ -5,9 +5,7 @@ import { Constants } from 'librechat-data-provider';
 import { useToastContext, useMediaQuery } from '@librechat/client';
 import type { TConversation } from 'librechat-data-provider';
 import { useUpdateConversationMutation } from '~/data-provider';
-import EndpointIcon from '~/components/Endpoints/EndpointIcon';
 import { useNavigateToConvo, useLocalize, useShiftKey } from '~/hooks';
-import { useGetEndpointsQuery } from '~/data-provider';
 import { NotificationSeverity } from '~/common';
 import { ConvoOptions } from './ConvoOptions';
 import RenameForm from './RenameForm';
@@ -32,7 +30,6 @@ export default function Conversation({
   const localize = useLocalize();
   const { showToast } = useToastContext();
   const { navigateToConvo } = useNavigateToConvo();
-  const { data: endpointsConfig } = useGetEndpointsQuery();
   const currentConvoId = useMemo(() => params.conversationId, [params.conversationId]);
   const updateConvoMutation = useUpdateConversationMutation(currentConvoId ?? '');
   const activeConvos = useRecoilValue(store.allConversationsSelector);
@@ -181,10 +178,8 @@ export default function Conversation({
     <div
       ref={containerRef}
       className={cn(
-        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-9',
-        isActiveConvo || isPopoverActive
-          ? 'bg-surface-active-alt before:absolute before:bottom-1 before:left-0 before:top-1 before:w-0.5 before:rounded-full before:bg-black dark:before:bg-white'
-          : 'hover:bg-surface-active-alt',
+        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-[38px]',
+        isActiveConvo || isPopoverActive ? 'bg-surface-active-alt' : 'hover:bg-surface-active-alt',
       )}
       role="button"
       tabIndex={renaming ? -1 : 0}
@@ -235,7 +230,7 @@ export default function Conversation({
           isSmallScreen={isSmallScreen}
           localize={localize}
         >
-          {isGenerating ? (
+          {isGenerating && (
             <svg
               className="h-5 w-5 flex-shrink-0 animate-spin text-text-primary"
               viewBox="0 0 24 24"
@@ -256,13 +251,6 @@ export default function Conversation({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-          ) : (
-            <EndpointIcon
-              conversation={conversation}
-              endpointsConfig={endpointsConfig}
-              size={20}
-              context="menu-item"
-            />
           )}
         </ConvoLink>
       )}

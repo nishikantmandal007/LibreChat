@@ -27,7 +27,7 @@ function Footer({ className }: { className?: string }) {
   const mainContentParts = (
     typeof config?.customFooter === 'string'
       ? config.customFooter
-      : 'Maya AI - Secure Chat with Data Privacy'
+      : 'AIsafe - Secure Chat with Data Privacy'
   ).split('|');
 
   useEffect(() => {
@@ -73,7 +73,7 @@ function Footer({ className }: { className?: string }) {
       <div
         className={
           className ??
-          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-xs text-text-primary sm:flex md:px-[60px]'
+          'absolute bottom-0 left-0 right-0 hidden items-center justify-center gap-2 px-2 py-2 text-center text-sm text-text-primary sm:flex md:px-[60px]'
         }
         role="contentinfo"
       >

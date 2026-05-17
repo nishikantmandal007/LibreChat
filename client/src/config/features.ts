@@ -2,7 +2,7 @@ export const FEATURES = {
   AGENTS: false,
   MARKETPLACE: false,
   PROMPTS: false,
-  SKILLS: false,
+  SKILLS: true,
   MCP: false,
   PRESETS: false,
   SEARCH: false,

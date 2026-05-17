@@ -57,6 +57,10 @@ export default function CreateSkillDialog({
 
   const createSkill = useCreateSkillMutation({
     onSuccess: (skill) => {
+      if (!skill?._id) {
+        showToast({ status: 'error', message: localize('com_ui_skill_create_error') });
+        return;
+      }
       showToast({ status: 'success', message: localize('com_ui_skill_created') });
       setIsOpen(false);
       reset();

@@ -1,5 +1,6 @@
 import { mdpClient } from './client';
 import { MDP_ENDPOINTS } from './endpoints';
+import { normalizeMdpLanguage } from './language';
 
 import type { MayaSafeFilePiiSummary, MayaSafeFileState, MayaSafeFileStatus } from '~/common';
 
@@ -105,15 +106,25 @@ function normalizePiiSummary(record: UnknownRecord): MayaSafeFilePiiSummary | un
     record.anonymization_summary,
   );
   const detectedValues = normalizeDetectedValues(
-    summary?.detected_values ?? summary?.detectedValues ?? record.detected_values ?? record.detectedValues,
+    summary?.detected_values ??
+      summary?.detectedValues ??
+      record.detected_values ??
+      record.detectedValues,
   );
   const anonymizedValues = normalizeDetectedValues(
-    summary?.anonymized_values ?? summary?.anonymizedValues ?? record.anonymized_values ?? record.anonymizedValues,
+    summary?.anonymized_values ??
+      summary?.anonymizedValues ??
+      record.anonymized_values ??
+      record.anonymizedValues,
   );
   const counts =
-    normalizeCounts(summary?.counts ?? summary?.entities ?? summary?.detected_values ?? record.entity_counts) ??
+    normalizeCounts(
+      summary?.counts ?? summary?.entities ?? summary?.detected_values ?? record.entity_counts,
+    ) ??
     (detectedValues
-      ? Object.fromEntries(Object.entries(detectedValues).map(([key, values]) => [key, values.length]))
+      ? Object.fromEntries(
+          Object.entries(detectedValues).map(([key, values]) => [key, values.length]),
+        )
       : undefined);
 
   const total =
@@ -182,9 +193,7 @@ function normalizeStatus(record: UnknownRecord, fallback?: MayaSafeFileState): M
     return 'anonymizing';
   }
 
-  if (
-    fallback?.status === 'ready'
-  ) {
+  if (fallback?.status === 'ready') {
     return 'ready';
   }
 
@@ -223,13 +232,15 @@ export function normalizeSafeFileResponse(
     fallback?.rawFileId,
   );
 
-  const safeFileId = safeDocId || firstString(
-    record.safe_file_id,
-    record.safeFileId,
-    record.file_id,
-    anonymized?.file_id,
-    fallback?.safeFileId,
-  );
+  const safeFileId =
+    safeDocId ||
+    firstString(
+      record.safe_file_id,
+      record.safeFileId,
+      record.file_id,
+      anonymized?.file_id,
+      fallback?.safeFileId,
+    );
   const safeFilename = firstString(
     record.safe_filename,
     record.safeFilename,
@@ -250,13 +261,14 @@ export function normalizeSafeFileResponse(
   );
   const downloadFileId = safeDocId || safeFileId;
 
-  const downloadUrl = firstString(
-    record.download_url,
-    record.downloadUrl,
-    record.safe_download_url,
-    anonymized?.download_url,
-    fallback?.downloadUrl,
-  ) || buildDownloadUrl(downloadFileId);
+  const downloadUrl =
+    firstString(
+      record.download_url,
+      record.downloadUrl,
+      record.safe_download_url,
+      anonymized?.download_url,
+      fallback?.downloadUrl,
+    ) || buildDownloadUrl(downloadFileId);
 
   const previewOriginalUrl = firstString(
     record.preview_original_url,
@@ -267,15 +279,16 @@ export function normalizeSafeFileResponse(
     fallback?.previewOriginalUrl,
   );
 
-  const previewAnonymizedUrl = firstString(
-    record.preview_anonymized_url,
-    record.anonymized_preview_url,
-    record.safe_preview_url,
-    preview?.anonymized,
-    preview?.safe,
-    anonymized?.preview_url,
-    fallback?.previewAnonymizedUrl,
-  ) || buildDownloadUrl(downloadFileId);
+  const previewAnonymizedUrl =
+    firstString(
+      record.preview_anonymized_url,
+      record.anonymized_preview_url,
+      record.safe_preview_url,
+      preview?.anonymized,
+      preview?.safe,
+      anonymized?.preview_url,
+      fallback?.previewAnonymizedUrl,
+    ) || buildDownloadUrl(downloadFileId);
 
   return {
     status: normalizeStatus(record, fallback),
@@ -286,7 +299,12 @@ export function normalizeSafeFileResponse(
     piiSummary: normalizePiiSummary(record) ?? fallback?.piiSummary,
     previewOriginalUrl,
     previewAnonymizedUrl,
-    originalText: firstString(record.original_text, raw?.text, preview?.original_text, fallback?.originalText),
+    originalText: firstString(
+      record.original_text,
+      raw?.text,
+      preview?.original_text,
+      fallback?.originalText,
+    ),
     anonymizedText: firstString(
       record.anonymized_text,
       record.safe_text,
@@ -315,7 +333,10 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function pollSafeFile(jobId: string, fallback: MayaSafeFileState): Promise<MayaSafeFileState> {
+async function pollSafeFile(
+  jobId: string,
+  fallback: MayaSafeFileState,
+): Promise<MayaSafeFileState> {
   let latest = fallback;
 
   for (let i = 0; i < MAX_POLLS; i += 1) {
@@ -344,6 +365,7 @@ export async function createSafeFile({
   filename,
   mimeType,
   llmType,
+  lang = 'en',
   localPreviewUrl,
 }: {
   file: File;
@@ -352,6 +374,7 @@ export async function createSafeFile({
   filename: string;
   mimeType?: string;
   llmType: string;
+  lang?: string;
   localPreviewUrl?: string;
 }): Promise<MayaSafeFileState> {
   const form = new FormData();
@@ -363,6 +386,7 @@ export async function createSafeFile({
   form.append('file_name', filename);
   form.append('file_type', mimeType ?? file.type);
   form.append('llm_type', llmType);
+  form.append('lang', normalizeMdpLanguage(lang));
   if (rawFilepath) {
     form.append('raw_file_path', rawFilepath);
   }

@@ -1,70 +1,47 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import * as Ariakit from '@ariakit/react';
-import { TooltipAnchor, DropdownPopup, PinIcon, VectorIcon } from '@librechat/client';
-import { Globe, ScrollText, Settings, Settings2, TerminalSquareIcon } from 'lucide-react';
+import { useRecoilState, useSetRecoilState } from 'recoil';
+import { TooltipAnchor, DropdownPopup, PinIcon } from '@librechat/client';
+import { Globe, ImageIcon, Languages, Settings, Settings2 } from 'lucide-react';
 import type { MenuItemProps } from '~/common';
 import {
   AuthType,
   Permissions,
-  ArtifactModes,
   PermissionTypes,
   defaultAgentCapabilities,
 } from 'librechat-data-provider';
 import { useLocalize, useHasAccess, useAgentCapabilities } from '~/hooks';
-import ArtifactsSubMenu from '~/components/Chat/Input/ArtifactsSubMenu';
-import MCPSubMenu from '~/components/Chat/Input/MCPSubMenu';
-import { useGetStartupConfig } from '~/data-provider';
 import { useBadgeRowContext } from '~/Providers';
+import { MDP_SUPPORTED_LANGUAGES, normalizeMdpLanguage } from '~/services/mdp/language';
+import store from '~/store';
 import { cn } from '~/utils';
 
 interface ToolsDropdownProps {
   disabled?: boolean;
 }
 
+const MDP_LANGUAGE_LABEL = 'Language';
+
 const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   const localize = useLocalize();
   const context = useBadgeRowContext();
-  const { data: startupConfig } = useGetStartupConfig();
 
-  const { codeEnabled, webSearchEnabled, artifactsEnabled, fileSearchEnabled, skillsEnabled } =
-    useAgentCapabilities(context?.agentsConfig?.capabilities ?? defaultAgentCapabilities);
+  const { webSearchEnabled } = useAgentCapabilities(
+    context?.agentsConfig?.capabilities ?? defaultAgentCapabilities,
+  );
 
   const canUseWebSearch = useHasAccess({
     permissionType: PermissionTypes.WEB_SEARCH,
     permission: Permissions.USE,
   });
 
-  const canRunCode = useHasAccess({
-    permissionType: PermissionTypes.RUN_CODE,
-    permission: Permissions.USE,
-  });
-
-  const canUseFileSearch = useHasAccess({
-    permissionType: PermissionTypes.FILE_SEARCH,
-    permission: Permissions.USE,
-  });
-
-  const canUseMcp = useHasAccess({
-    permissionType: PermissionTypes.MCP_SERVERS,
-    permission: Permissions.USE,
-  });
-
-  const canUseSkills = useHasAccess({
-    permissionType: PermissionTypes.SKILLS,
-    permission: Permissions.USE,
-  });
-
   const [isPopoverActive, setIsPopoverActive] = useState(false);
+  const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
+  const [isImageGenPinned, setIsImageGenPinned] = useRecoilState(store.imageGenPinned);
+  const [mdpLanguage, setMdpLanguage] = useRecoilState(store.mdpAnonymizationLanguage);
+  const selectedMdpLanguage = normalizeMdpLanguage(mdpLanguage);
   const isDisabled = disabled ?? false;
-  const {
-    skills,
-    webSearch,
-    artifacts,
-    fileSearch,
-    mcpServerManager,
-    codeInterpreter,
-    searchApiKeyForm,
-  } = context ?? {};
+  const { webSearch, searchApiKeyForm } = context ?? {};
 
   const { setIsDialogOpen: setIsSearchDialogOpen, menuTriggerRef: searchMenuTriggerRef } =
     searchApiKeyForm ?? {};
@@ -73,10 +50,6 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     setIsPinned: setIsSearchPinned,
     authData: webSearchAuthData,
   } = webSearch ?? {};
-  const { isPinned: isCodePinned, setIsPinned: setIsCodePinned } = codeInterpreter ?? {};
-  const { isPinned: isFileSearchPinned, setIsPinned: setIsFileSearchPinned } = fileSearch ?? {};
-  const { isPinned: isArtifactsPinned, setIsPinned: setIsArtifactsPinned } = artifacts ?? {};
-  const { isPinned: isSkillsPinned, setIsPinned: setIsSkillsPinned } = skills ?? {};
 
   const showWebSearchSettings = useMemo(() => {
     const authTypes = webSearchAuthData?.authTypes ?? [];
@@ -89,83 +62,17 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     webSearch?.debouncedChange({ value: newValue });
   }, [webSearch]);
 
-  const handleCodeInterpreterToggle = useCallback(() => {
-    const newValue = !codeInterpreter?.toggleState;
-    codeInterpreter?.debouncedChange({ value: newValue });
-  }, [codeInterpreter]);
+  const handleImageGenToggle = useCallback(() => {
+    setImageGenEnabled((prev) => !prev);
+  }, [setImageGenEnabled]);
 
-  const handleFileSearchToggle = useCallback(() => {
-    const newValue = !fileSearch?.toggleState;
-    fileSearch?.debouncedChange({ value: newValue });
-  }, [fileSearch]);
-
-  const handleArtifactsToggle = useCallback(() => {
-    const currentState = artifacts?.toggleState;
-    if (!currentState || currentState === '') {
-      artifacts?.debouncedChange({ value: ArtifactModes.DEFAULT });
-    } else {
-      artifacts?.debouncedChange({ value: '' });
+  useEffect(() => {
+    if (mdpLanguage !== selectedMdpLanguage) {
+      setMdpLanguage(selectedMdpLanguage);
     }
-  }, [artifacts]);
-
-  const handleShadcnToggle = useCallback(() => {
-    const currentState = artifacts?.toggleState;
-    if (currentState === ArtifactModes.SHADCNUI) {
-      artifacts?.debouncedChange({ value: ArtifactModes.DEFAULT });
-    } else {
-      artifacts?.debouncedChange({ value: ArtifactModes.SHADCNUI });
-    }
-  }, [artifacts]);
-
-  const handleCustomToggle = useCallback(() => {
-    const currentState = artifacts?.toggleState;
-    if (currentState === ArtifactModes.CUSTOM) {
-      artifacts?.debouncedChange({ value: ArtifactModes.DEFAULT });
-    } else {
-      artifacts?.debouncedChange({ value: ArtifactModes.CUSTOM });
-    }
-  }, [artifacts]);
-
-  const handleSkillsToggle = useCallback(() => {
-    const newValue = !skills?.toggleState;
-    skills?.debouncedChange({ value: newValue });
-  }, [skills]);
-
-  const mcpPlaceholder = startupConfig?.interface?.mcpServers?.placeholder;
+  }, [mdpLanguage, selectedMdpLanguage, setMdpLanguage]);
 
   const dropdownItems: MenuItemProps[] = [];
-
-  if (fileSearchEnabled && canUseFileSearch) {
-    dropdownItems.push({
-      onClick: handleFileSearchToggle,
-      hideOnClick: false,
-      render: (props) => (
-        <div {...props}>
-          <div className="flex items-center gap-2">
-            <VectorIcon className="icon-md" />
-            <span>{localize('com_assistants_file_search')}</span>
-          </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsFileSearchPinned?.(!isFileSearchPinned);
-            }}
-            className={cn(
-              'rounded p-1 transition-all duration-200',
-              'hover:bg-surface-secondary hover:shadow-sm',
-              !isFileSearchPinned && 'text-text-secondary hover:text-text-primary',
-            )}
-            aria-label={isFileSearchPinned ? 'Unpin' : 'Pin'}
-          >
-            <div className="h-4 w-4">
-              <PinIcon unpin={isFileSearchPinned} />
-            </div>
-          </button>
-        </div>
-      ),
-    });
-  }
 
   if (canUseWebSearch && webSearchEnabled) {
     dropdownItems.push({
@@ -221,96 +128,80 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     });
   }
 
-  if (canUseSkills && skillsEnabled) {
-    dropdownItems.push({
-      onClick: handleSkillsToggle,
-      hideOnClick: false,
-      render: (props) => (
-        <div {...props}>
-          <div className="flex items-center gap-2">
-            <ScrollText className="icon-md" aria-hidden="true" />
-            <span>{localize('com_ui_skills')}</span>
-          </div>
+  dropdownItems.push({
+    hideOnClick: false,
+    render: (props) => (
+      <div
+        {...props}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      >
+        <div className="flex items-center gap-2">
+          <Languages className="icon-md" aria-hidden="true" />
+          <span>{MDP_LANGUAGE_LABEL}</span>
+        </div>
+        <div
+          className="flex h-8 items-center rounded-lg border border-border-light bg-surface-secondary p-0.5"
+          role="group"
+          aria-label={MDP_LANGUAGE_LABEL}
+        >
+          {MDP_SUPPORTED_LANGUAGES.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={selectedMdpLanguage === option.value}
+              className={cn(
+                'h-7 rounded-md px-2.5 text-sm font-medium transition-colors',
+                selectedMdpLanguage === option.value
+                  ? 'bg-surface-primary text-text-primary shadow-sm'
+                  : 'text-text-secondary hover:text-text-primary',
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                setMdpLanguage(normalizeMdpLanguage(option.value));
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    ),
+  });
+
+  dropdownItems.push({
+    onClick: handleImageGenToggle,
+    hideOnClick: false,
+    render: (props) => (
+      <div {...props}>
+        <div className="flex items-center gap-2">
+          <ImageIcon className="icon-md" aria-hidden="true" />
+          <span>{localize('com_ui_image_gen')}</span>
+        </div>
+        <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              setIsSkillsPinned?.(!isSkillsPinned);
+              setIsImageGenPinned((prev) => !prev);
             }}
             className={cn(
               'rounded p-1 transition-all duration-200',
               'hover:bg-surface-secondary hover:shadow-sm',
-              !isSkillsPinned && 'text-text-secondary hover:text-text-primary',
+              !isImageGenPinned && 'text-text-secondary hover:text-text-primary',
             )}
-            aria-label={isSkillsPinned ? localize('com_ui_unpin') : localize('com_ui_pin')}
+            aria-label={isImageGenPinned ? 'Unpin' : 'Pin'}
           >
             <div className="h-4 w-4">
-              <PinIcon unpin={isSkillsPinned} />
+              <PinIcon unpin={isImageGenPinned} />
             </div>
           </button>
         </div>
-      ),
-    });
-  }
-
-  if (canRunCode && codeEnabled) {
-    dropdownItems.push({
-      onClick: handleCodeInterpreterToggle,
-      hideOnClick: false,
-      render: (props) => (
-        <div {...props}>
-          <div className="flex items-center gap-2">
-            <TerminalSquareIcon className="icon-md" aria-hidden="true" />
-            <span>{localize('com_ui_run_code')}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsCodePinned?.(!isCodePinned);
-              }}
-              className={cn(
-                'rounded p-1 transition-all duration-200',
-                'hover:bg-surface-secondary hover:shadow-sm',
-                !isCodePinned && 'text-text-primary hover:text-text-primary',
-              )}
-              aria-label={isCodePinned ? 'Unpin' : 'Pin'}
-            >
-              <div className="h-4 w-4">
-                <PinIcon unpin={isCodePinned} />
-              </div>
-            </button>
-          </div>
-        </div>
-      ),
-    });
-  }
-
-  if (artifactsEnabled && setIsArtifactsPinned != null) {
-    dropdownItems.push({
-      hideOnClick: false,
-      render: (props) => (
-        <ArtifactsSubMenu
-          {...props}
-          isArtifactsPinned={isArtifactsPinned ?? false}
-          setIsArtifactsPinned={setIsArtifactsPinned}
-          artifactsMode={artifacts?.toggleState as string}
-          handleArtifactsToggle={handleArtifactsToggle}
-          handleShadcnToggle={handleShadcnToggle}
-          handleCustomToggle={handleCustomToggle}
-        />
-      ),
-    });
-  }
-
-  const { availableMCPServers } = mcpServerManager ?? {};
-  if (canUseMcp && availableMCPServers && availableMCPServers.length > 0) {
-    dropdownItems.push({
-      hideOnClick: false,
-      render: (props) => <MCPSubMenu {...props} placeholder={mcpPlaceholder} />,
-    });
-  }
+      </div>
+    ),
+  });
 
   if (dropdownItems.length === 0) {
     return null;
@@ -324,7 +215,7 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
           id="tools-dropdown-button"
           aria-label="Tools Options"
           className={cn(
-            'flex size-9 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
+            'flex size-10 items-center justify-center rounded-full p-1 hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-opacity-50',
             isPopoverActive && 'bg-surface-hover',
           )}
         >

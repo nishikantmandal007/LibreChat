@@ -5,6 +5,7 @@ import type { TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon, TMessageChatContext } from '~/common';
 import { cn, getHeaderPrefixForScreenReader, getMessageAriaLabel } from '~/utils';
 import SourceCitations from '~/components/Chat/Messages/Content/SourceCitations';
+import ResponseArtifacts from '~/components/Chat/Messages/Content/ResponseArtifacts';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
 import { useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
@@ -232,7 +233,7 @@ const MessageRender = memo(function MessageRender({
               <MessageContext.Provider value={messageContextValue}>
                 <div
                   key={showAnonymizedPrompt && piiDetected && !edit ? 'anonymized' : 'original'}
-                  className="animate-in fade-in-0 duration-150"
+                  className="duration-150 animate-in fade-in-0"
                 >
                   <MessageContent
                     ask={ask}
@@ -338,6 +339,7 @@ const MessageRender = memo(function MessageRender({
             </MessageContext.Provider>
           </div>
           <SourceCitations message={msg} />
+          <ResponseArtifacts message={msg} />
           {hasNoChildren && isSubmitting ? (
             <PlaceholderRow />
           ) : (

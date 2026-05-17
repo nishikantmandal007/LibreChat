@@ -1,11 +1,9 @@
 import { v4 as uuidv4 } from 'uuid';
 import { FileSources } from 'librechat-data-provider';
-import { mdpClient } from './client';
-import { MDP_ENDPOINTS } from './endpoints';
 import { createSafeFile } from './safeFiles';
+import { normalizeMdpLanguage } from './language';
 
 import type { TFileUpload } from 'librechat-data-provider';
-import type { MDPFileUploadResponse } from './types';
 import type { MayaSafeFileState } from '~/common';
 
 type MayaSafeFileUpload = TFileUpload & {
@@ -28,39 +26,29 @@ export async function uploadFile(formData: FormData): Promise<TFileUpload> {
 
   const tempFileId = formData.get('file_id')?.toString() || uuidv4();
   const llmType = formData.get('llm_type')?.toString() || 'openai';
-  const uploadForm = new FormData();
-  uploadForm.append('file', file, file.name);
-  uploadForm.append('file_name', file.name);
-  uploadForm.append('file_type', file.type);
-  uploadForm.append('llm_type', llmType);
-
+  const lang = normalizeMdpLanguage(formData.get('lang')?.toString());
+  const filename = file.name;
+  const mimeType = file.type || 'application/octet-stream';
   const localPreviewUrl = URL.createObjectURL(file);
 
   _onSafeFileProgress?.({
     status: 'uploading',
+    rawFileId: tempFileId,
     previewOriginalUrl: localPreviewUrl,
   });
 
-  const response = await mdpClient.post<MDPFileUploadResponse | string>(MDP_ENDPOINTS.upload, uploadForm, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  const raw = response.data;
-  const data: MDPFileUploadResponse = typeof raw === 'string' ? { file_id: raw } : (raw ?? {});
   const now = new Date().toISOString();
-  const fileId = data.file_id || data.doc_id || tempFileId;
-  const filename = data.file_name || data.filename || file.name;
-  const filepath = data.filepath || data.file_path || data.url || fileId;
 
   _onSafeFileProgress?.({
     status: 'scanning',
-    rawFileId: data.raw_file_id || fileId,
+    rawFileId: tempFileId,
     previewOriginalUrl: localPreviewUrl,
   });
 
   await new Promise((r) => setTimeout(r, 400));
   _onSafeFileProgress?.({
     status: 'anonymizing',
-    rawFileId: data.raw_file_id || fileId,
+    rawFileId: tempFileId,
     previewOriginalUrl: localPreviewUrl,
   });
 
@@ -68,17 +56,17 @@ export async function uploadFile(formData: FormData): Promise<TFileUpload> {
   try {
     safeFile = await createSafeFile({
       file,
-      rawFileId: data.raw_file_id || fileId,
-      rawFilepath: filepath,
+      rawFileId: tempFileId,
       filename,
-      mimeType: data.type || file.type,
+      mimeType,
       llmType,
+      lang,
       localPreviewUrl,
     });
   } catch (error) {
     safeFile = {
       status: 'failed',
-      rawFileId: data.raw_file_id || fileId,
+      rawFileId: tempFileId,
       error: error instanceof Error ? error.message : 'Failed to create an anonymized safe copy.',
     };
   }
@@ -100,21 +88,21 @@ export async function uploadFile(formData: FormData): Promise<TFileUpload> {
 
   const upload: MayaSafeFileUpload = {
     user: 'guest',
-    file_id: fileId,
+    file_id: safeFile.safeDocId || tempFileId,
     temp_file_id: tempFileId,
     bytes: file.size,
-    embedded: false,
+    embedded: Boolean(safeFile.safeDocId),
     filename,
-    filepath,
+    filepath: safeFile.downloadUrl || localPreviewUrl,
     object: 'file',
-    type: data.type || file.type || 'application/octet-stream',
+    type: mimeType,
     usage: 0,
     source: FileSources.local,
     createdAt: now,
     updatedAt: now,
     safeFile: {
       ...safeFile,
-      rawFileId: safeFile.rawFileId || data.raw_file_id || fileId,
+      rawFileId: safeFile.rawFileId || tempFileId,
       previewOriginalUrl: safeFile.previewOriginalUrl || localPreviewUrl,
     },
   };

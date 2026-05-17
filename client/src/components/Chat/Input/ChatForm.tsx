@@ -235,7 +235,7 @@ const ChatForm = memo(function ChatForm({
   const baseClasses = useMemo(
     () =>
       cn(
-        'md:py-3.5 m-0 w-full resize-none py-[13px] placeholder-black/60 bg-transparent dark:placeholder-white/60 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
+        'md:py-4.5 m-0 w-full resize-none py-4 text-base placeholder-black/60 bg-transparent dark:placeholder-white/60 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
       ),
@@ -273,7 +273,13 @@ const ChatForm = memo(function ChatForm({
             newConversation={newConversation}
             textAreaRef={textAreaRef}
           />
-          <PromptsCommand index={index} textAreaRef={textAreaRef} submitPrompt={submitPrompt} />
+          <PromptsCommand
+            index={index}
+            textAreaRef={textAreaRef}
+            submitPrompt={submitPrompt}
+            conversationId={conversationId}
+            agentId={conversation?.agent_id}
+          />
           <SkillsCommand
             index={index}
             textAreaRef={textAreaRef}
@@ -339,7 +345,7 @@ const ChatForm = memo(function ChatForm({
                     onBlur={handleTextareaBlur}
                     aria-label={localize('com_ui_message_input')}
                     onClick={handleFocusOrClick}
-                    style={{ height: 44, overflowY: 'auto' }}
+                    style={{ height: 56, overflowY: 'auto' }}
                     className={cn(
                       baseClasses,
                       removeFocusRings,
@@ -358,7 +364,7 @@ const ChatForm = memo(function ChatForm({
             )}
             <div
               className={cn(
-                '@container items-between flex gap-2 pb-2',
+                '@container items-between flex gap-2 pb-3 pt-1',
                 isRTL ? 'flex-row-reverse' : 'flex-row',
               )}
             >

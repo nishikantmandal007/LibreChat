@@ -82,7 +82,7 @@ const ChatsHeader: FC<ChatsHeaderProps> = memo(({ isExpanded, onToggle }) => {
   return (
     <button
       onClick={onToggle}
-      className="group flex w-full items-center justify-between rounded-lg px-1 py-2 text-xs font-bold text-text-secondary outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
+      className="group flex w-full items-center justify-between rounded-lg px-1 py-2 text-[0.8125rem] font-semibold leading-5 text-text-secondary outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white"
       type="button"
     >
       <span className="select-none">{localize('com_ui_chats')}</span>
@@ -102,8 +102,10 @@ const DateLabel: FC<{ groupName: string; isFirst?: boolean }> = memo(({ groupNam
       aria-label={localize('com_a11y_chats_date_section', {
         date: localize(groupName as TranslationKeys) || groupName,
       })}
-      className={cn('pl-1 pt-1 text-text-secondary', isFirst === true ? 'mt-0' : 'mt-2')}
-      style={{ fontSize: '0.7rem' }}
+      className={cn(
+        'pl-1 pt-1 text-xs font-medium leading-5 text-text-secondary',
+        isFirst === true ? 'mt-0' : 'mt-2',
+      )}
     >
       {localize(groupName as TranslationKeys) || groupName}
     </h2>
@@ -165,7 +167,7 @@ const Conversations: FC<ConversationsProps> = ({
   const search = useRecoilValue(store.search);
   const { favorites, isLoading: isFavoritesLoading } = useFavorites();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
-  const convoHeight = isSmallScreen ? 44 : 34;
+  const convoHeight = isSmallScreen ? 44 : 38;
   const showAgentMarketplace = useShowMarketplace();
 
   const favoritesContentKeyRef = useRef('');
@@ -369,7 +371,7 @@ const Conversations: FC<ConversationsProps> = ({
   );
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col pb-2 text-sm text-text-primary">
+    <div className="relative flex h-full min-h-0 flex-col pb-2 text-[0.9375rem] leading-5 text-text-primary">
       {isSearchLoading ? (
         <div className="flex flex-1 items-center justify-center">
           <Spinner className="text-text-primary" />

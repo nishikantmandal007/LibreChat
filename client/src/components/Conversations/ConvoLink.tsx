@@ -8,7 +8,7 @@ interface ConvoLinkProps {
   onRename: () => void;
   isSmallScreen: boolean;
   localize: (key: any, options?: any) => string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const ConvoLink: React.FC<ConvoLinkProps> = ({
@@ -32,7 +32,7 @@ const ConvoLink: React.FC<ConvoLinkProps> = ({
     >
       {children}
       <div
-        className="relative flex-1 grow overflow-hidden whitespace-nowrap"
+        className="relative flex-1 grow overflow-hidden whitespace-nowrap text-[0.9375rem] leading-5"
         style={{ textOverflow: 'clip' }}
         onDoubleClick={(e) => {
           if (isSmallScreen) {

@@ -13,7 +13,6 @@ import type { TSkill, TCreateSkill, TSkillWarning } from 'librechat-data-provide
 import { useCreateSkillMutation } from '~/data-provider';
 import { useLocalize } from '~/hooks';
 import SkillContentEditor from './SkillContentEditor';
-import InvocationModePicker from './InvocationModePicker';
 import CategorySelector from './CategorySelector';
 import { cn } from '~/utils';
 
@@ -84,6 +83,10 @@ export default function CreateSkillForm({
 
   const createSkill = useCreateSkillMutation({
     onSuccess: (skill) => {
+      if (!skill?._id) {
+        showToast({ status: 'error', message: localize('com_ui_skill_create_error') });
+        return;
+      }
       const warnings: TSkillWarning[] | undefined = skill.warnings;
       showToast({
         status: warnings && warnings.length > 0 ? 'warning' : 'success',
