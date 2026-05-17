@@ -3,17 +3,17 @@ import axios from 'axios';
 import type { MDPApiResponse } from './types';
 
 const MDP_TOKEN_KEY = 'mdp_jwt_token';
+const MDP_API_BASE_URL = import.meta.env.VITE_MDP_API_BASE_URL || '';
 
 export const mdpClient = axios.create({
-  baseURL: '',
+  baseURL: MDP_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 mdpClient.interceptors.request.use((config) => {
-  const token =
-    localStorage.getItem(MDP_TOKEN_KEY) || import.meta.env.VITE_MDP_JWT_TOKEN;
+  const token = localStorage.getItem(MDP_TOKEN_KEY) || import.meta.env.VITE_MDP_JWT_TOKEN;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -32,9 +32,8 @@ mdpClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && getMDPToken()) {
       localStorage.removeItem(MDP_TOKEN_KEY);
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   },

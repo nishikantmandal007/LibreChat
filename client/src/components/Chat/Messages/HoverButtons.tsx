@@ -3,6 +3,7 @@ import { useRecoilState } from 'recoil';
 import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
 import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@librechat/client';
 import { useGenerationsByLatest, useLocalize } from '~/hooks';
+import AnonymizedPromptToggle from '~/components/Chat/Messages/Content/AnonymizedPromptToggle';
 import { Fork } from '~/components/Conversations';
 import MessageAudio from './MessageAudio';
 import Feedback from './Feedback';
@@ -22,6 +23,9 @@ type THoverButtons = {
   isLast: boolean;
   index: number;
   handleFeedback?: ({ feedback }: { feedback: TFeedback | undefined }) => void;
+  showAnonymizedPrompt?: boolean;
+  onToggleAnonymizedPrompt?: () => void;
+  piiDetected?: boolean;
 };
 
 type HoverButtonProps = {
@@ -122,6 +126,9 @@ const HoverButtons = ({
   latestMessageId,
   isLast,
   handleFeedback,
+  showAnonymizedPrompt = false,
+  onToggleAnonymizedPrompt,
+  piiDetected = false,
 }: THoverButtons) => {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
@@ -186,6 +193,15 @@ const HoverButtons = ({
 
   return (
     <div className="group visible flex justify-center gap-0.5 self-end focus-within:outline-none lg:justify-start">
+      {isCreatedByUser && Boolean(message.text?.trim()) && onToggleAnonymizedPrompt && (
+        <AnonymizedPromptToggle
+          isShowing={showAnonymizedPrompt}
+          onToggle={onToggleAnonymizedPrompt}
+          piiDetected={piiDetected}
+          isLast={isLast}
+        />
+      )}
+
       {/* Text to Speech */}
       {TextToSpeech && (
         <MessageAudio

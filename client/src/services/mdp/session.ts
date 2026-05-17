@@ -6,7 +6,7 @@ import type { MDPSessionRenameRequest, MDPSessionDeleteRequest } from './types';
 export async function renameSession(sessionId: string, name: string): Promise<void> {
   const request: MDPSessionRenameRequest = {
     session_id: sessionId,
-    session_name: name,
+    new_name: name,
   };
   await mdpClient.post(MDP_ENDPOINTS.sessionRename, request);
 }

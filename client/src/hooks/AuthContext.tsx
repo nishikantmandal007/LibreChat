@@ -1,14 +1,7 @@
-import {
-  useMemo,
-  useState,
-  useEffect,
-  useContext,
-  useCallback,
-  createContext,
-} from 'react';
+import { useMemo, useState, useEffect, useContext, useCallback, createContext } from 'react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
 import { useNavigate } from 'react-router-dom';
-import { SystemRoles } from 'librechat-data-provider';
+import { SystemRoles, roleDefaults } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 import type { ReactNode } from 'react';
 import { TAuthConfig, TAuthContext } from '~/common';
@@ -27,7 +20,9 @@ const GUEST_USER: t.TUser = {
   username: 'guest',
   role: SystemRoles.USER,
   provider: 'local',
-  avatar: undefined,
+  avatar: '',
+  createdAt: new Date(0).toISOString(),
+  updatedAt: new Date(0).toISOString(),
 };
 
 const AuthContextProvider = ({
@@ -79,8 +74,8 @@ const AuthContextProvider = ({
       logout,
       setError,
       roles: {
-        [SystemRoles.USER]: null,
-        [SystemRoles.ADMIN]: null,
+        [SystemRoles.USER]: roleDefaults[SystemRoles.USER],
+        [SystemRoles.ADMIN]: roleDefaults[SystemRoles.ADMIN],
       },
       isAuthenticated,
     }),

@@ -22,6 +22,31 @@
       }
     </style>
     <script>
+      (() => {
+        const isLocalDev =
+          ['localhost', '127.0.0.1'].includes(window.location.hostname) &&
+          window.location.port !== '';
+
+        if (!isLocalDev) {
+          return;
+        }
+
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker
+            .getRegistrations()
+            .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+            .catch(() => {});
+        }
+
+        if ('caches' in window) {
+          caches
+            .keys()
+            .then((keys) => keys.forEach((key) => caches.delete(key)))
+            .catch(() => {});
+        }
+      })();
+    </script>
+    <script>
       const theme = localStorage.getItem('color-theme');
       const loadingContainerStyle = document.createElement('style');
       let backgroundColor;

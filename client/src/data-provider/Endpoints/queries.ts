@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { QueryObserverResult, UseQueryOptions } from '@tanstack/react-query';
 import type t from 'librechat-data-provider';
 import store from '~/store';
+import { MAYA_STARTUP_CONFIG } from '~/services/mdp/modelConfig';
 
 export const useGetEndpointsQuery = <TData = t.TEndpointsConfig>(
   config?: UseQueryOptions<t.TEndpointsConfig, unknown, TData>,
@@ -31,39 +32,12 @@ export const useGetEndpointsQuery = <TData = t.TEndpointsConfig>(
 export const startupConfigKey = (isAuthenticated: boolean) =>
   [QueryKeys.startupConfig, isAuthenticated] as const;
 
-const MDP_DEFAULT_STARTUP_CONFIG: t.TStartupConfig = {
-  appTitle: 'Maya AI',
-  socialLogins: [],
-  discordLoginEnabled: false,
-  facebookLoginEnabled: false,
-  githubLoginEnabled: false,
-  googleLoginEnabled: false,
-  openidLoginEnabled: false,
-  openidLabel: '',
-  openidImageUrl: '',
-  appleLoginEnabled: false,
-  samlLoginEnabled: false,
-  ldap: { enabled: false },
-  serverDomain: '',
-  emailLoginEnabled: true,
-  registrationEnabled: true,
-  socialLoginEnabled: false,
-  emailEnabled: false,
-  checkBalance: false,
-  showBirthdayIcon: false,
-  helpAndFaqURL: '',
-  modelSpecs: undefined,
-  interface: {},
-  balance: undefined,
-  isFreeTier: false,
-};
-
 export const useGetStartupConfig = (
   config?: UseQueryOptions<t.TStartupConfig>,
 ): QueryObserverResult<t.TStartupConfig> => {
   return useQuery<t.TStartupConfig>(
     startupConfigKey(false),
-    () => Promise.resolve(MDP_DEFAULT_STARTUP_CONFIG),
+    () => Promise.resolve(MAYA_STARTUP_CONFIG),
     {
       staleTime: Infinity,
       refetchOnWindowFocus: false,

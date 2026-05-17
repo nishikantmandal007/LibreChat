@@ -16,16 +16,26 @@ export interface MDPChatRequest {
     detected_values?: Record<string, string[]>;
     choices?: string[];
     doc?: string;
+    docs?: string[];
   };
 }
 
 export interface MDPChatResponse {
   session_id: string;
+  anonymized_prompt?: string;
   replaced_response: string;
   llm_response: string;
   total_tokens: number;
   anonymized_values: Record<string, string>;
   file_name?: string;
+  citations?: Array<{
+    file_name?: string;
+    filename?: string;
+    page?: number | string;
+    chunk_id?: string;
+    text?: string;
+    source?: string;
+  }>;
 }
 
 export interface MDPSession {
@@ -73,20 +83,37 @@ export interface MDPDetectResponse {
 }
 
 export interface MDPFileUploadResponse {
-  file_id: string;
-  file_name: string;
+  file_id?: string;
+  doc_id?: string;
+  file_name?: string;
+  filename?: string;
+  filepath?: string;
+  file_path?: string;
+  url?: string;
+  type?: string;
+  job_id?: string;
+  raw_file_id?: string;
+  safe_file_id?: string;
+  safe_doc_id?: string;
+  status?: string;
+  download_url?: string;
+  preview_original_url?: string;
+  preview_anonymized_url?: string;
+  pii_summary?: unknown;
+  rag_index_status?: string;
 }
 
 export interface MDPHistorySession {
   session_id: string;
-  session_name: string;
-  created_at: string;
-  updated_at: string;
+  session_name?: string;
+  chat_title?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MDPSessionRenameRequest {
   session_id: string;
-  session_name: string;
+  new_name: string;
 }
 
 export interface MDPSessionDeleteRequest {

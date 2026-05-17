@@ -21,6 +21,7 @@ import {
   useSubmitMessage,
   useFocusChatEffect,
 } from '~/hooks';
+import { hasMayaSafeFileBlocker } from '~/utils/mayaSafeFiles';
 import PendingManualSkillsChips from './PendingManualSkillsChips';
 import { cn, getModelSpec, removeFocusRings } from '~/utils';
 import { useGetStartupConfig } from '~/data-provider';
@@ -161,6 +162,16 @@ const ChatForm = memo(function ChatForm({
   });
 
   const { submitMessage, submitPrompt } = useSubmitMessage();
+  const hasSafeFileBlocker = useMemo(() => hasMayaSafeFileBlocker(files), [files]);
+  const handleSafeSubmit = useCallback(
+    (...args: Parameters<typeof submitMessage>) => {
+      if (hasSafeFileBlocker) {
+        return;
+      }
+      return submitMessage(...args);
+    },
+    [hasSafeFileBlocker, submitMessage],
+  );
 
   const handleKeyUp = useHandleKeyUp({
     index,
@@ -233,7 +244,7 @@ const ChatForm = memo(function ChatForm({
 
   return (
     <form
-      onSubmit={methods.handleSubmit(submitMessage)}
+      onSubmit={methods.handleSubmit(handleSafeSubmit)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
         maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
@@ -393,7 +404,13 @@ const ChatForm = memo(function ChatForm({
                     <SendButton
                       ref={submitButtonRef}
                       control={methods.control}
-                      disabled={filesLoading || isSubmitting || disableInputs || isNotAppendable}
+                      disabled={
+                        filesLoading ||
+                        hasSafeFileBlocker ||
+                        isSubmitting ||
+                        disableInputs ||
+                        isNotAppendable
+                      }
                     />
                   )
                 )}

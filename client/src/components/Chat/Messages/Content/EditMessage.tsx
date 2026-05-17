@@ -6,6 +6,7 @@ import { useUpdateMessageMutation } from 'librechat-data-provider/react-query';
 import type { TEditProps } from '~/common';
 import { useMessagesOperations, useMessagesConversation } from '~/Providers';
 import { useGetAddedConvo } from '~/hooks/Chat';
+import { anonymizeText, DEFAULT_PII_CHOICES } from '~/services/mdp';
 import { cn, removeFocusRings } from '~/utils';
 import { useLocalize } from '~/hooks';
 import Container from './Container';
@@ -98,11 +99,32 @@ const EditMessage = ({
     enterEdit(true);
   };
 
-  const updateMessage = (data: { text: string }) => {
+  const getUpdatedUserMetadata = async (nextText: string) => {
+    if (!message.isCreatedByUser) {
+      return message.metadata;
+    }
+
+    try {
+      const anonymized = await anonymizeText(nextText.trim(), DEFAULT_PII_CHOICES, 'en');
+      return {
+        ...(message.metadata ?? {}),
+        anonymizedPrompt: anonymized.anonymized_prompt || nextText,
+      };
+    } catch (error) {
+      console.warn('Failed to anonymize edited prompt metadata', error);
+      return {
+        ...(message.metadata ?? {}),
+        anonymizedPrompt: nextText,
+      };
+    }
+  };
+
+  const updateMessage = async (data: { text: string }) => {
     const messages = getMessages();
     if (!messages) {
       return;
     }
+    const metadata = await getUpdatedUserMetadata(data.text);
     updateMessageMutation.mutate({
       conversationId: conversationId ?? '',
       model: conversation?.model ?? 'gpt-3.5-turbo',
@@ -113,6 +135,7 @@ const EditMessage = ({
     const isInMessages = messages.some((message) => message.messageId === messageId);
     if (!isInMessages) {
       message.text = data.text;
+      message.metadata = metadata;
     } else {
       setMessages(
         messages.map((msg) =>
@@ -120,6 +143,7 @@ const EditMessage = ({
             ? {
                 ...msg,
                 text: data.text,
+                metadata,
               }
             : msg,
         ),
