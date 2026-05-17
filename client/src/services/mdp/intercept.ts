@@ -6,9 +6,38 @@ import {
   getSessionMessages,
   invalidateSessionsCache,
 } from './history';
+import { mdpClient } from './client';
+import { MDP_ENDPOINTS } from './endpoints';
 import { renameSession, deleteSession } from './session';
 import { uploadFile as uploadMayaFile } from './files';
 import { MAYA_ENDPOINTS, MAYA_MODELS, MAYA_STARTUP_CONFIG } from './modelConfig';
+import {
+  attachWorkspaceBookmarks,
+  createWorkspaceBookmark,
+  createWorkspacePrompt,
+  createWorkspaceSkill,
+  deleteWorkspaceBookmark,
+  deleteWorkspacePrompt,
+  deleteWorkspacePromptGroup,
+  deleteWorkspaceSkill,
+  getWorkspacePromptGroup,
+  getWorkspaceSkill,
+  getWorkspaceSkillStates,
+  importWorkspaceSkill,
+  listAllWorkspacePromptGroups,
+  listWorkspaceBookmarks,
+  listWorkspacePromptCategories,
+  listWorkspacePromptGroups,
+  listWorkspacePrompts,
+  listWorkspaceSkills,
+  makeWorkspacePromptProduction,
+  recordWorkspacePromptUsage,
+  setConversationBookmarks,
+  updateWorkspaceBookmark,
+  updateWorkspacePromptGroup,
+  updateWorkspaceSkill,
+  updateWorkspaceSkillStates,
+} from './workspaceStore';
 
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
@@ -17,7 +46,7 @@ const EMPTY_OBJECT = {};
 
 const GUEST_USER = {
   id: 'guest',
-  email: 'guest@maya.ai',
+  email: 'guest@aisafe.local',
   name: 'Guest',
   username: 'guest',
   role: SystemRoles.USER,
@@ -40,7 +69,15 @@ const MOCK_ROUTES: Record<string, unknown> = {
   '/api/tags': EMPTY_ARRAY,
   '/api/convos/tags': EMPTY_ARRAY,
   '/api/search/enable': false,
-  '/api/files/speech/config/get': { message: 'not_found' },
+  '/api/files/speech/config/get': {
+    speechToText: true,
+    engineSTT: 'external',
+    languageSTT: 'en',
+    autoTranscribeAudio: false,
+    autoSendText: -1,
+    textToSpeech: true,
+    engineTTS: 'browser',
+  },
   '/api/files/speech/tts/voices': EMPTY_ARRAY,
   '/api/files/config': {},
   '/api/files': EMPTY_ARRAY,
@@ -56,7 +93,6 @@ const MOCK_ROUTES: Record<string, unknown> = {
   '/api/mcp/servers': EMPTY_OBJECT,
   '/api/mcp/connection/status': EMPTY_OBJECT,
   '/api/memories': { memories: EMPTY_ARRAY, totalCount: 0 },
-  '/api/skills': { skills: EMPTY_ARRAY, totalCount: 0 },
   '/api/categories': EMPTY_ARRAY,
 };
 
@@ -126,6 +162,49 @@ function getArg<T>(config: InternalAxiosRequestConfig): T | undefined {
   return body as T | undefined;
 }
 
+function normalizeSpeechText(data: unknown): string {
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (!data || typeof data !== 'object') {
+    return '';
+  }
+
+  const value = data as Record<string, unknown>;
+  const text = value.text ?? value.transcript ?? value.data;
+  if (typeof text === 'string') {
+    return text;
+  }
+  if (text && typeof text === 'object') {
+    const nested = text as Record<string, unknown>;
+    return typeof nested.transcript === 'string' ? nested.transcript : '';
+  }
+
+  return '';
+}
+
+async function transcribeSpeech(config: InternalAxiosRequestConfig): Promise<{ text: string }> {
+  if (!(config.data instanceof FormData)) {
+    throw new Error('Audio request must be multipart form data');
+  }
+
+  const audio = config.data.get('audio');
+  if (!(audio instanceof Blob)) {
+    throw new Error('Audio request is missing an audio file');
+  }
+
+  const language = config.data.get('language');
+  const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.voice, audio, {
+    headers: {
+      'Content-Type': audio.type || 'application/octet-stream',
+      lang: typeof language === 'string' && language ? language : 'en',
+      'model-size': 'tiny',
+    },
+  });
+
+  return { text: normalizeSpeechText(response.data) };
+}
+
 function staticRoute(pathname: string): { matched: boolean; data: unknown } {
   const entries = Object.entries(MOCK_ROUTES).sort((a, b) => b[0].length - a[0].length);
   for (const [route, data] of entries) {
@@ -143,6 +222,233 @@ function fallbackTitle(conversationId: string): string {
   return 'New Chat';
 }
 
+function handleWorkspaceBookmarkRoute(
+  config: InternalAxiosRequestConfig,
+  pathname: string,
+  method: string,
+): { matched: boolean; data: unknown } {
+  if (pathname === '/api/tags' && method === 'get') {
+    return { matched: true, data: listWorkspaceBookmarks() };
+  }
+
+  if (pathname === '/api/tags' && method === 'post') {
+    return {
+      matched: true,
+      data: createWorkspaceBookmark(
+        getArg<Parameters<typeof createWorkspaceBookmark>[0]>(config) ?? {},
+      ),
+    };
+  }
+
+  if (pathname.startsWith('/api/tags/convo/') && method === 'put') {
+    const conversationId = decodeURIComponent(pathname.replace('/api/tags/convo/', ''));
+    const payload = getArg<{ tags?: string[] }>(config);
+    return { matched: true, data: setConversationBookmarks(conversationId, payload?.tags ?? []) };
+  }
+
+  if (pathname === '/api/convos/tags' || pathname.startsWith('/api/convos/tags/')) {
+    return { matched: true, data: listWorkspaceBookmarks() };
+  }
+
+  if (pathname.startsWith('/api/tags/')) {
+    const tag = decodeURIComponent(pathname.replace('/api/tags/', ''));
+    if (tag === 'rebuild') {
+      return { matched: true, data: listWorkspaceBookmarks() };
+    }
+    if (method === 'put' || method === 'patch') {
+      return {
+        matched: true,
+        data: updateWorkspaceBookmark(
+          tag,
+          getArg<Parameters<typeof updateWorkspaceBookmark>[1]>(config) ?? {},
+        ),
+      };
+    }
+    if (method === 'delete') {
+      return { matched: true, data: deleteWorkspaceBookmark(tag) };
+    }
+  }
+
+  return { matched: false, data: null };
+}
+
+function handleWorkspacePromptRoute(
+  config: InternalAxiosRequestConfig,
+  pathname: string,
+  method: string,
+  searchParams: URLSearchParams,
+): { matched: boolean; data: unknown } {
+  if (pathname === '/api/categories' && method === 'get') {
+    return { matched: true, data: listWorkspacePromptCategories() };
+  }
+
+  if (pathname === '/api/prompts/all' && method === 'get') {
+    return { matched: true, data: listAllWorkspacePromptGroups() };
+  }
+
+  if (pathname === '/api/prompts/groups' && method === 'get') {
+    return {
+      matched: true,
+      data: listWorkspacePromptGroups(Object.fromEntries(searchParams.entries())),
+    };
+  }
+
+  const groupPromptMatch = pathname.match(/^\/api\/prompts\/groups\/([^/]+)\/prompts$/);
+  if (groupPromptMatch && method === 'post') {
+    const groupId = decodeURIComponent(groupPromptMatch[1]);
+    const payload =
+      getArg<Parameters<typeof createWorkspacePrompt>[0]>(config) ??
+      ({} as Parameters<typeof createWorkspacePrompt>[0]);
+    return {
+      matched: true,
+      data: createWorkspacePrompt({
+        ...payload,
+        prompt: {
+          ...(payload.prompt ?? {}),
+          groupId,
+        },
+      }),
+    };
+  }
+
+  const groupUseMatch = pathname.match(/^\/api\/prompts\/groups\/([^/]+)\/use$/);
+  if (groupUseMatch && method === 'post') {
+    return {
+      matched: true,
+      data: recordWorkspacePromptUsage(decodeURIComponent(groupUseMatch[1])),
+    };
+  }
+
+  const groupMatch = pathname.match(/^\/api\/prompts\/groups\/([^/]+)$/);
+  if (groupMatch) {
+    const groupId = decodeURIComponent(groupMatch[1]);
+    if (method === 'get') {
+      return { matched: true, data: getWorkspacePromptGroup(groupId) };
+    }
+    if (method === 'patch' || method === 'put') {
+      return {
+        matched: true,
+        data: updateWorkspacePromptGroup(
+          groupId,
+          getArg<Parameters<typeof updateWorkspacePromptGroup>[1]>(config) ?? {},
+        ),
+      };
+    }
+    if (method === 'delete') {
+      return { matched: true, data: deleteWorkspacePromptGroup(groupId) };
+    }
+  }
+
+  if (pathname === '/api/prompts' && method === 'get') {
+    return {
+      matched: true,
+      data: listWorkspacePrompts(searchParams.get('groupId') ?? ''),
+    };
+  }
+
+  if (pathname === '/api/prompts' && method === 'post') {
+    return {
+      matched: true,
+      data: createWorkspacePrompt(
+        getArg<Parameters<typeof createWorkspacePrompt>[0]>(config) ??
+          ({} as Parameters<typeof createWorkspacePrompt>[0]),
+      ),
+    };
+  }
+
+  const productionMatch = pathname.match(/^\/api\/prompts\/([^/]+)\/tags\/production$/);
+  if (productionMatch && (method === 'patch' || method === 'put')) {
+    return {
+      matched: true,
+      data: makeWorkspacePromptProduction(decodeURIComponent(productionMatch[1])),
+    };
+  }
+
+  const labelsMatch = pathname.match(/^\/api\/prompts\/([^/]+)\/labels$/);
+  if (labelsMatch && (method === 'patch' || method === 'put')) {
+    return { matched: true, data: { message: 'Prompt labels updated' } };
+  }
+
+  const promptMatch = pathname.match(/^\/api\/prompts\/([^/]+)$/);
+  if (promptMatch && method === 'delete') {
+    return {
+      matched: true,
+      data: deleteWorkspacePrompt(
+        decodeURIComponent(promptMatch[1]),
+        searchParams.get('groupId') ?? '',
+      ),
+    };
+  }
+
+  return { matched: false, data: null };
+}
+
+async function handleWorkspaceSkillRoute(
+  config: InternalAxiosRequestConfig,
+  pathname: string,
+  method: string,
+  searchParams: URLSearchParams,
+): Promise<{ matched: boolean; data: unknown }> {
+  if (pathname === '/api/user/settings/skills/active' && method === 'get') {
+    return { matched: true, data: getWorkspaceSkillStates() };
+  }
+
+  if (pathname === '/api/user/settings/skills/active' && method === 'post') {
+    const body = parseBody<{ skillStates?: Record<string, boolean> }>(config.data);
+    return { matched: true, data: updateWorkspaceSkillStates(body?.skillStates ?? {}) };
+  }
+
+  if (pathname === '/api/skills' && method === 'get') {
+    const params: Record<string, string | number | undefined> = Object.fromEntries(
+      searchParams.entries(),
+    );
+    if (params.limit) {
+      params.limit = Number(params.limit);
+    }
+    return {
+      matched: true,
+      data: listWorkspaceSkills(
+        params as { category?: string; search?: string; limit?: number; cursor?: string },
+      ),
+    };
+  }
+
+  if (pathname === '/api/skills' && method === 'post') {
+    const payload =
+      getArg<Parameters<typeof createWorkspaceSkill>[0]>(config) ??
+      parseBody<Parameters<typeof createWorkspaceSkill>[0]>(config.data) ??
+      ({} as Parameters<typeof createWorkspaceSkill>[0]);
+    return { matched: true, data: createWorkspaceSkill(payload) };
+  }
+
+  if (pathname === '/api/skills/import' && method === 'post') {
+    if (!(config.data instanceof FormData)) {
+      throw new Error('Skill import request must be multipart form data');
+    }
+    return { matched: true, data: await importWorkspaceSkill(config.data) };
+  }
+
+  const skillMatch = pathname.match(/^\/api\/skills\/([^/]+)$/);
+  if (skillMatch) {
+    const skillId = decodeURIComponent(skillMatch[1]);
+    if (method === 'get') {
+      return { matched: true, data: getWorkspaceSkill(skillId) };
+    }
+    if (method === 'patch' || method === 'put') {
+      const payload =
+        getArg<Parameters<typeof updateWorkspaceSkill>[1]>(config) ??
+        parseBody<Parameters<typeof updateWorkspaceSkill>[1]>(config.data) ??
+        ({} as Parameters<typeof updateWorkspaceSkill>[1]);
+      return { matched: true, data: updateWorkspaceSkill(skillId, payload) };
+    }
+    if (method === 'delete') {
+      return { matched: true, data: deleteWorkspaceSkill(skillId) };
+    }
+  }
+
+  return { matched: false, data: null };
+}
+
 async function resolveApiData(
   config: InternalAxiosRequestConfig,
   apiPath: string,
@@ -157,7 +463,7 @@ async function resolveApiData(
 
   if (pathname === '/api/convos' && method === 'get') {
     return {
-      conversations: await listSessions(),
+      conversations: (await listSessions()).map(attachWorkspaceBookmarks),
       nextCursor: null,
     };
   }
@@ -169,12 +475,20 @@ async function resolveApiData(
   }
 
   if (pathname === '/api/convos/update' && method === 'post') {
-    const payload = getArg<{ conversationId?: string; title?: string }>(config);
-    if (payload?.conversationId && payload.title) {
-      invalidateSessionsCache();
-      await renameSession(payload.conversationId, payload.title);
+    const payload = getArg<{ conversationId?: string; title?: string; tags?: string[] }>(config);
+    if (payload?.conversationId) {
+      if (payload.title) {
+        invalidateSessionsCache();
+        await renameSession(payload.conversationId, payload.title);
+      }
+      if (Array.isArray(payload.tags)) {
+        setConversationBookmarks(payload.conversationId, payload.tags);
+      }
       const conversation = await getSessionConversation(payload.conversationId);
-      return { ...conversation, title: payload.title };
+      return attachWorkspaceBookmarks({
+        ...conversation,
+        title: payload.title ?? conversation.title,
+      });
     }
     return EMPTY_OBJECT;
   }
@@ -188,13 +502,24 @@ async function resolveApiData(
     return { acknowledged: true, deletedCount: payload?.conversationId ? 1 : 0 };
   }
 
-  if (pathname.startsWith('/api/convos/tags')) {
-    return EMPTY_ARRAY;
+  const bookmarkRoute = handleWorkspaceBookmarkRoute(config, pathname, method);
+  if (bookmarkRoute.matched) {
+    return bookmarkRoute.data;
+  }
+
+  const promptRoute = handleWorkspacePromptRoute(config, pathname, method, searchParams);
+  if (promptRoute.matched) {
+    return promptRoute.data;
+  }
+
+  const skillRoute = await handleWorkspaceSkillRoute(config, pathname, method, searchParams);
+  if (skillRoute.matched) {
+    return skillRoute.data;
   }
 
   if (pathname.startsWith('/api/convos/') && method === 'get') {
     const conversationId = decodeURIComponent(pathname.replace('/api/convos/', ''));
-    return getSessionConversation(conversationId);
+    return attachWorkspaceBookmarks(await getSessionConversation(conversationId));
   }
 
   if (pathname === '/api/messages' && method === 'get') {
@@ -230,6 +555,10 @@ async function resolveApiData(
     config.data instanceof FormData
   ) {
     return uploadMayaFile(config.data);
+  }
+
+  if (pathname === '/api/files/speech/stt' && method === 'post') {
+    return transcribeSpeech(config);
   }
 
   if (pathname.startsWith('/api/files/') && pathname.endsWith('/preview') && method === 'get') {

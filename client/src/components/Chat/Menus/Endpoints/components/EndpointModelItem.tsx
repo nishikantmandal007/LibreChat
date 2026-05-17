@@ -70,9 +70,7 @@ export function EndpointModelItem({ modelId, endpoint }: EndpointModelItemProps)
   };
 
   const renderAvatar = () => {
-    const isAgentOrAssistant =
-      isAgentsEndpoint(endpoint.value) || isAssistantsEndpoint(endpoint.value);
-    const showEndpointIcon = isAgentOrAssistant && endpoint.icon;
+    const showEndpointIcon = Boolean(endpoint.icon);
 
     const getContent = () => {
       if (avatarUrl) {

@@ -1,19 +1,25 @@
 import { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
+import { ScrollText } from 'lucide-react';
 import { AutoSizer, List } from 'react-virtualized';
 import { Spinner, useCombobox } from '@librechat/client';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import type { TPromptGroup } from 'librechat-data-provider';
-import type { PromptOption } from '~/common';
+import type { TPromptGroup, TSkillSummary } from 'librechat-data-provider';
+import type { MentionOption, PromptOption } from '~/common';
 import useInitPopoverInput from '~/hooks/Input/useInitPopoverInput';
 import { removeCharIfLast, detectVariables } from '~/utils';
-import { useRecordPromptUsage } from '~/data-provider';
+import { useRecordPromptUsage, useSkillsInfiniteQuery } from '~/data-provider';
 import { VariableDialog } from '~/components/Prompts';
-import { usePromptGroupsContext } from '~/Providers';
+import { useAgentsMapContext, usePromptGroupsContext } from '~/Providers';
+import { isEphemeralAgent } from '~/common';
+import { ephemeralAgentByConvoId } from '~/store';
 import MentionItem from './MentionItem';
-import { useLocalize } from '~/hooks';
+import { useLocalize, useSkillActiveState } from '~/hooks';
+import { filterSkillsForPopover } from './SkillsCommand';
 import store from '~/store';
 
 const commandChar = '/';
+const skillIcon = <ScrollText className="icon-md text-cyan-500" />;
+type SlashCommandOption = PromptOption | (MentionOption & { id: string; type: 'skill' });
 
 const PopoverContainer = memo(
   ({
@@ -56,16 +62,22 @@ function PromptsCommand({
   index,
   textAreaRef,
   submitPrompt,
+  conversationId,
+  agentId,
 }: {
   index: number;
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
   submitPrompt: (textPrompt: string) => void;
+  conversationId: string;
+  agentId?: string | null;
 }) {
   const localize = useLocalize();
   const { mutate: recordUsage } = useRecordPromptUsage();
   const promptGroupsContext = usePromptGroupsContext();
   const { allPromptGroups, hasAccess } = promptGroupsContext ?? {};
   const { data, isLoading } = allPromptGroups ?? {};
+  const agentsMap = useAgentsMapContext();
+  const { isActive } = useSkillActiveState();
 
   const [activeIndex, setActiveIndex] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,13 +85,59 @@ function PromptsCommand({
   const [isVariableDialogOpen, setVariableDialogOpen] = useState(false);
   const [variableGroup, setVariableGroup] = useState<TPromptGroup | null>(null);
   const setShowPromptsPopover = useSetRecoilState(store.showPromptsPopoverFamily(index));
+  const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
+  const setPendingManualSkills = useSetRecoilState(
+    store.pendingManualSkillsByConvoId(conversationId),
+  );
 
-  const prompts = useMemo(() => data?.promptGroups, [data]);
-  const promptsMap = useMemo(() => data?.promptsMap, [data]);
+  const agentSkillIds = useMemo<string[] | null | undefined>(() => {
+    if (!agentId || isEphemeralAgent(agentId)) {
+      return undefined;
+    }
+    if (!agentsMap) {
+      return [];
+    }
+    const agent = agentsMap[agentId];
+    if (!agent || agent.skills_enabled !== true) {
+      return [];
+    }
+    return Array.isArray(agent.skills) && agent.skills.length > 0 ? agent.skills : undefined;
+  }, [agentId, agentsMap]);
+
+  const {
+    data: skillsData,
+    isLoading: isSkillsLoading,
+    isError: isSkillsError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useSkillsInfiniteQuery({ limit: 50 });
+  const skillPaginationBlockedRef = useRef(false);
+
+  const prompts = useMemo(() => (hasAccess ? data?.promptGroups : []), [data, hasAccess]);
+  const promptsMap = useMemo(() => (hasAccess ? data?.promptsMap : undefined), [data, hasAccess]);
+  const skillOptions: SlashCommandOption[] = useMemo(() => {
+    const allSkills: TSkillSummary[] = [];
+    for (const page of skillsData?.pages ?? []) {
+      allSkills.push(...page.skills);
+    }
+    return filterSkillsForPopover(allSkills, { agentSkillIds, isActive }).map((skill) => ({
+      id: skill._id,
+      label: `Skill · ${skill.displayTitle ?? skill.name}`,
+      value: skill.name,
+      description: skill.description,
+      type: 'skill',
+      icon: skillIcon,
+    }));
+  }, [skillsData?.pages, agentSkillIds, isActive]);
+  const slashOptions: SlashCommandOption[] = useMemo(
+    () => [...(prompts ?? []), ...skillOptions],
+    [prompts, skillOptions],
+  );
 
   const { open, setOpen, searchValue, setSearchValue, matches } = useCombobox({
     value: '',
-    options: prompts ?? [],
+    options: slashOptions,
   });
 
   const initInputRef = useInitPopoverInput({
@@ -91,7 +149,7 @@ function PromptsCommand({
   });
 
   const handleSelect = useCallback(
-    (mention?: PromptOption, e?: React.KeyboardEvent<HTMLInputElement>) => {
+    (mention?: SlashCommandOption, e?: React.KeyboardEvent<HTMLInputElement>) => {
       if (!mention) {
         return;
       }
@@ -102,6 +160,15 @@ function PromptsCommand({
 
       if (textAreaRef.current) {
         removeCharIfLast(textAreaRef.current, commandChar);
+      }
+
+      if (mention.type === 'skill') {
+        setEphemeralAgent((prev) => (prev?.skills ? prev : { ...(prev || {}), skills: true }));
+        setPendingManualSkills((prev) =>
+          prev.includes(mention.value) ? prev : [...prev, mention.value],
+        );
+        textAreaRef.current?.focus();
+        return;
       }
 
       const group = promptsMap?.[mention.id];
@@ -129,11 +196,28 @@ function PromptsCommand({
       setOpen,
       setShowPromptsPopover,
       textAreaRef,
+      setEphemeralAgent,
+      setPendingManualSkills,
       promptsMap,
       submitPrompt,
       recordUsage,
     ],
   );
+
+  useEffect(() => {
+    if (isSkillsError) {
+      skillPaginationBlockedRef.current = true;
+    }
+  }, [isSkillsError]);
+
+  useEffect(() => {
+    if (skillPaginationBlockedRef.current || isSkillsError) {
+      return;
+    }
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, isSkillsError, fetchNextPage]);
 
   useEffect(() => {
     if (!open) {
@@ -152,13 +236,11 @@ function PromptsCommand({
   }, []);
 
   useEffect(() => {
-    const currentActiveItem = document.getElementById(`prompt-item-${activeIndex}`);
+    const currentActiveItem =
+      document.getElementById(`prompt-item-${activeIndex}`) ??
+      document.getElementById(`skill-item-${activeIndex}`);
     currentActiveItem?.scrollIntoView({ behavior: 'instant', block: 'nearest' });
   }, [activeIndex]);
-
-  if (!hasAccess) {
-    return null;
-  }
 
   const rowRenderer = ({
     index,
@@ -169,11 +251,11 @@ function PromptsCommand({
     key: string;
     style: React.CSSProperties;
   }) => {
-    const mention = matches[index] as PromptOption;
+    const mention = matches[index] as SlashCommandOption;
     return (
       <MentionItem
         index={index}
-        type="prompt"
+        type={mention.type === 'skill' ? 'skill' : 'prompt'}
         key={key}
         style={style}
         onClick={() => {
@@ -221,7 +303,7 @@ function PromptsCommand({
                 if (e.key === 'Enter') {
                   e.preventDefault();
                 }
-                handleSelect(matches[activeIndex] as PromptOption | undefined, e);
+                handleSelect(matches[activeIndex] as SlashCommandOption | undefined, e);
               } else if (e.key === 'Backspace' && searchValue === '') {
                 setOpen(false);
                 setShowPromptsPopover(false);
@@ -237,7 +319,7 @@ function PromptsCommand({
               }, 150);
             }}
           />
-          {open && isLoading && matches.length === 0 && (
+          {open && (isLoading || isSkillsLoading) && matches.length === 0 && (
             <div className="flex h-32 items-center justify-center text-text-primary">
               <Spinner />
             </div>

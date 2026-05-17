@@ -64,6 +64,15 @@ const chatBadges = atomWithLocalStorage<Pick<BadgeItem, 'id'>[]>('chatBadges', [
   // { id: '2' },
 ]);
 
+const imageGenEnabled = atom<boolean>({
+  key: 'imageGenEnabled',
+  default: false,
+});
+
+const imageGenPinned = atomWithLocalStorage<boolean>('imageGenPinned', false);
+
+const mdpAnonymizationLanguage = atomWithLocalStorage<string>('mdpAnonymizationLanguage', 'en');
+
 export default {
   hideBannerHint,
   messageAttachmentsMap,
@@ -71,4 +80,7 @@ export default {
   queriesEnabled,
   isEditingBadges,
   chatBadges,
+  imageGenEnabled,
+  imageGenPinned,
+  mdpAnonymizationLanguage,
 };

@@ -46,7 +46,7 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
         {...props}
         className={cn(
           !parent &&
-            'flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border-light px-3 py-2 text-sm text-text-primary',
+            'flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-border-light px-4 py-2.5 text-base font-medium text-text-primary',
           menuStore.useState('open')
             ? 'bg-surface-active-alt hover:bg-surface-active-alt'
             : 'bg-presentation hover:bg-surface-active-alt',
@@ -67,7 +67,7 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
           parent ? 'animate-popover-left ml-3' : 'animate-popover',
           'outline-none! z-40 flex max-h-[min(450px,var(--popover-available-height))] w-full',
           'w-[var(--menu-width,auto)] min-w-[300px] flex-col overflow-auto rounded-xl border border-border-light',
-          'bg-presentation text-sm text-text-primary shadow-lg',
+          'bg-presentation text-[0.9375rem] text-text-primary shadow-lg',
           parent ? 'px-0.5 py-0.5' : 'px-3 py-2',
           'max-w-[calc(100vw-4rem)] sm:max-h-[calc(65vh)] sm:max-w-[400px]',
           searchable && 'p-0',
@@ -82,8 +82,8 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
                     autoSelect
                     render={combobox}
                     className={cn(
-                      'peer flex h-10 w-full items-center justify-center rounded-lg border-none bg-transparent px-2 text-base',
-                      'sm:h-8 sm:text-sm',
+                      'peer flex h-10 w-full items-center justify-center rounded-lg border-none bg-transparent px-3 text-base',
+                      'sm:h-10 sm:text-[0.9375rem]',
                       'focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-primary',
                     )}
                   />
@@ -144,7 +144,7 @@ export const CustomMenuGroup = React.forwardRef<HTMLDivElement, CustomMenuGroupP
     return (
       <Ariakit.MenuGroup ref={ref} {...props} className={cn('', props.className)}>
         {label && (
-          <Ariakit.MenuGroupLabel className="cursor-default p-2 text-sm font-medium opacity-60 sm:py-1 sm:text-xs">
+          <Ariakit.MenuGroupLabel className="cursor-default p-2 text-sm font-medium opacity-60 sm:py-1.5 sm:text-sm">
             {label}
           </Ariakit.MenuGroupLabel>
         )}
@@ -170,7 +170,7 @@ export const CustomMenuItem = React.forwardRef<HTMLDivElement, CustomMenuItemPro
       blurOnHoverEnd: false,
       ...props,
       className: cn(
-        'relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1 outline-none! scroll-m-1 scroll-mt-[calc(var(--combobox-height,0px)+var(--label-height,4px))] aria-disabled:opacity-25 data-[active-item]:bg-black/[0.075] data-[active-item]:text-black dark:data-[active-item]:bg-white/10 dark:data-[active-item]:text-white sm:text-sm min-w-0 w-full before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-transparent before:rounded-full data-[active-item]:before:bg-black dark:data-[active-item]:before:bg-white',
+        'relative flex cursor-default items-center gap-2 rounded-lg px-3 py-1.5 outline-none! scroll-m-1 scroll-mt-[calc(var(--combobox-height,0px)+var(--label-height,4px))] aria-disabled:opacity-25 data-[active-item]:bg-black/[0.075] data-[active-item]:text-black dark:data-[active-item]:bg-white/10 dark:data-[active-item]:text-white text-[0.9375rem] min-w-0 w-full before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-transparent before:rounded-full data-[active-item]:before:bg-black dark:data-[active-item]:before:bg-white',
         props.className,
       ),
     };

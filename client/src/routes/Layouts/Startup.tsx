@@ -44,7 +44,7 @@ export default function StartupLayout({ isAuthenticated }: { isAuthenticated?: b
   }, [isAuthenticated, navigate, data]);
 
   useEffect(() => {
-    document.title = startupConfig?.appTitle || 'Maya AI';
+    document.title = startupConfig?.appTitle || 'AIsafe';
   }, [startupConfig?.appTitle]);
 
   useEffect(() => {

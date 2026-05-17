@@ -27,8 +27,8 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
         data-testid="nav-user"
         className={
           collapsed
-            ? 'flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
-            : 'mt-text-sm flex h-auto w-full items-center gap-2 rounded-xl p-2 text-sm transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
+            ? 'flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
+            : 'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-[0.9375rem] leading-5 transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
         }
       >
         <div
@@ -49,45 +49,57 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
       </Menu.MenuButton>
       <Menu.Menu
         portal
-        className="account-settings-popover popover-ui z-[125] w-[305px] rounded-lg md:w-[244px]"
+        className="account-settings-popover popover-ui z-[125] w-[305px] rounded-lg text-[0.9375rem] leading-5 md:w-[244px]"
         placement={collapsed ? 'right-end' : undefined}
         style={{
           transformOrigin: collapsed ? 'left bottom' : 'bottom',
           translate: collapsed ? '4px 0' : '0 -4px',
         }}
       >
-        <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+        <div
+          className="text-token-text-secondary ml-3 mr-2 py-2 text-[0.9375rem] leading-5"
+          role="note"
+        >
           {user?.email ?? localize('com_nav_user')}
         </div>
         <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
           <>
-            <div className="text-token-text-secondary ml-3 mr-2 py-2 text-sm" role="note">
+            <div
+              className="text-token-text-secondary ml-3 mr-2 py-2 text-[0.9375rem] leading-5"
+              role="note"
+            >
               {localize('com_nav_balance')}:{' '}
               {new Intl.NumberFormat().format(Math.round(balanceQuery.data.tokenCredits))}
             </div>
             <DropdownMenuSeparator />
           </>
         )}
-        <Menu.MenuItem onClick={() => setShowFiles(true)} className="select-item text-sm">
+        <Menu.MenuItem
+          onClick={() => setShowFiles(true)}
+          className="select-item text-[0.9375rem] leading-5"
+        >
           <FileText className="icon-md" aria-hidden="true" />
           {localize('com_nav_my_files')}
         </Menu.MenuItem>
         {startupConfig?.helpAndFaqURL !== '/' && (
           <Menu.MenuItem
             onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
-            className="select-item text-sm"
+            className="select-item text-[0.9375rem] leading-5"
           >
             <LinkIcon aria-hidden="true" />
             {localize('com_nav_help_faq')}
           </Menu.MenuItem>
         )}
-        <Menu.MenuItem onClick={() => setShowSettings(true)} className="select-item text-sm">
+        <Menu.MenuItem
+          onClick={() => setShowSettings(true)}
+          className="select-item text-[0.9375rem] leading-5"
+        >
           <GearIcon className="icon-md" aria-hidden="true" />
           {localize('com_nav_settings')}
         </Menu.MenuItem>
         <DropdownMenuSeparator />
-        <Menu.MenuItem onClick={() => logout()} className="select-item text-sm">
+        <Menu.MenuItem onClick={() => logout()} className="select-item text-[0.9375rem] leading-5">
           <LogOut className="icon-md" aria-hidden="true" />
           {localize('com_nav_log_out')}
         </Menu.MenuItem>

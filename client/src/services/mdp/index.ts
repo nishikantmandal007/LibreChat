@@ -1,14 +1,12 @@
 export { installApiInterceptor } from './intercept';
 export { mdpClient } from './client';
 export { MDP_ENDPOINTS } from './endpoints';
-export { sendChat } from './chat';
+export { sendChat, generateImage } from './chat';
 export { listSessions, getSessionMessages, invalidateSessionsCache } from './history';
 export { renameSession, deleteSession } from './session';
 export { uploadFile, setSafeFileProgressCallback } from './files';
-export {
-  createSafeFile,
-  normalizeSafeFileResponse,
-} from './safeFiles';
+export { createSafeFile, normalizeSafeFileResponse } from './safeFiles';
+export { MDP_SUPPORTED_LANGUAGES, normalizeMdpLanguage } from './language';
 export { detectEntities, anonymizeText, DEFAULT_PII_CHOICES } from './anonymization';
 export {
   getCurrentUser,

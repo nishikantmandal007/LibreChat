@@ -7,13 +7,11 @@ import type { ChatFormValues } from '~/common';
 import { ChatContext, ChatFormProvider, ActivePanelProvider } from '~/Providers';
 import useUnifiedSidebarLinks from '~/hooks/Nav/useUnifiedSidebarLinks';
 import { useChatHelpers, useLocalize } from '~/hooks';
-import SidePanelNav from '~/components/SidePanel/Nav';
-import ExpandedPanel from './ExpandedPanel';
 import Sidebar from './Sidebar';
 import { cn } from '~/utils';
 import store from '~/store';
 
-const COLLAPSED_WIDTH = 52;
+const COLLAPSED_WIDTH = 64;
 const EXPANDED_MIN = 360;
 const TRANSITION_MS = 300;
 const EASING = 'cubic-bezier(0.2, 0, 0, 1)';
@@ -148,10 +146,14 @@ function UnifiedSidebar() {
         >
           <SidebarChatProvider>
             <ActivePanelProvider>
-              <ExpandedPanel links={links} onCollapse={handleCollapse} />
-              <nav className="min-h-0 flex-1 overflow-hidden bg-surface-primary-alt">
-                <SidePanelNav links={links} />
-              </nav>
+              <Sidebar
+                links={links}
+                expanded={expanded}
+                onCollapse={handleCollapse}
+                onExpand={handleExpand}
+                onResizeStart={handleResizeStart}
+                onResizeKeyboard={handleResizeKeyboard}
+              />
             </ActivePanelProvider>
           </SidebarChatProvider>
         </div>

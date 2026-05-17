@@ -121,6 +121,8 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     returnHandlers: true,
   });
 
+  const validSpec = spec && modelSpecs.some((item) => item.name === spec) ? spec : '';
+
   // State
   const [selectedValues, setSelectedValues] = useState<SelectedValues>(() => {
     let initialModel = model || '';
@@ -132,7 +134,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     return {
       endpoint: endpoint || '',
       model: initialModel,
-      modelSpec: spec || '',
+      modelSpec: validSpec,
     };
   });
   useSelectorEffects({
@@ -141,7 +143,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       ? ({
           endpoint: endpoint ?? null,
           model: model ?? null,
-          spec: spec ?? null,
+          spec: validSpec || null,
           agent_id: agent_id ?? null,
           assistant_id: assistant_id ?? null,
         } as any)

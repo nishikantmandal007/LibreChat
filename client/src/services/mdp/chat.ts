@@ -4,6 +4,7 @@ import { MDP_ENDPOINTS } from './endpoints';
 import { endpointToMayaLLM, MAYA_DEFAULT_MODEL } from './modelConfig';
 import { formatMayaAssistantText } from './format';
 import { invalidateSessionsCache } from './history';
+import { normalizeMdpLanguage } from './language';
 
 import type { TMessage } from 'librechat-data-provider';
 import type { MDPChatRequest, MDPChatResponse } from './types';
@@ -21,6 +22,12 @@ export interface MDPChatSubmission {
   choices?: string[];
   docId?: string;
   docIds?: string[];
+  manualSkills?: string[];
+  skillInstructions?: Array<{
+    name: string;
+    description?: string;
+    body: string;
+  }>;
   files?: TMessage['files'];
   endpoint?: string | null;
   model?: string | null;
@@ -33,14 +40,64 @@ export interface MDPChatResult {
   rawResponse: MDPChatResponse;
 }
 
+export interface MDPImageGenResult {
+  sessionId: string;
+  imagePath: string;
+}
+
+type MDPImageGenResponse = {
+  session_id?: string;
+  image_path?: string;
+  chat_id?: string;
+  image_url?: string;
+};
+
 export { formatMayaAssistantText } from './format';
+
+function normalizeGeneratedImagePath(imagePath: string): string {
+  const trimmed = imagePath.trim();
+  if (trimmed.startsWith('#') && trimmed.endsWith('#')) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+export async function generateImage(
+  prompt: string,
+  sessionId?: string,
+  llmType?: string,
+): Promise<MDPImageGenResult> {
+  const response = await mdpClient.post<MDPImageGenResponse | { data: MDPImageGenResponse }>(
+    MDP_ENDPOINTS.generateImage,
+    {
+      llm_type: llmType || 'openai',
+      image_dto: {
+        prompt,
+        chat_id: sessionId || '',
+      },
+    },
+  );
+
+  const rawData = response.data;
+  const data = 'data' in rawData ? rawData.data : rawData;
+  const imagePath = normalizeGeneratedImagePath(data.image_path || data.image_url || '');
+
+  if (!imagePath) {
+    throw new Error('Image generation response did not include an image URL.');
+  }
+
+  return {
+    sessionId: data.session_id || data.chat_id || sessionId || '',
+    imagePath,
+  };
+}
 
 export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatResult> {
   const model = submission.model || MAYA_DEFAULT_MODEL;
   const request: MDPChatRequest = {
     llm_type: endpointToMayaLLM(submission.endpoint),
     chat_dto: {
-      lang: submission.lang || 'eng',
+      lang: normalizeMdpLanguage(submission.lang),
       chat_id: submission.sessionId,
       original_prompt: submission.text,
       anonymized_prompt: submission.anonymizedPrompt,
@@ -49,6 +106,8 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
       choices: submission.choices,
       doc: submission.docId,
       docs: submission.docIds,
+      manual_skills: submission.manualSkills,
+      skill_instructions: submission.skillInstructions,
     },
   };
 
@@ -78,12 +137,19 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     text: submission.text,
     isCreatedByUser: true,
     files: submission.files,
+    manualSkills: submission.manualSkills,
     createdAt: now,
     updatedAt: now,
     metadata: anonymizedPrompt ? { anonymizedPrompt } : undefined,
   };
 
   const citationData = data.citations?.filter(Boolean) ?? [];
+  const artifactData = data.artifacts?.filter(Boolean) ?? [];
+  const metadata = {
+    ...(citationData.length > 0 ? { citations: citationData } : {}),
+    ...(artifactData.length > 0 ? { artifacts: artifactData } : {}),
+    ...(data.workflow ? { workflow: data.workflow } : {}),
+  };
   const assistantMessage: TMessage = {
     messageId: assistantMessageId,
     conversationId,
@@ -99,7 +165,8 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     endpoint: submission.endpoint || undefined,
     iconURL: submission.endpoint || undefined,
     model,
-    metadata: citationData.length > 0 ? { citations: citationData } : undefined,
+    manualSkills: submission.manualSkills,
+    metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
   };
 
   return {

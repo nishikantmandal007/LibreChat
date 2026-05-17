@@ -18,6 +18,7 @@ import type { BadgeItem } from '~/common';
 import { useChatBadges } from '~/hooks';
 import ToolDialogs from './ToolDialogs';
 import FileSearch from './FileSearch';
+import ImageGeneration from './ImageGeneration';
 import Artifacts from './Artifacts';
 import MCPSelect from './MCPSelect';
 import WebSearch from './WebSearch';
@@ -372,6 +373,7 @@ function BadgeRow({
         {showEphemeralBadges === true && (
           <>
             <WebSearch />
+            <ImageGeneration />
             <CodeInterpreter />
             <FileSearch />
             <Skills />

@@ -17,6 +17,12 @@ export interface MDPChatRequest {
     choices?: string[];
     doc?: string;
     docs?: string[];
+    manual_skills?: string[];
+    skill_instructions?: Array<{
+      name: string;
+      description?: string;
+      body: string;
+    }>;
   };
 }
 
@@ -36,6 +42,23 @@ export interface MDPChatResponse {
     text?: string;
     source?: string;
   }>;
+  artifacts?: Array<{
+    artifact_id: string;
+    kind?: string;
+    format?: string;
+    content_type?: string;
+    filename?: string;
+    download_url?: string;
+    preview_url?: string;
+    metadata?: Record<string, unknown>;
+    created_at?: string;
+  }>;
+  workflow?: {
+    privacy?: string;
+    rag?: string;
+    skills?: string[];
+    artifact_count?: number;
+  };
 }
 
 export interface MDPSession {

@@ -1,5 +1,6 @@
 import { mdpClient } from './client';
 import { MDP_ENDPOINTS } from './endpoints';
+import { normalizeMdpLanguage } from './language';
 
 import type {
   MDPDetectRequest,
@@ -13,7 +14,7 @@ export async function detectEntities(
   choices: string[],
   lang = 'en',
 ): Promise<MDPDetectResponse> {
-  const request: MDPDetectRequest = { prompt, choices, lang };
+  const request: MDPDetectRequest = { prompt, choices, lang: normalizeMdpLanguage(lang) };
   const response = await mdpClient.post<MDPDetectResponse>(MDP_ENDPOINTS.detect, request);
   return response.data;
 }
@@ -26,7 +27,7 @@ export async function anonymizeText(
   const request: MDPAnonymizeRequest = {
     prompt,
     choices,
-    lang,
+    lang: normalizeMdpLanguage(lang),
     model: 'Gliner',
     requires_anonymization: true,
     case_correction: true,

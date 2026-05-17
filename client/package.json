@@ -1,7 +1,7 @@
 {
   "name": "@maya/frontend",
   "version": "0.1.0",
-  "description": "Maya Data Privacy - AI Chat Frontend",
+  "description": "AIsafe - Secure AI Chat Frontend",
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -18,7 +18,7 @@
     "b:dev": "NODE_ENV=development bunx vite"
   },
   "keywords": [],
-  "author": "Maya Data Privacy",
+  "author": "AIsafe",
   "license": "ISC",
   "dependencies": {
     "@ariakit/react": "^0.4.15",
