@@ -34,11 +34,6 @@ function Header() {
     permission: Permissions.USE,
   });
 
-  const hasAccessToTemporaryChat = useHasAccess({
-    permissionType: PermissionTypes.TEMPORARY_CHAT,
-    permission: Permissions.USE,
-  });
-
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   return (
@@ -62,7 +57,7 @@ function Header() {
                   <ExportAndShareMenu
                     isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
                   />
-                  {hasAccessToTemporaryChat === true && <TemporaryChat />}
+                  <TemporaryChat />
                 </>
               )}
             </div>
@@ -74,7 +69,7 @@ function Header() {
             <ExportAndShareMenu
               isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
             />
-            {hasAccessToTemporaryChat === true && <TemporaryChat />}
+            <TemporaryChat />
           </div>
         )}
       </div>

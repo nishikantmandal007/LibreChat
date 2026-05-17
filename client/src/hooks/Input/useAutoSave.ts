@@ -33,6 +33,12 @@ export const useAutoSave = ({
 
   const restoreFiles = useCallback(
     (id: string) => {
+      if (id === Constants.NEW_CONVO) {
+        localStorage.removeItem(`${LocalStorageKeys.FILES_DRAFT}${id}`);
+        setFiles(new Map());
+        return;
+      }
+
       const filesDraft = JSON.parse(
         (localStorage.getItem(`${LocalStorageKeys.FILES_DRAFT}${id}`) ?? '') || '[]',
       ) as string[];
@@ -231,6 +237,11 @@ export const useAutoSave = ({
       conversationId === '' ||
       currentConversationId !== conversationId
     ) {
+      return;
+    }
+
+    if (conversationId === Constants.NEW_CONVO) {
+      localStorage.removeItem(`${LocalStorageKeys.FILES_DRAFT}${conversationId}`);
       return;
     }
 

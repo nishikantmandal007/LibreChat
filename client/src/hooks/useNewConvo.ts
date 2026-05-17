@@ -336,6 +336,7 @@ const useNewConvo = (index = 0) => {
           }));
 
         setFiles(new Map());
+        localStorage.removeItem(`${LocalStorageKeys.FILES_DRAFT}${Constants.NEW_CONVO}`);
         localStorage.setItem(LocalStorageKeys.FILES_TO_DELETE, JSON.stringify({}));
 
         if (!saveDrafts && filesToDelete.length > 0) {

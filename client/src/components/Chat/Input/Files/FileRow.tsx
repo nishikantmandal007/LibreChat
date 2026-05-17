@@ -1,10 +1,16 @@
 import { useEffect } from 'react';
 import { useToastContext } from '@librechat/client';
+import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import { EToolResources } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
 import { useDeleteFilesMutation } from '~/data-provider';
-import { logger, getCachedPreview } from '~/utils';
+import { logger, getCachedPreview, cn } from '~/utils';
 import { useFileDeletion } from '~/hooks/Files';
+import {
+  getMayaSafeFileStatusLabel,
+  isMayaSafeFileProcessing,
+  isMayaSafeFileReadyForChat,
+} from '~/utils/mayaSafeFiles';
 import FileContainer from './FileContainer';
 import { useLocalize } from '~/hooks';
 import Image from './Image';
@@ -64,7 +70,7 @@ export default function FileRow({
       return;
     }
 
-    if (files.some((file) => file.progress < 1)) {
+    if (files.some((file) => file.progress < 1 || isMayaSafeFileProcessing(file))) {
       setFilesLoading(true);
       return;
     }
@@ -78,6 +84,41 @@ export default function FileRow({
   if (files.length === 0) {
     return null;
   }
+
+  const renderSafeSubtitle = (file: ExtendedFile) => {
+    if (!file.safeFile) {
+      return undefined;
+    }
+
+    const label = getMayaSafeFileStatusLabel(file);
+    const isReady = isMayaSafeFileReadyForChat(file);
+    const isFailed = file.safeFile.status === 'failed';
+    const isProcessing = isMayaSafeFileProcessing(file);
+    const Icon = isFailed ? AlertTriangle : isReady ? CheckCircle2 : ShieldCheck;
+
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-1 truncate text-xs',
+          isProcessing
+            ? 'text-sky-600 dark:text-sky-300'
+            : isFailed
+              ? 'text-red-600 dark:text-red-300'
+              : isReady
+                ? 'text-emerald-600'
+                : 'text-sky-600',
+        )}
+        title={label}
+      >
+        {isProcessing ? (
+          <Loader2 className="h-3 w-3 shrink-0 animate-spin" />
+        ) : (
+          <Icon className="h-3 w-3 shrink-0" />
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+    );
+  };
 
   const renderFiles = () => {
     const rowStyle = isRTL
@@ -124,6 +165,8 @@ export default function FileRow({
               deleteFile({ file, setFiles });
             };
             const isImage = file.type?.startsWith('image') ?? false;
+            const isSafeFile = Boolean(file.safeFile);
+            const isProcessingSafeFile = isSafeFile && isMayaSafeFileProcessing(file);
 
             return (
               <div
@@ -134,7 +177,7 @@ export default function FileRow({
                   flexShrink: 0,
                 }}
               >
-                {isImage ? (
+                {isImage && !isSafeFile ? (
                   <Image
                     url={getCachedPreview(file.file_id) ?? file.preview ?? file.filepath}
                     onDelete={handleDelete}
@@ -142,7 +185,18 @@ export default function FileRow({
                     source={file.source}
                   />
                 ) : (
-                  <FileContainer file={file} onDelete={handleDelete} />
+                  <FileContainer
+                    file={file}
+                    onDelete={handleDelete}
+                    subtitle={renderSafeSubtitle(file)}
+                    buttonClassName={
+                      isProcessingSafeFile
+                        ? 'border-border-light bg-surface-hover-alt hover:bg-surface-hover'
+                        : isSafeFile && !isMayaSafeFileReadyForChat(file)
+                          ? 'border-sky-400/70 bg-sky-50/50 dark:bg-sky-950/20'
+                          : undefined
+                    }
+                  />
                 )}
               </div>
             );

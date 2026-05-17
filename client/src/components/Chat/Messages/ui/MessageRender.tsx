@@ -1,9 +1,10 @@
-import React, { useCallback, useMemo, memo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, memo } from 'react';
 import { useAtomValue } from 'jotai';
 import { useRecoilValue } from 'recoil';
 import type { TMessage } from 'librechat-data-provider';
 import type { TMessageProps, TMessageIcon, TMessageChatContext } from '~/common';
 import { cn, getHeaderPrefixForScreenReader, getMessageAriaLabel } from '~/utils';
+import SourceCitations from '~/components/Chat/Messages/Content/SourceCitations';
 import MessageContent from '~/components/Chat/Messages/Content/MessageContent';
 import { useLocalize, useMessageActions, useContentMetadata } from '~/hooks';
 import PlaceholderRow from '~/components/Chat/Messages/ui/PlaceholderRow';
@@ -29,6 +30,16 @@ type MessageRenderProps = {
   TMessageProps,
   'currentEditId' | 'setCurrentEditId' | 'siblingIdx' | 'setSiblingIdx' | 'siblingCount'
 >;
+
+const getMetadataAnonymizedPrompt = (message?: TMessage): string | undefined => {
+  const metadata = message?.metadata as Record<string, unknown> | undefined;
+  return typeof metadata?.anonymizedPrompt === 'string' ? metadata.anonymizedPrompt : undefined;
+};
+
+const getPromptSentToLLM = (message?: TMessage): string => {
+  const metadataPrompt = getMetadataAnonymizedPrompt(message);
+  return metadataPrompt?.trim() ? metadataPrompt : (message?.text ?? '');
+};
 
 /**
  * Custom comparator for React.memo: compares `message` by key fields instead of reference
@@ -79,6 +90,7 @@ function areMessageRenderPropsEqual(prev: MessageRenderProps, next: MessageRende
     prevMsg.model === nextMsg.model &&
     prevMsg.endpoint === nextMsg.endpoint &&
     prevMsg.iconURL === nextMsg.iconURL &&
+    getMetadataAnonymizedPrompt(prevMsg) === getMetadataAnonymizedPrompt(nextMsg) &&
     prevMsg.feedback?.rating === nextMsg.feedback?.rating &&
     (prevMsg.files?.length ?? 0) === (nextMsg.files?.length ?? 0)
   );
@@ -148,6 +160,21 @@ const MessageRender = memo(function MessageRender({
 
   const { hasParallelContent } = useContentMetadata(msg);
   const messageId = msg?.messageId ?? '';
+  const promptSentToLLM = getPromptSentToLLM(msg);
+  const piiDetected =
+    msg?.isCreatedByUser === true && promptSentToLLM.trim() !== (msg.text ?? '').trim();
+  const [showAnonymizedPrompt, setShowAnonymizedPrompt] = useState(false);
+  const handleToggleAnonymizedPrompt = useCallback(() => {
+    if (!piiDetected) {
+      return;
+    }
+    setShowAnonymizedPrompt((value) => !value);
+  }, [piiDetected]);
+
+  useEffect(() => {
+    setShowAnonymizedPrompt(false);
+  }, [msg?.messageId, msg?.text, promptSentToLLM, edit]);
+
   const messageContextValue = useMemo(
     () => ({
       messageId,
@@ -182,6 +209,82 @@ const MessageRender = memo(function MessageRender({
     focus: 'focus:outline-none focus:ring-2 focus:ring-border-xheavy',
   };
 
+  const isUser = msg.isCreatedByUser === true;
+
+  if (isUser) {
+    const displayText =
+      showAnonymizedPrompt && piiDetected && !edit ? promptSentToLLM : (msg.text ?? '');
+
+    return (
+      <div
+        id={msg.messageId}
+        aria-label={getMessageAriaLabel(msg, localize)}
+        className={cn(
+          baseClasses.common,
+          baseClasses.chat,
+          conditionalClasses.focus,
+          'message-render flex-row-reverse',
+        )}
+      >
+        <div className={cn('relative flex max-w-[85%] flex-col items-end', 'user-turn')}>
+          <div className="rounded-2xl bg-surface-tertiary px-4 py-2.5 text-text-primary dark:bg-gray-700/60 dark:text-white">
+            <div className="flex min-h-[20px] max-w-full flex-grow flex-col gap-0">
+              <MessageContext.Provider value={messageContextValue}>
+                <div
+                  key={showAnonymizedPrompt && piiDetected && !edit ? 'anonymized' : 'original'}
+                  className="animate-in fade-in-0 duration-150"
+                >
+                  <MessageContent
+                    ask={ask}
+                    edit={edit}
+                    isLast={isLast}
+                    text={displayText}
+                    message={msg}
+                    enterEdit={enterEdit}
+                    error={!!(msg.error ?? false)}
+                    isSubmitting={isSubmitting}
+                    unfinished={msg.unfinished ?? false}
+                    isCreatedByUser={true}
+                    siblingIdx={siblingIdx ?? 0}
+                    setSiblingIdx={setSiblingIdx ?? (() => ({}))}
+                  />
+                </div>
+              </MessageContext.Provider>
+            </div>
+          </div>
+          {hasNoChildren && isSubmitting ? (
+            <PlaceholderRow />
+          ) : (
+            <SubRow classes="text-xs">
+              <SiblingSwitch
+                siblingIdx={siblingIdx}
+                siblingCount={siblingCount}
+                setSiblingIdx={setSiblingIdx}
+              />
+              <HoverButtons
+                index={index}
+                isEditing={edit}
+                message={msg}
+                enterEdit={enterEdit}
+                isSubmitting={chatContext.isSubmitting}
+                conversation={conversation ?? null}
+                regenerate={handleRegenerateMessage}
+                copyToClipboard={copyToClipboard}
+                handleContinue={handleContinue}
+                latestMessageId={latestMessageId}
+                handleFeedback={handleFeedback}
+                isLast={isLast}
+                showAnonymizedPrompt={showAnonymizedPrompt}
+                onToggleAnonymizedPrompt={handleToggleAnonymizedPrompt}
+                piiDetected={piiDetected}
+              />
+            </SubRow>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       id={msg.messageId}
@@ -205,7 +308,7 @@ const MessageRender = memo(function MessageRender({
         className={cn(
           'relative flex flex-col',
           hasParallelContent ? 'w-full' : 'w-11/12',
-          msg.isCreatedByUser ? 'user-turn' : 'agent-turn',
+          'agent-turn',
         )}
       >
         {!hasParallelContent && (
@@ -228,12 +331,13 @@ const MessageRender = memo(function MessageRender({
                 error={!!(msg.error ?? false)}
                 isSubmitting={isSubmitting}
                 unfinished={msg.unfinished ?? false}
-                isCreatedByUser={msg.isCreatedByUser ?? true}
+                isCreatedByUser={false}
                 siblingIdx={siblingIdx ?? 0}
                 setSiblingIdx={setSiblingIdx ?? (() => ({}))}
               />
             </MessageContext.Provider>
           </div>
+          <SourceCitations message={msg} />
           {hasNoChildren && isSubmitting ? (
             <PlaceholderRow />
           ) : (

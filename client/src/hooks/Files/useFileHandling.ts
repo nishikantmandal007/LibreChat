@@ -14,9 +14,10 @@ import {
 } from 'librechat-data-provider';
 import debounce from 'lodash/debounce';
 import type { EModelEndpoint, TEndpointsConfig, TError } from 'librechat-data-provider';
-import type { ExtendedFile, FileSetter } from '~/common';
+import type { ExtendedFile, FileSetter, MayaSafeFileState } from '~/common';
 import type { TConversation } from 'librechat-data-provider';
 import { logger, validateFiles, cachePreview, getCachedPreview, removePreviewEntry } from '~/utils';
+import { setSafeFileProgressCallback } from '~/services/mdp';
 import { useGetFileConfig, useUploadFileMutation } from '~/data-provider';
 import useLocalize, { TranslationKeys } from '~/hooks/useLocalize';
 import { useDelayedUploadToast } from './useDelayedUploadToast';
@@ -117,6 +118,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
   const uploadFile = useUploadFileMutation(
     {
       onSuccess: (data) => {
+        const safeFile = (data as typeof data & { safeFile?: MayaSafeFileState }).safeFile;
         clearUploadTimer(data.temp_file_id);
         console.log('upload success', data);
         if (agent_id) {
@@ -128,6 +130,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
           {
             progress: 0.9,
             filepath: data.filepath,
+            safeFile,
           },
           assistant_id ? true : false,
         );
@@ -151,6 +154,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
               filename: data.filename,
               source: data.source,
               embedded: data.embedded,
+              safeFile,
             },
             assistant_id ? true : false,
           );
@@ -186,6 +190,10 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
   const startUpload = async (extendedFile: ExtendedFile) => {
     const filename = extendedFile.file?.name ?? 'File';
     startUploadTimer(extendedFile.file_id, filename, extendedFile.size);
+
+    setSafeFileProgressCallback((state) => {
+      updateFileById(extendedFile.file_id, { safeFile: state }, false);
+    });
 
     const formData = new FormData();
     formData.append('endpoint', endpoint);
@@ -314,6 +322,7 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
         const initialExtendedFile: ExtendedFile = {
           file_id,
           file: originalFile,
+          filename: originalFile.name,
           type: originalFile.type,
           preview: initialPreview,
           progress: 0.1, // Show as processing

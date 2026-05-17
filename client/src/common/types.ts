@@ -555,6 +555,40 @@ export type TOptionSettings = {
   isCodeChat?: boolean;
 };
 
+export type MayaSafeFileStatus =
+  | 'uploading'
+  | 'scanning'
+  | 'anonymizing'
+  | 'indexing'
+  | 'ready'
+  | 'failed';
+
+export type MayaSafeFilePiiSummary = {
+  total?: number;
+  changedCount?: number;
+  counts?: Record<string, number>;
+  detectedValues?: Record<string, string[]>;
+  anonymizedValues?: Record<string, string[]>;
+};
+
+export type MayaSafeFileState = {
+  status: MayaSafeFileStatus;
+  rawFileId?: string;
+  safeFileId?: string;
+  safeDocId?: string;
+  jobId?: string;
+  piiSummary?: MayaSafeFilePiiSummary;
+  previewOriginalUrl?: string;
+  previewAnonymizedUrl?: string;
+  originalText?: string;
+  anonymizedText?: string;
+  downloadUrl?: string;
+  safeFilename?: string;
+  mimeType?: string;
+  ragIndexStatus?: string;
+  error?: string;
+};
+
 export interface ExtendedFile {
   file?: File;
   file_id: string;
@@ -571,6 +605,7 @@ export interface ExtendedFile {
   attached?: boolean;
   embedded?: boolean;
   tool_resource?: string;
+  safeFile?: MayaSafeFileState;
   metadata?: t.TFile['metadata'];
 }
 

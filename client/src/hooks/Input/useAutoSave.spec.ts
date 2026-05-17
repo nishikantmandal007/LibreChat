@@ -26,8 +26,10 @@ jest.mock('~/utils', () => ({
 import React from 'react';
 import { renderHook, act } from '@testing-library/react';
 import { useRecoilValue } from 'recoil';
+import { Constants, LocalStorageKeys } from 'librechat-data-provider';
 import { useChatFormContext } from '~/Providers';
 import { useGetFiles } from '~/data-provider';
+import type { ExtendedFile } from '~/common';
 import { getDraft, setDraft } from '~/utils';
 import store from '~/store';
 import { useAutoSave } from '~/hooks';
@@ -42,6 +44,7 @@ const makeTextAreaRef = (value = '') =>
   }) as unknown as React.RefObject<HTMLTextAreaElement>;
 
 beforeEach(() => {
+  localStorage.clear();
   (useRecoilValue as jest.Mock).mockImplementation((atom) => {
     if (atom === store.saveDrafts) return true;
     return undefined;
@@ -106,5 +109,47 @@ describe('useAutoSave — conversation switching', () => {
     });
 
     expect(mockSetDraft).toHaveBeenCalledWith({ id: 'convo-1', value: 'draft in progress' });
+  });
+
+  it('clears stale file drafts when restoring the new conversation input', () => {
+    const fileDraftKey = `${LocalStorageKeys.FILES_DRAFT}${Constants.NEW_CONVO}`;
+    localStorage.setItem(fileDraftKey, JSON.stringify(['file-1']));
+    const setFiles = jest.fn();
+
+    renderHook(() =>
+      useAutoSave({
+        conversationId: Constants.NEW_CONVO,
+        textAreaRef: makeTextAreaRef(),
+        files: new Map(),
+        setFiles,
+      }),
+    );
+
+    expect(localStorage.getItem(fileDraftKey)).toBeNull();
+    expect(setFiles).toHaveBeenCalledWith(new Map());
+  });
+
+  it('does not persist file drafts for the new conversation input', () => {
+    const fileDraftKey = `${LocalStorageKeys.FILES_DRAFT}${Constants.NEW_CONVO}`;
+    const attachedFiles = new Map([
+      ['file-1', { file_id: 'file-1' } as ExtendedFile],
+    ]);
+
+    const { rerender } = renderHook(
+      ({ files }) =>
+        useAutoSave({
+          conversationId: Constants.NEW_CONVO,
+          textAreaRef: makeTextAreaRef(),
+          files,
+          setFiles: jest.fn(),
+        }),
+      { initialProps: { files: new Map() } },
+    );
+
+    act(() => {
+      rerender({ files: attachedFiles });
+    });
+
+    expect(localStorage.getItem(fileDraftKey)).toBeNull();
   });
 });

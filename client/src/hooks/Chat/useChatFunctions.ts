@@ -29,6 +29,7 @@ import type { TAskFunction, ExtendedFile } from '~/common';
 import useSetFilesToDelete from '~/hooks/Files/useSetFilesToDelete';
 import useGetSender from '~/hooks/Conversations/useGetSender';
 import { logger, createDualMessageContent } from '~/utils';
+import { hasMayaSafeFileBlocker, toMayaSafeMessageFile } from '~/utils/mayaSafeFiles';
 import store, { useGetEphemeralAgent } from '~/store';
 import { startupConfigKey } from '~/data-provider';
 import useUserKey from '~/hooks/Input/useUserKey';
@@ -126,6 +127,10 @@ export default function useChatFunctions({
 
     text = text.trim();
     if (!!isSubmitting || text === '') {
+      return;
+    }
+    if (files && hasMayaSafeFileBlocker(files)) {
+      console.warn('Maya Safe Chat blocked submission until all safe files are ready.');
       return;
     }
 
@@ -277,13 +282,7 @@ export default function useChatFunctions({
       setFiles(new Map());
       setFilesToDelete({});
     } else if (setFiles && files && files.size > 0) {
-      currentMsg.files = Array.from(files.values()).map((file) => ({
-        file_id: file.file_id,
-        filepath: file.filepath,
-        type: file.type ?? '', // Ensure type is not undefined
-        height: file.height,
-        width: file.width,
-      }));
+      currentMsg.files = Array.from(files.values()).map(toMayaSafeMessageFile);
       setFiles(new Map());
       setFilesToDelete({});
     }
