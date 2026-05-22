@@ -68,7 +68,7 @@ function DetailView({ skillId }: { skillId: string }) {
   // Show file content when a file is selected from the sidebar tree
   if (activeFile) {
     return (
-      <div className="flex h-full w-full flex-col bg-presentation">
+      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
         <SkillFileViewer skillId={skillId} relativePath={activeFile} />
       </div>
     );
@@ -95,7 +95,7 @@ function DetailView({ skillId }: { skillId: string }) {
   }
 
   return (
-    <div className="flex h-full w-full flex-col bg-presentation">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
       <SkillDetail
         skill={skillQuery.data}
         onEdit={() => navigate(`/skills/${skillId}/edit`)}
@@ -108,7 +108,7 @@ function DetailView({ skillId }: { skillId: string }) {
 /** Edit form — reached via the Edit button or `/skills/:id/edit` URL. */
 function EditView({ skillId }: { skillId: string }) {
   return (
-    <div className="flex h-full w-full flex-col overflow-y-auto bg-presentation">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
       <SkillForm skillId={skillId} />
     </div>
   );

@@ -64,14 +64,25 @@ export default function SafeFilePreviewPanel() {
     preview?.safeFilename ??
     preview?.filename ??
     (preview?.previewOnly ? 'Voice transcript' : 'Anonymized file');
-  const previewUrl = preview?.previewAnonymizedUrl ?? preview?.downloadUrl;
-  const downloadUrl = preview?.downloadUrl ?? preview?.previewAnonymizedUrl;
-  const statusText = preview?.previewOnly
-    ? 'Prompt-only transcript'
-    : preview?.status === 'ready'
-      ? 'Ready for Safe Chat'
-      : preview?.status;
   const inlinePreviewText = preview?.previewText ?? preview?.anonymizedText;
+  const previewUrl =
+    preview?.previewAnonymizedUrl ?? (inlinePreviewText ? undefined : preview?.downloadUrl);
+  const downloadUrl = preview?.downloadUrl ?? preview?.previewAnonymizedUrl;
+  const statusText = useMemo(() => {
+    if (!preview) {
+      return undefined;
+    }
+    if (preview.statusLabel) {
+      return preview.statusLabel;
+    }
+    if (preview.previewOnly) {
+      return 'Prompt-only transcript';
+    }
+    if (preview.status === 'ready') {
+      return 'Ready for Safe Chat';
+    }
+    return preview.status;
+  }, [preview]);
   const previewKind = useMemo(
     () => getPreviewKind(preview?.mimeType, displayName),
     [displayName, preview?.mimeType],
@@ -79,6 +90,9 @@ export default function SafeFilePreviewPanel() {
   const downloadHref = useMemo(
     () => (downloadUrl ? withDownloadFlag(downloadUrl) : undefined),
     [downloadUrl],
+  );
+  const isGeneratedDocx = Boolean(
+    preview?.previewOnly && preview?.downloadUrl && filenameExtension(displayName) === 'docx',
   );
 
   const clearBlobUrl = useCallback(() => {
@@ -173,9 +187,7 @@ export default function SafeFilePreviewPanel() {
       return (
         <div className="flex h-full items-center justify-center gap-2 p-6 text-sm text-text-secondary">
           <Spinner size={16} />
-          <span>
-            {preview.previewOnly ? 'Loading transcript...' : 'Loading anonymized file...'}
-          </span>
+          <span>{preview.previewOnly ? 'Loading preview...' : 'Loading anonymized file...'}</span>
         </div>
       );
     }
@@ -184,7 +196,7 @@ export default function SafeFilePreviewPanel() {
       return (
         <div className="flex h-full items-center justify-center p-6 text-center text-sm text-text-secondary">
           {preview.previewOnly
-            ? 'Could not load the transcript preview.'
+            ? 'Could not load the preview.'
             : 'Could not load the anonymized file preview. Use download to inspect the safe copy.'}
         </div>
       );
@@ -192,7 +204,10 @@ export default function SafeFilePreviewPanel() {
 
     if (previewKind === 'text' && (blobText || (!previewUrl && inlinePreviewText))) {
       return (
-        <pre className="h-full overflow-auto whitespace-pre-wrap break-words bg-surface-primary p-5 font-mono text-sm leading-6 text-text-primary">
+        <pre
+          key={preview.fileId}
+          className="h-full overflow-auto whitespace-pre-wrap break-words bg-surface-primary p-5 font-mono text-sm leading-6 text-text-primary"
+        >
           {blobText ?? inlinePreviewText}
         </pre>
       );
@@ -200,7 +215,10 @@ export default function SafeFilePreviewPanel() {
 
     if (!previewUrl && inlinePreviewText) {
       return (
-        <pre className="h-full overflow-auto whitespace-pre-wrap break-words bg-surface-primary p-5 font-mono text-sm leading-6 text-text-primary">
+        <pre
+          key={preview.fileId}
+          className="h-full overflow-auto whitespace-pre-wrap break-words bg-surface-primary p-5 font-mono text-sm leading-6 text-text-primary"
+        >
           {inlinePreviewText}
         </pre>
       );
@@ -210,7 +228,7 @@ export default function SafeFilePreviewPanel() {
       return (
         <div className="flex h-full items-center justify-center p-6 text-center text-sm text-text-secondary">
           {preview.previewOnly
-            ? 'Transcript preview is not available.'
+            ? 'Preview is not available.'
             : 'An anonymized preview is not available for this file.'}
         </div>
       );
@@ -236,7 +254,7 @@ export default function SafeFilePreviewPanel() {
     return (
       <div className="flex h-full items-center justify-center p-6 text-center text-sm text-text-secondary">
         {preview.previewOnly
-          ? 'Preview is not supported for this transcript file type.'
+          ? 'Preview is not supported for this file type.'
           : 'Preview is not supported for this anonymized file type. Use download to inspect the safe copy.'}
       </div>
     );
@@ -267,13 +285,14 @@ export default function SafeFilePreviewPanel() {
         <div className="flex shrink-0 items-center gap-1.5">
           {downloadHref && (
             <Button
-              size="icon"
+              size={isGeneratedDocx ? 'sm' : 'icon'}
               variant="ghost"
-              className="h-9 w-9"
-              aria-label="Download anonymized file"
+              className={cn('h-9', isGeneratedDocx ? 'gap-1.5 px-3' : 'w-9')}
+              aria-label={isGeneratedDocx ? 'Download DOCX' : 'Download anonymized file'}
               onClick={handleDownload}
             >
               <Download className="h-4 w-4" aria-hidden="true" />
+              {isGeneratedDocx && <span>DOCX</span>}
             </Button>
           )}
           <Button

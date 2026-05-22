@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { replaceSpecialVars } from 'librechat-data-provider';
+import { Constants, replaceSpecialVars } from 'librechat-data-provider';
+import type { TSavedPromptRef } from 'librechat-data-provider';
 import { useChatContext, useChatFormContext, useAddedChatContext } from '~/Providers';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { mainTextareaId } from '~/common';
@@ -10,14 +11,18 @@ export default function useSubmitMessage() {
   const { user } = useAuthContext();
   const methods = useChatFormContext();
   const { conversation: addedConvo } = useAddedChatContext();
-  const { ask, index, getMessages, setMessages } = useChatContext();
+  const { ask, index, getMessages, setMessages, conversation } = useChatContext();
   const latestMessage = useRecoilValue(store.latestMessageFamily(index));
+  const conversationId = conversation?.conversationId ?? Constants.NEW_CONVO;
 
   const autoSendPrompts = useRecoilValue(store.autoSendPrompts);
   const setActivePrompt = useSetRecoilState(store.activePromptByIndex(index));
+  const setPendingSavedPrompt = useSetRecoilState(
+    store.pendingSavedPromptByConvoId(conversationId),
+  );
 
   const submitMessage = useCallback(
-    (data?: { text: string }) => {
+    (data?: { text: string; savedPrompt?: TSavedPromptRef }) => {
       if (!data) {
         return console.warn('No data provided to submitMessage');
       }
@@ -32,6 +37,7 @@ export default function useSubmitMessage() {
       ask(
         {
           text: data.text,
+          savedPrompt: data.savedPrompt,
         },
         {
           addedConvo: addedConvo ?? undefined,
@@ -43,19 +49,20 @@ export default function useSubmitMessage() {
   );
 
   const submitPrompt = useCallback(
-    (text: string) => {
+    (text: string, savedPrompt?: TSavedPromptRef) => {
       const parsedText = replaceSpecialVars({ text, user });
       if (autoSendPrompts) {
-        submitMessage({ text: parsedText });
+        submitMessage({ text: parsedText, savedPrompt });
         return;
       }
 
       const textarea = document.getElementById(mainTextareaId) as HTMLTextAreaElement | null;
       const currentText = textarea?.value ?? methods.getValues('text');
       const newText = currentText.trim().length > 1 ? `\n${parsedText}` : parsedText;
+      setPendingSavedPrompt(savedPrompt ?? null);
       setActivePrompt(newText);
     },
-    [autoSendPrompts, submitMessage, setActivePrompt, methods, user],
+    [autoSendPrompts, submitMessage, setPendingSavedPrompt, setActivePrompt, methods, user],
   );
 
   return { submitMessage, submitPrompt };

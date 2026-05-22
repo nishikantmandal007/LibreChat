@@ -18,6 +18,16 @@ import type {
   TUpdateSkillPayload,
   TSkillStatesResponse,
 } from 'librechat-data-provider';
+import {
+  listPremadePrompts,
+  getPremadePrompt,
+  createPremadePrompt,
+  updatePremadePrompt,
+  deletePremadePrompt,
+  getCurrentPremadePromptLocale,
+  getPremadePromptDisplay,
+} from './premadePrompts';
+import type { PremadePrompt } from './premadePrompts';
 
 const TAGS_KEY = 'maya:workspace:conversation-tags';
 const CONVO_TAGS_KEY = 'maya:workspace:conversation-tag-map';
@@ -25,6 +35,8 @@ const PROMPTS_KEY = 'maya:workspace:prompt-groups';
 const SKILLS_KEY = 'maya:workspace:skills';
 const SKILL_STATES_KEY = 'maya:workspace:skill-states';
 const SKILL_FAVORITES_KEY = 'maya:workspace:skill-favorites';
+const BACKEND_PROMPT_MAP_KEY = 'maya:workspace:backend-prompt-map';
+const BACKEND_SKILL_PREFIX = 'backend_';
 const USER_ID = 'guest';
 const USER_NAME = 'Guest';
 
@@ -562,6 +574,93 @@ function saveSkillRecords(skills: TSkill[]): void {
   writeJson(SKILLS_KEY, skills);
 }
 
+function getBackendPromptMap(): Record<string, string> {
+  return readJson<Record<string, string>>(BACKEND_PROMPT_MAP_KEY, {});
+}
+
+function setBackendPromptId(localId: string, backendId: string): void {
+  const map = getBackendPromptMap();
+  map[localId] = backendId;
+  writeJson(BACKEND_PROMPT_MAP_KEY, map);
+}
+
+function removeBackendPromptId(localId: string): void {
+  const map = getBackendPromptMap();
+  delete map[localId];
+  writeJson(BACKEND_PROMPT_MAP_KEY, map);
+}
+
+function backendSkillId(promptId: string): string {
+  return `${BACKEND_SKILL_PREFIX}${promptId}`;
+}
+
+function backendPromptIdFromSkillId(skillId: string): string | null {
+  return skillId.startsWith(BACKEND_SKILL_PREFIX)
+    ? skillId.slice(BACKEND_SKILL_PREFIX.length)
+    : null;
+}
+
+function premadePromptToSkill(prompt: PremadePrompt): TSkill {
+  const now = nowIso();
+  const display = getPremadePromptDisplay(prompt, getCurrentPremadePromptLocale());
+  return {
+    _id: backendSkillId(prompt.id),
+    name: display.name,
+    displayTitle: display.name,
+    description: display.description || display.name,
+    body: prompt.body ?? '',
+    category: display.category || prompt.category,
+    frontmatter: {
+      'user-invocable': true,
+      'disable-model-invocation': false,
+    },
+    userInvocable: true,
+    disableModelInvocation: false,
+    author: 'system',
+    authorName: 'System',
+    version: 1,
+    source: 'global' as TSkill['source'],
+    fileCount: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+function premadePromptToSkillSummary(prompt: PremadePrompt): TSkillSummary {
+  return toSkillSummary(premadePromptToSkill(prompt));
+}
+
+function skillToPremadePrompt(skill: TSkill): Partial<PremadePrompt> {
+  const locale = getCurrentPremadePromptLocale().split('-')[0]?.toLowerCase() || 'en';
+  return {
+    name: skill.name,
+    description: skill.description,
+    body: skill.body,
+    category: skill.category,
+    output_format: 'Skill',
+    [`name_${locale}`]: skill.displayTitle ?? skill.name,
+    [`description_${locale}`]: skill.description,
+    [`category_${locale}`]: skill.category,
+    [`output_format_${locale}`]: 'Skill',
+  };
+}
+
+function skillPayloadToPremadePrompt(payload: TUpdateSkillPayload): Partial<PremadePrompt> {
+  const locale = getCurrentPremadePromptLocale().split('-')[0]?.toLowerCase() || 'en';
+  return {
+    ...(payload.name
+      ? { name: payload.name, [`name_${locale}`]: payload.displayTitle ?? payload.name }
+      : {}),
+    ...(payload.description
+      ? { description: payload.description, [`description_${locale}`]: payload.description }
+      : {}),
+    ...(payload.body ? { body: payload.body } : {}),
+    ...(payload.category
+      ? { category: payload.category, [`category_${locale}`]: payload.category }
+      : {}),
+  };
+}
+
 function toSkillSummary(skill: TSkill): TSkillSummary {
   const { body: _body, frontmatter: _fm, ...summary } = skill;
   return summary;
@@ -594,8 +693,43 @@ export function listWorkspaceSkills(params?: TSkillListRequest): TSkillListRespo
   };
 }
 
+export async function listWorkspaceSkillsWithBackend(
+  params?: TSkillListRequest,
+): Promise<TSkillListResponse> {
+  const localResult = listWorkspaceSkills(params);
+  try {
+    const backendPrompts = await listPremadePrompts(params?.category);
+    const mirroredBackendIds = new Set(Object.values(getBackendPromptMap()).map(backendSkillId));
+    const search = params?.search?.toLowerCase();
+    const backendSkills = backendPrompts
+      .map(premadePromptToSkillSummary)
+      .filter((s) => !mirroredBackendIds.has(s._id))
+      .filter(
+        (s) =>
+          !search ||
+          s.name.toLowerCase().includes(search) ||
+          s.description.toLowerCase().includes(search),
+      );
+    return {
+      ...localResult,
+      skills: [...backendSkills, ...localResult.skills],
+    };
+  } catch {
+    return localResult;
+  }
+}
+
 export function getWorkspaceSkill(id: string): TSkill | null {
   return getSkillRecords().find((s) => s._id === id) ?? null;
+}
+
+export async function getWorkspaceSkillWithBackend(id: string): Promise<TSkill | null> {
+  const backendPromptId = backendPromptIdFromSkillId(id);
+  if (backendPromptId) {
+    const prompt = await getPremadePrompt(backendPromptId);
+    return prompt ? premadePromptToSkill(prompt) : null;
+  }
+  return getWorkspaceSkill(id);
 }
 
 export function getWorkspaceSkillsByNames(names: string[]): TSkill[] {
@@ -603,7 +737,7 @@ export function getWorkspaceSkillsByNames(names: string[]): TSkill[] {
   return getSkillRecords().filter((skill) => requested.has(skill.name));
 }
 
-export function createWorkspaceSkill(payload: TCreateSkill): TSkill {
+function createWorkspaceSkillRecord(payload: TCreateSkill): TSkill {
   const records = getSkillRecords();
   const timestamp = nowIso();
   const skill: TSkill = {
@@ -627,6 +761,23 @@ export function createWorkspaceSkill(payload: TCreateSkill): TSkill {
   return skill;
 }
 
+async function saveWorkspaceSkillToBackend(skill: TSkill): Promise<void> {
+  const backendPrompt = await createPremadePrompt(skillToPremadePrompt(skill));
+  setBackendPromptId(skill._id, backendPrompt.id);
+}
+
+export function createWorkspaceSkill(payload: TCreateSkill): TSkill {
+  const skill = createWorkspaceSkillRecord(payload);
+  saveWorkspaceSkillToBackend(skill).catch(() => {});
+  return skill;
+}
+
+export async function createWorkspaceSkillWithBackend(payload: TCreateSkill): Promise<TSkill> {
+  const skill = createWorkspaceSkillRecord(payload);
+  await saveWorkspaceSkillToBackend(skill);
+  return skill;
+}
+
 export async function importWorkspaceSkill(formData: FormData): Promise<TSkill> {
   const file = formData.get('file');
   if (!(file instanceof Blob)) {
@@ -647,7 +798,7 @@ export async function importWorkspaceSkill(formData: FormData): Promise<TSkill> 
     try {
       const parsed = JSON.parse(content) as Partial<TCreateSkill>;
       if (parsed.name && parsed.description && parsed.body) {
-        return createWorkspaceSkill({
+        return createWorkspaceSkillWithBackend({
           name: slugifySkillName(parsed.name),
           displayTitle: parsed.displayTitle,
           description: parsed.description,
@@ -662,7 +813,7 @@ export async function importWorkspaceSkill(formData: FormData): Promise<TSkill> 
     }
   }
 
-  return createWorkspaceSkill(buildSkillPayloadFromText(filename, content));
+  return createWorkspaceSkillWithBackend(buildSkillPayloadFromText(filename, content));
 }
 
 export function updateWorkspaceSkill(id: string, payload: TUpdateSkillPayload): TSkill | null {
@@ -682,9 +833,57 @@ export function updateWorkspaceSkill(id: string, payload: TUpdateSkillPayload): 
   return updated;
 }
 
+export async function updateWorkspaceSkillWithBackend(
+  id: string,
+  payload: TUpdateSkillPayload,
+): Promise<TSkill | null> {
+  const backendPromptId = backendPromptIdFromSkillId(id);
+  if (backendPromptId) {
+    const updatedPrompt = await updatePremadePrompt(
+      backendPromptId,
+      skillPayloadToPremadePrompt(payload),
+    );
+    return premadePromptToSkill(updatedPrompt);
+  }
+
+  const updated = updateWorkspaceSkill(id, payload);
+  const backendId = getBackendPromptMap()[id];
+  if (updated && backendId) {
+    await updatePremadePrompt(backendId, skillToPremadePrompt(updated));
+  }
+  return updated;
+}
+
 export function deleteWorkspaceSkill(id: string): { acknowledged: boolean } {
   const records = getSkillRecords();
   saveSkillRecords(records.filter((s) => s._id !== id));
+  const backendMap = getBackendPromptMap();
+  const backendId = backendMap[id];
+  if (backendId) {
+    deletePremadePrompt(backendId).catch(() => {});
+    removeBackendPromptId(id);
+  }
+  return { acknowledged: true };
+}
+
+export async function deleteWorkspaceSkillWithBackend(
+  id: string,
+): Promise<{ acknowledged: boolean }> {
+  const backendPromptId = backendPromptIdFromSkillId(id);
+  if (backendPromptId) {
+    const acknowledged = await deletePremadePrompt(backendPromptId);
+    return { acknowledged };
+  }
+
+  const records = getSkillRecords();
+  saveSkillRecords(records.filter((s) => s._id !== id));
+  const backendMap = getBackendPromptMap();
+  const backendId = backendMap[id];
+  if (backendId) {
+    const acknowledged = await deletePremadePrompt(backendId);
+    removeBackendPromptId(id);
+    return { acknowledged };
+  }
   return { acknowledged: true };
 }
 

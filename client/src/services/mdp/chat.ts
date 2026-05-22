@@ -7,7 +7,7 @@ import { invalidateSessionsCache } from './history';
 import { normalizeMdpLanguage } from './language';
 
 import type { TMessage } from 'librechat-data-provider';
-import type { MDPChatRequest, MDPChatResponse } from './types';
+import type { FileRole, MDPChatRequest, MDPChatResponse } from './types';
 
 export interface MDPChatSubmission {
   text: string;
@@ -18,7 +18,7 @@ export interface MDPChatSubmission {
   parentMessageId?: string | null;
   lang?: string;
   anonymizedPrompt?: string;
-  anonymizedValues?: Record<string, string>;
+  anonymizedValues?: Record<string, string[]>;
   detectedValues?: Record<string, string[]>;
   choices?: string[];
   docId?: string;
@@ -34,7 +34,7 @@ export interface MDPChatSubmission {
     description?: string;
     body: string;
   }>;
-  fileRoles?: Record<string, string>;
+  fileRoles?: Record<string, FileRole>;
   files?: TMessage['files'];
   endpoint?: string | null;
   model?: string | null;

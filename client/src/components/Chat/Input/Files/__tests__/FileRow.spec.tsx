@@ -1,9 +1,11 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { RecoilRoot, useRecoilValue } from 'recoil';
+import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { FileSources } from 'librechat-data-provider';
 import type { ExtendedFile } from '~/common';
 import FileRow from '../FileRow';
+import store from '~/store';
 
 jest.mock('~/hooks', () => ({
   useLocalize: jest.fn(),
@@ -22,6 +24,7 @@ jest.mock('~/utils', () => ({
     log: jest.fn(),
   },
   getCachedPreview: jest.fn(() => undefined),
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
 }));
 
 jest.mock('../Image', () => {
@@ -37,11 +40,12 @@ jest.mock('../Image', () => {
 });
 
 jest.mock('../FileContainer', () => {
-  return function MockFileContainer({ file }: any) {
+  return function MockFileContainer({ file, onClick, subtitle }: any) {
     return (
-      <div data-testid="mock-file-container">
+      <button data-testid="mock-file-container" onClick={onClick}>
         <span data-testid="file-name">{file.filename}</span>
-      </div>
+        {subtitle && <span data-testid="file-subtitle">{subtitle}</span>}
+      </button>
     );
   };
 });
@@ -89,9 +93,23 @@ describe('FileRow', () => {
     ...overrides,
   });
 
-  const renderFileRow = (files: Map<string, ExtendedFile>) => {
+  function SafeFilePreviewObserver({ onChange }: { onChange: jest.Mock }) {
+    const preview = useRecoilValue(store.safeFilePreview);
+    React.useEffect(() => {
+      onChange(preview);
+    }, [onChange, preview]);
+    return null;
+  }
+
+  const renderFileRow = (
+    files: Map<string, ExtendedFile>,
+    options?: { onPreviewChange?: jest.Mock },
+  ) => {
     return render(
-      <FileRow files={files} setFiles={mockSetFiles} setFilesLoading={mockSetFilesLoading} />,
+      <RecoilRoot>
+        {options?.onPreviewChange && <SafeFilePreviewObserver onChange={options.onPreviewChange} />}
+        <FileRow files={files} setFiles={mockSetFiles} setFilesLoading={mockSetFilesLoading} />
+      </RecoilRoot>,
     );
   };
 
@@ -314,10 +332,79 @@ describe('FileRow', () => {
 
     it('should render nothing when files is undefined', () => {
       const { container } = render(
-        <FileRow files={undefined} setFiles={mockSetFiles} setFilesLoading={mockSetFilesLoading} />,
+        <RecoilRoot>
+          <FileRow
+            files={undefined}
+            setFiles={mockSetFiles}
+            setFilesLoading={mockSetFilesLoading}
+          />
+        </RecoilRoot>,
       );
 
       expect(container.firstChild).toBeNull();
+    });
+  });
+
+  describe('Safe File Preview', () => {
+    it('opens the anonymized preview for a ready safe file without original preview fields', () => {
+      const file = createMockFile({
+        type: 'application/pdf',
+        filename: 'customer-record.pdf',
+        safeFile: {
+          status: 'ready',
+          safeDocId: 'safe-doc-1',
+          previewOriginalUrl: '/raw-preview/customer-record.pdf',
+          originalText: 'raw customer record',
+          previewAnonymizedUrl: '/safe-preview/customer-record.pdf',
+          anonymizedText: 'Hello <PERSON_1>',
+          downloadUrl: '/safe-download/customer-record.pdf',
+          safeFilename: 'customer-record.anonymized.pdf',
+          mimeType: 'application/pdf',
+        },
+      });
+      const onPreviewChange = jest.fn();
+      const filesMap = new Map<string, ExtendedFile>();
+      filesMap.set(file.file_id, file);
+
+      renderFileRow(filesMap, { onPreviewChange });
+      fireEvent.click(screen.getByTestId('mock-file-container'));
+
+      expect(onPreviewChange).toHaveBeenLastCalledWith({
+        fileId: 'test-file-id',
+        filename: 'customer-record.pdf',
+        safeFilename: 'customer-record.anonymized.pdf',
+        status: 'ready',
+        mimeType: 'application/pdf',
+        previewAnonymizedUrl: '/safe-preview/customer-record.pdf',
+        anonymizedText: 'Hello <PERSON_1>',
+        downloadUrl: '/safe-download/customer-record.pdf',
+      });
+      expect(onPreviewChange).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          previewOriginalUrl: '/raw-preview/customer-record.pdf',
+          originalText: 'raw customer record',
+        }),
+      );
+    });
+
+    it('does not open a preview while the safe file is still processing', () => {
+      const file = createMockFile({
+        type: 'application/pdf',
+        filename: 'customer-record.pdf',
+        safeFile: {
+          status: 'anonymizing',
+          safeDocId: 'safe-doc-1',
+          previewAnonymizedUrl: '/safe-preview/customer-record.pdf',
+        },
+      });
+      const onPreviewChange = jest.fn();
+      const filesMap = new Map<string, ExtendedFile>();
+      filesMap.set(file.file_id, file);
+
+      renderFileRow(filesMap, { onPreviewChange });
+      fireEvent.click(screen.getByTestId('mock-file-container'));
+
+      expect(onPreviewChange).toHaveBeenLastCalledWith(null);
     });
   });
 

@@ -10,6 +10,7 @@ export type SafeFilePreviewState = {
   previewAnonymizedUrl?: string;
   anonymizedText?: string;
   previewText?: string;
+  statusLabel?: string;
   downloadUrl?: string;
   previewOnly?: boolean;
 };

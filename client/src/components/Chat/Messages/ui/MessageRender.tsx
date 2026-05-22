@@ -37,6 +37,12 @@ const getMetadataAnonymizedPrompt = (message?: TMessage): string | undefined => 
   return typeof metadata?.anonymizedPrompt === 'string' ? metadata.anonymizedPrompt : undefined;
 };
 
+const getMetadataCitationCount = (message?: TMessage): number => {
+  const metadata = message?.metadata as Record<string, unknown> | undefined;
+  const citations = metadata?.citations;
+  return Array.isArray(citations) ? citations.length : 0;
+};
+
 const getPromptSentToLLM = (message?: TMessage): string => {
   const metadataPrompt = getMetadataAnonymizedPrompt(message);
   return metadataPrompt?.trim() ? metadataPrompt : (message?.text ?? '');
@@ -92,6 +98,7 @@ function areMessageRenderPropsEqual(prev: MessageRenderProps, next: MessageRende
     prevMsg.endpoint === nextMsg.endpoint &&
     prevMsg.iconURL === nextMsg.iconURL &&
     getMetadataAnonymizedPrompt(prevMsg) === getMetadataAnonymizedPrompt(nextMsg) &&
+    getMetadataCitationCount(prevMsg) === getMetadataCitationCount(nextMsg) &&
     prevMsg.feedback?.rating === nextMsg.feedback?.rating &&
     (prevMsg.files?.length ?? 0) === (nextMsg.files?.length ?? 0)
   );

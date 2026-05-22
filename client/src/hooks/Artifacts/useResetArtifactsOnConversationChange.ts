@@ -15,6 +15,7 @@ export default function useResetArtifactsOnConversationChange(): void {
   const conversationId = useRecoilValue(store.conversationIdByIndex(0));
   const resetArtifacts = useResetRecoilState(store.artifactsState);
   const resetCurrentArtifactId = useResetRecoilState(store.currentArtifactId);
+  const resetSafeFilePreview = useResetRecoilState(store.safeFilePreview);
   const prevConversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -26,5 +27,6 @@ export default function useResetArtifactsOnConversationChange(): void {
     }
     resetArtifacts();
     resetCurrentArtifactId();
-  }, [conversationId, resetArtifacts, resetCurrentArtifactId]);
+    resetSafeFilePreview();
+  }, [conversationId, resetArtifacts, resetCurrentArtifactId, resetSafeFilePreview]);
 }

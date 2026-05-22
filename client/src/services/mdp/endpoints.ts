@@ -20,4 +20,7 @@ export const MDP_ENDPOINTS = {
   health: `${BASE}/health`,
   supportedFiles: `${BASE}/supported-files`,
   billingDetails: `${BASE}/billing-details`,
+  premadePrompts: `${BASE}/premade-prompts`,
+  documentTemplates: `${BASE}/document-templates`,
+  artifacts: `${BASE}/artifacts`,
 };

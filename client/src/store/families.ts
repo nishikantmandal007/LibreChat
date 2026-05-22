@@ -319,6 +319,11 @@ const pendingManualSkillsByConvoId = atomFamily<string[], string>({
   default: [],
 });
 
+const pendingSavedPromptByConvoId = atomFamily<{ groupId: string; name?: string } | null, string>({
+  key: 'pendingSavedPromptByConvoId',
+  default: null,
+});
+
 const globalAudioURLFamily = atomFamily<string | null, string | number | null>({
   key: 'globalAudioURLByIndex',
   default: null,
@@ -518,5 +523,6 @@ export default {
   showPromptsPopoverFamily,
   showSkillsPopoverFamily,
   pendingManualSkillsByConvoId,
+  pendingSavedPromptByConvoId,
   updateConversationSelector,
 };

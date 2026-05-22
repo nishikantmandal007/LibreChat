@@ -56,11 +56,18 @@ const SkillContentEditor: React.FC<SkillContentEditorProps> = ({
   const EditorIcon = isEditing ? Check : EditIcon;
 
   return (
-    <div className="flex max-h-[85vh] flex-col sm:max-h-[85vh]">
-      <h2 className="sr-only">{localize('com_ui_skill_content')}</h2>
+    <div className="flex flex-col">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-text-primary">
+            {localize('com_ui_skill_content')}
+          </h2>
+          <p className="text-xs text-text-secondary">Edit the exact SKILL.md instructions.</p>
+        </div>
+      </div>
       <div
         className={cn(
-          'relative w-full flex-1 overflow-auto rounded-xl border border-border-medium p-3 text-left transition-all duration-200 sm:p-4',
+          'relative w-full flex-1 overflow-auto rounded-lg border border-border-light bg-surface-primary p-3 text-left shadow-sm transition-all duration-200 sm:p-4',
           isEditing ? '' : 'cursor-pointer hover:bg-surface-tertiary',
         )}
       >
@@ -100,9 +107,9 @@ const SkillContentEditor: React.FC<SkillContentEditorProps> = ({
                 {...field}
                 // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
-                className="w-full resize-none overflow-y-auto bg-transparent font-mono text-sm leading-relaxed text-text-primary placeholder:text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary sm:text-base"
-                minRows={4}
-                maxRows={16}
+                className="min-h-[24rem] w-full resize-y overflow-y-auto rounded-md bg-transparent pr-10 font-mono text-sm leading-6 text-text-primary placeholder:text-text-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary"
+                minRows={14}
+                maxRows={28}
                 onKeyDown={(e) => {
                   if (e.key === 'Escape') {
                     e.preventDefault();
@@ -114,8 +121,8 @@ const SkillContentEditor: React.FC<SkillContentEditorProps> = ({
               />
             ) : (
               <div
-                className="group/preview relative min-h-[6rem] overflow-y-auto text-sm sm:text-base"
-                style={{ maxHeight: '24rem' }}
+                className="group/preview relative min-h-[16rem] overflow-y-auto pr-8 text-sm"
+                style={{ maxHeight: '34rem' }}
               >
                 {!field.value ? (
                   <p className="italic text-text-secondary">{localize('com_ui_click_to_edit')}</p>

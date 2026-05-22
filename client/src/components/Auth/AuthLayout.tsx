@@ -60,12 +60,13 @@ function AuthLayout({
     <div className="relative flex min-h-screen flex-col bg-white dark:bg-gray-900">
       <Banner />
       <BlinkAnimation active={isFetching}>
-        <div className="mt-6 h-10 w-full bg-cover">
-          <img
-            src="assets/logo.png"
-            className="h-full w-full object-contain"
-            alt={localize('com_ui_logo', { 0: startupConfig?.appTitle ?? 'AIsafe' })}
-          />
+        <div className="mt-6 flex items-center justify-center gap-2.5 select-none">
+          <svg className="h-8 w-8 text-black dark:text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span className="text-xl font-bold tracking-tight text-black dark:text-white">
+            {startupConfig?.appTitle ?? 'AI Safe'}
+          </span>
         </div>
       </BlinkAnimation>
       <DisplayError />
