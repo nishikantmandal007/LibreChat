@@ -11,6 +11,7 @@ import { MDP_ENDPOINTS } from './endpoints';
 import { renameSession, deleteSession } from './session';
 import { uploadFile as uploadMayaFile } from './files';
 import { MAYA_ENDPOINTS, MAYA_MODELS, MAYA_STARTUP_CONFIG } from './modelConfig';
+import { normalizeMdpLanguage } from './language';
 import {
   attachWorkspaceBookmarks,
   createWorkspaceBookmark,
@@ -197,7 +198,7 @@ async function transcribeSpeech(config: InternalAxiosRequestConfig): Promise<{ t
   const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.voice, audio, {
     headers: {
       'Content-Type': audio.type || 'application/octet-stream',
-      lang: typeof language === 'string' && language ? language : 'en',
+      lang: normalizeMdpLanguage(typeof language === 'string' ? language : null),
       'model-size': 'tiny',
     },
   });

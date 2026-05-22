@@ -76,13 +76,14 @@ const ChatForm = memo(function ChatForm({
   const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
   const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
 
-  const SpeechToText = useRecoilValue(store.speechToText);
+  const SpeechToText = true;
   const TextToSpeech = useRecoilValue(store.textToSpeech);
   const chatDirection = useRecoilValue(store.chatDirection);
   const automaticPlayback = useRecoilValue(store.automaticPlayback);
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
   const isTemporary = useRecoilValue(store.isTemporary);
+  const mdpLanguage = useRecoilValue(store.mdpAnonymizationLanguage);
 
   const [badges, setBadges] = useRecoilState(store.chatBadges);
   const [isEditingBadges, setIsEditingBadges] = useRecoilState(store.isEditingBadges);
@@ -400,6 +401,9 @@ const ChatForm = memo(function ChatForm({
                   textAreaRef={textAreaRef}
                   disabled={disableInputs || isNotAppendable}
                   isSubmitting={isSubmitting}
+                  setFiles={setFiles}
+                  conversation={conversation}
+                  transcriptionLanguage={mdpLanguage}
                 />
               )}
               <div className={`${isRTL ? 'ml-2' : 'mr-2'}`}>

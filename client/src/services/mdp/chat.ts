@@ -23,11 +23,17 @@ export interface MDPChatSubmission {
   docId?: string;
   docIds?: string[];
   manualSkills?: string[];
+  savedPrompt?: {
+    groupId: string;
+    name?: string;
+    prompt: string;
+  };
   skillInstructions?: Array<{
     name: string;
     description?: string;
     body: string;
   }>;
+  fileRoles?: Record<string, string>;
   files?: TMessage['files'];
   endpoint?: string | null;
   model?: string | null;
@@ -107,7 +113,15 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
       doc: submission.docId,
       docs: submission.docIds,
       manual_skills: submission.manualSkills,
+      saved_prompt: submission.savedPrompt
+        ? {
+            group_id: submission.savedPrompt.groupId,
+            name: submission.savedPrompt.name,
+            prompt: submission.savedPrompt.prompt,
+          }
+        : undefined,
       skill_instructions: submission.skillInstructions,
+      file_roles: submission.fileRoles,
     },
   };
 
@@ -138,9 +152,25 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     isCreatedByUser: true,
     files: submission.files,
     manualSkills: submission.manualSkills,
+    savedPrompt: submission.savedPrompt
+      ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
+      : undefined,
     createdAt: now,
     updatedAt: now,
-    metadata: anonymizedPrompt ? { anonymizedPrompt } : undefined,
+    metadata:
+      anonymizedPrompt || submission.savedPrompt
+        ? {
+            ...(anonymizedPrompt ? { anonymizedPrompt } : {}),
+            ...(submission.savedPrompt
+              ? {
+                  savedPrompt: {
+                    groupId: submission.savedPrompt.groupId,
+                    name: submission.savedPrompt.name,
+                  },
+                }
+              : {}),
+          }
+        : undefined,
   };
 
   const citationData = data.citations?.filter(Boolean) ?? [];
@@ -166,6 +196,9 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     iconURL: submission.endpoint || undefined,
     model,
     manualSkills: submission.manualSkills,
+    savedPrompt: submission.savedPrompt
+      ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
+      : undefined,
     metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
   };
 
@@ -175,4 +208,39 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     assistantMessage,
     rawResponse: data,
   };
+}
+
+function normalizeTranscriptionText(data: unknown): string {
+  if (typeof data === 'string') {
+    return data;
+  }
+  if (!data || typeof data !== 'object') {
+    return '';
+  }
+
+  const value = data as Record<string, unknown>;
+  const text = value.text ?? value.transcript ?? value.data;
+  if (typeof text === 'string') {
+    return text;
+  }
+  if (text && typeof text === 'object') {
+    const nested = text as Record<string, unknown>;
+    return typeof nested.transcript === 'string' ? nested.transcript : '';
+  }
+
+  return '';
+}
+
+export async function transcribeAudio(audioBlob: Blob, lang?: string): Promise<string> {
+  const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.voice, audioBlob, {
+    headers: {
+      'Content-Type': audioBlob.type || 'application/octet-stream',
+      lang: normalizeMdpLanguage(lang),
+    },
+  });
+  const text = normalizeTranscriptionText(response.data);
+  if (!text) {
+    throw new Error('Audio transcription failed');
+  }
+  return text;
 }
