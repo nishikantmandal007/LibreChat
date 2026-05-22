@@ -329,6 +329,7 @@ export type TGenButtonProps = {
 
 export type TAskProps = {
   text: string;
+  savedPrompt?: t.TSavedPromptRef;
   overrideConvoId?: string;
   overrideUserMessageId?: string;
   parentMessageId?: string | null;
@@ -357,6 +358,8 @@ export type TOptions = {
    * pills are still visible on the user bubble.
    */
   overrideManualSkills?: string[];
+  /** Carry forward the saved prompt reference when resubmitting/regenerating. */
+  overrideSavedPrompt?: t.TSavedPromptRef;
   /** Added conversation for multi-convo feature - sent to server as part of submission payload */
   addedConvo?: t.TConversation;
 };
@@ -582,10 +585,13 @@ export type MayaSafeFileState = {
   previewAnonymizedUrl?: string;
   originalText?: string;
   anonymizedText?: string;
+  promptText?: string;
   downloadUrl?: string;
   safeFilename?: string;
   mimeType?: string;
   ragIndexStatus?: string;
+  localPreviewOnly?: boolean;
+  role?: 'case_file' | 'reference_file' | 'knowledge_source';
   error?: string;
 };
 

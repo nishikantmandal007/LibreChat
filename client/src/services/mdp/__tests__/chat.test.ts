@@ -103,6 +103,73 @@ describe('sendChat', () => {
     );
   });
 
+  it('serializes saved prompt metadata for backend prompt-aware flows', async () => {
+    mockedPost.mockResolvedValue({
+      data: {
+        session_id: 'session-1',
+        replaced_response: 'Answer',
+        llm_response: 'Answer',
+        total_tokens: 4,
+        anonymized_values: {},
+      },
+    });
+
+    const result = await sendChat({
+      text: 'Draft a policy',
+      sessionId: 'session-1',
+      savedPrompt: {
+        groupId: 'prompt-group-1',
+        name: 'Policy draft',
+        prompt: 'Draft a policy',
+      },
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/mdp/ai-safe/chat',
+      expect.objectContaining({
+        chat_dto: expect.objectContaining({
+          saved_prompt: {
+            group_id: 'prompt-group-1',
+            name: 'Policy draft',
+            prompt: 'Draft a policy',
+          },
+        }),
+      }),
+    );
+    expect(result.userMessage.savedPrompt).toEqual({
+      groupId: 'prompt-group-1',
+      name: 'Policy draft',
+    });
+  });
+
+  it('posts the effective prompt while returning a shorter display text', async () => {
+    mockedPost.mockResolvedValue({
+      data: {
+        session_id: 'session-1',
+        replaced_response: 'Answer',
+        llm_response: 'Answer',
+        total_tokens: 4,
+        anonymized_values: {},
+      },
+    });
+
+    const result = await sendChat({
+      text: 'Voice transcript attached.\n\nHello Alice',
+      displayText: 'Voice transcript attached.',
+      sessionId: 'session-1',
+    });
+
+    expect(mockedPost).toHaveBeenCalledWith(
+      '/mdp/ai-safe/chat',
+      expect.objectContaining({
+        chat_dto: expect.objectContaining({
+          original_prompt: 'Voice transcript attached.\n\nHello Alice',
+        }),
+      }),
+    );
+    expect(result.userMessage.text).toBe('Voice transcript attached.');
+  });
+
   it('preserves citations, artifacts, and workflow metadata on assistant messages', async () => {
     mockedPost.mockResolvedValue({
       data: {

@@ -7,6 +7,7 @@ import type { TConversation, TMessage, TSubmission } from 'librechat-data-provid
 import useMDPChat from '../useMDPChat';
 import { anonymizeText, generateImage, sendChat } from '~/services/mdp';
 import { getWorkspaceSkillsByNames } from '~/services/mdp/workspaceStore';
+import { getMayaPromptOnlyFileText } from '~/utils/mayaSafeFiles';
 import store from '~/store';
 
 const mockNavigate = jest.fn();
@@ -44,6 +45,7 @@ jest.mock('~/services/mdp/workspaceStore', () => ({
 }));
 
 jest.mock('~/utils/mayaSafeFiles', () => ({
+  getMayaPromptOnlyFileText: jest.fn(() => ''),
   getMayaSafeDocIds: jest.fn(() => []),
   getMayaSafeFileState: jest.fn(() => null),
 }));
@@ -107,6 +109,62 @@ function createSubmission(text: string): TSubmission {
 describe('useMDPChat', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (getMayaPromptOnlyFileText as jest.Mock).mockReturnValue('');
+  });
+
+  it('adds prompt-only transcript text to the effective prompt without changing display text', async () => {
+    const helpers = createChatHelpers();
+    const submission = createSubmission('Voice transcript attached.');
+    submission.userMessage = {
+      ...submission.userMessage,
+      files: [
+        {
+          file_id: 'transcript-1',
+          filename: 'voice-transcript.txt',
+          type: 'text/plain',
+          maya_safe_file: {
+            status: 'ready',
+            localPreviewOnly: true,
+            promptText: 'Hello Alice',
+          },
+        },
+      ],
+    } as TMessage;
+
+    (getMayaPromptOnlyFileText as jest.Mock).mockReturnValue('Hello Alice');
+    (anonymizeText as jest.Mock).mockResolvedValue({
+      anonymized_prompt: 'Voice transcript attached.\n\nHello <NAME>',
+      anonymized_values: { Alice: '<NAME>' },
+      detected_values: { NAME: ['Alice'] },
+    });
+    (sendChat as jest.Mock).mockResolvedValue({
+      sessionId: 'session-1',
+      userMessage: {
+        messageId: 'user-message-1',
+        text: 'Voice transcript attached.',
+      },
+      assistantMessage: {
+        messageId: 'assistant-message-1',
+        text: '',
+      },
+      rawResponse: {},
+    });
+
+    renderHook(() => useMDPChat(submission, helpers), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(sendChat).toHaveBeenCalledTimes(1));
+
+    const effectivePrompt = 'Voice transcript attached.\n\nHello Alice';
+    expect(anonymizeText).toHaveBeenCalledWith(effectivePrompt, ['NAME', 'EMAIL'], 'en');
+    expect(sendChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: effectivePrompt,
+        displayText: 'Voice transcript attached.',
+        docIds: undefined,
+      }),
+    );
   });
 
   it('passes the selected anonymization language through anonymizeText and sendChat', async () => {
@@ -234,6 +292,65 @@ describe('useMDPChat', () => {
         ],
       }),
     );
+  });
+
+  it('passes saved prompt metadata into the MDP chat payload and local messages', async () => {
+    const helpers = createChatHelpers();
+    const submission = {
+      ...createSubmission('Draft the onboarding policy'),
+      savedPrompt: {
+        groupId: 'prompt-group-1',
+        name: 'Onboarding policy',
+      },
+    } as TSubmission;
+
+    (anonymizeText as jest.Mock).mockResolvedValue({
+      anonymized_prompt: 'Draft the onboarding policy',
+      anonymized_values: {},
+      detected_values: {},
+    });
+    (sendChat as jest.Mock).mockResolvedValue({
+      sessionId: 'session-1',
+      userMessage: {
+        messageId: 'user-message-1',
+        text: 'Draft the onboarding policy',
+      },
+      assistantMessage: {
+        messageId: 'assistant-message-1',
+        text: '',
+      },
+      rawResponse: {},
+    });
+
+    renderHook(() => useMDPChat(submission, helpers), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(sendChat).toHaveBeenCalledTimes(1));
+
+    expect(sendChat).toHaveBeenCalledWith(
+      expect.objectContaining({
+        savedPrompt: {
+          groupId: 'prompt-group-1',
+          name: 'Onboarding policy',
+          prompt: 'Draft the onboarding policy',
+        },
+      }),
+    );
+
+    const latestMessages = (helpers.setMessages as jest.Mock).mock.calls.at(-1)?.[0] as TMessage[];
+    expect(
+      latestMessages.find((message) => message.messageId === 'user-message-1')?.savedPrompt,
+    ).toEqual({
+      groupId: 'prompt-group-1',
+      name: 'Onboarding policy',
+    });
+    expect(
+      latestMessages.find((message) => message.messageId === 'assistant-message-1')?.savedPrompt,
+    ).toEqual({
+      groupId: 'prompt-group-1',
+      name: 'Onboarding policy',
+    });
   });
 
   it('attaches the built-in document skill when document export mode is enabled', async () => {

@@ -6,36 +6,77 @@ import { useLocalize } from '~/hooks';
 import { useChatFormContext } from '~/Providers';
 import { globalAudioId } from '~/common';
 import { transcribeAudio } from '~/services/mdp/chat';
-import { createSafeFile } from '~/services/mdp/safeFiles';
-import { endpointToMayaLLM } from '~/services/mdp/modelConfig';
 import { cn } from '~/utils';
 
-import type { TConversation } from 'librechat-data-provider';
-import type { FileSetter, ExtendedFile } from '~/common';
+import type { ExtendedFile, FileSetter } from '~/common';
 
-/** Transcripts at or below this length are pasted inline; longer ones become attached safe files */
-const SHORT_TRANSCRIPT_MAX = 1000;
+const TRANSCRIPT_PROMPT_NOTE = 'Voice transcript attached.';
+
+function getTranscriptFileId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `voice-transcript-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function getTranscriptFilename(): string {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return `voice-transcript-${timestamp}.txt`;
+}
+
+function appendTranscriptPromptNote(currentText: string): string {
+  if (!currentText.trim()) {
+    return TRANSCRIPT_PROMPT_NOTE;
+  }
+  if (currentText.includes(TRANSCRIPT_PROMPT_NOTE)) {
+    return currentText;
+  }
+  return `${currentText}\n${TRANSCRIPT_PROMPT_NOTE}`;
+}
+
+function createTranscriptPreviewFile(transcript: string): ExtendedFile {
+  const fileId = getTranscriptFileId();
+  const filename = getTranscriptFilename();
+  const file = new File([transcript], filename, { type: 'text/plain' });
+
+  return {
+    file,
+    file_id: fileId,
+    filename,
+    type: 'text/plain',
+    size: file.size,
+    progress: 1,
+    source: FileSources.local,
+    attached: true,
+    embedded: false,
+    safeFile: {
+      status: 'ready',
+      rawFileId: fileId,
+      safeFilename: filename,
+      mimeType: 'text/plain',
+      originalText: transcript,
+      promptText: transcript,
+      localPreviewOnly: true,
+    },
+  };
+}
 
 export default memo(function AudioRecorder({
   disabled,
-  ask,
   methods,
   textAreaRef,
   isSubmitting,
   setFiles,
-  conversation,
   transcriptionLanguage,
 }: {
   disabled: boolean;
-  ask: (data: { text: string }) => void;
   methods: ReturnType<typeof useChatFormContext>;
   textAreaRef: React.RefObject<HTMLTextAreaElement>;
   isSubmitting: boolean;
   setFiles?: FileSetter;
-  conversation?: TConversation | null;
   transcriptionLanguage?: string;
 }) {
-  const { setValue, getValues, reset } = methods;
+  const { setValue, getValues } = methods;
   const localize = useLocalize();
   const { showToast } = useToastContext();
 
@@ -65,83 +106,6 @@ export default memo(function AudioRecorder({
     return 'audio/webm';
   }
 
-  /**
-   * Attach a long transcript as a safe file so it appears in the file-row
-   * and the user can click to open it in the SafeFilePreviewPanel.
-   */
-  const attachTranscriptAsFile = useCallback(
-    async (text: string) => {
-      if (!setFiles) {
-        return null;
-      }
-
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `voice-transcript-${timestamp}.txt`;
-      const blob = new Blob([text], { type: 'text/plain' });
-      const file = new File([blob], filename, { type: 'text/plain' });
-      const rawFileId = crypto.randomUUID();
-
-      // Add a pending entry to the files map immediately so the user sees progress
-      const pendingEntry: ExtendedFile = {
-        file,
-        file_id: rawFileId,
-        filename,
-        type: 'text/plain',
-        size: blob.size,
-        progress: 0,
-        source: FileSources.local,
-        safeFile: {
-          status: 'scanning',
-          rawFileId,
-        },
-      };
-
-      setFiles((prev) => new Map(prev).set(rawFileId, pendingEntry));
-
-      try {
-        const llmType = endpointToMayaLLM(
-          conversation?.endpoint ?? conversation?.endpointType ?? null,
-        );
-        const safeFileState = await createSafeFile({
-          file,
-          rawFileId,
-          filename,
-          mimeType: 'text/plain',
-          llmType,
-          lang: transcriptionLanguage,
-          role: 'transcription',
-        });
-
-        const readyEntry: ExtendedFile = {
-          ...pendingEntry,
-          progress: 100,
-          safeFile: {
-            ...safeFileState,
-            role: 'case_file',
-          },
-        };
-
-        setFiles((prev) => new Map(prev).set(rawFileId, readyEntry));
-        return safeFileState.safeDocId ?? null;
-      } catch (err) {
-        console.error('[AudioRecorder] Safe file upload failed:', err);
-        setFiles((prev) => {
-          const next = new Map(prev);
-          const existing = next.get(rawFileId);
-          if (existing) {
-            next.set(rawFileId, {
-              ...existing,
-              safeFile: { status: 'failed', rawFileId, error: 'Upload failed' },
-            });
-          }
-          return next;
-        });
-        return null;
-      }
-    },
-    [setFiles, conversation, transcriptionLanguage],
-  );
-
   const handleStopAndTranscribe = useCallback(
     async (audioBlob: Blob) => {
       if (isSubmittingRef.current) {
@@ -164,46 +128,23 @@ export default memo(function AudioRecorder({
           globalAudio.muted = false;
         }
 
-        const text = await transcribeAudio(audioBlob, transcriptionLanguage);
-        if (!text || text.trim() === '') {
+        const text = (await transcribeAudio(audioBlob, transcriptionLanguage)).trim();
+        if (!text) {
           showToast({ message: 'No speech detected in recording', status: 'warning' });
           return;
         }
 
-        if (text.length <= SHORT_TRANSCRIPT_MAX) {
-          const existing = getValues('text') || '';
-          const finalText = existing ? `${existing}\n${text}` : text;
-          ask({ text: finalText });
-          reset({ text: '' });
-          showToast({ message: 'Voice transcription added to message', status: 'success' });
-        } else {
-          // Long transcript: attach as safe .txt file
-          if (setFiles) {
-            showToast({
-              message: `Uploading transcript (${text.length} chars) as safe file…`,
-              status: 'info',
-            });
-            attachTranscriptAsFile(text).then((safeDocId) => {
-              if (safeDocId) {
-                showToast({
-                  message: 'Voice transcript attached as a safe file. Click the file to preview.',
-                  status: 'success',
-                });
-              }
-            });
-          } else {
-            // Fallback: paste full text if setFiles not available
-            const existing = getValues('text') || '';
-            const finalText = existing ? `${existing}\n${text}` : text;
-            setValue('text', finalText, { shouldValidate: true });
-            showToast({
-              message: `Long transcript (${text.length} chars) pasted into message`,
-              status: 'info',
-            });
-          }
-        }
+        const transcriptFile = createTranscriptPreviewFile(text);
+        setFiles?.((currentFiles) => {
+          const nextFiles = new Map(currentFiles);
+          nextFiles.set(transcriptFile.file_id, transcriptFile);
+          return nextFiles;
+        });
 
-        // Focus back to textarea
+        const existing = getValues('text') || '';
+        setValue('text', appendTranscriptPromptNote(existing), { shouldValidate: true });
+        showToast({ message: 'Voice transcript attached to message', status: 'success' });
+
         requestAnimationFrame(() => {
           textAreaRef.current?.focus();
         });
@@ -217,18 +158,7 @@ export default memo(function AudioRecorder({
         setIsLoading(false);
       }
     },
-    [
-      getValues,
-      setValue,
-      showToast,
-      localize,
-      textAreaRef,
-      setFiles,
-      attachTranscriptAsFile,
-      ask,
-      reset,
-      transcriptionLanguage,
-    ],
+    [getValues, setValue, showToast, localize, textAreaRef, transcriptionLanguage, setFiles],
   );
 
   const startRecording = useCallback(async () => {
@@ -251,7 +181,6 @@ export default memo(function AudioRecorder({
       recorder.addEventListener('stop', () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         audioChunksRef.current = [];
-        // Stop all tracks
         stream.getTracks().forEach((track) => track.stop());
         audioStreamRef.current = null;
         handleStopAndTranscribe(audioBlob);
