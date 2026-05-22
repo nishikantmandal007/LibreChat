@@ -1,7 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { PanelLeftClose, PanelLeftOpen, Search, SquarePen } from 'lucide-react';
+import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
+import { PanelLeftClose, PanelLeftOpen, Search, SquarePen, FileText } from 'lucide-react';
 import { QueryKeys } from 'librechat-data-provider';
 import { Button, TooltipAnchor } from '@librechat/client';
 import type { NavLink } from '~/common';
@@ -15,7 +15,7 @@ import AccountSettings from '~/components/Nav/AccountSettings';
 type NavLayout = 'icon' | 'row';
 
 const rowButtonClass =
-  'flex h-12 w-full items-center justify-start gap-3 rounded-xl px-3 text-[0.9375rem] font-medium text-text-primary transition-colors hover:bg-surface-hover';
+  'flex h-12 w-full items-center justify-start gap-3 rounded-xl px-3 text-base font-semibold text-text-primary transition-colors hover:bg-surface-hover';
 const iconButtonClass =
   'flex h-11 w-11 items-center justify-center rounded-xl text-text-primary transition-colors hover:bg-surface-hover';
 const AISAFE_BRAND_NAME = 'AI Safe';
@@ -32,11 +32,13 @@ const NewChatButton = memo(function NewChatButton({
   const { newConversation } = useNewConvo();
   const conversation = useRecoilValue(store.conversationByIndex(0));
   const switchToHistory = useRecoilValue(store.newChatSwitchToHistory);
+  const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
+        setDocumentCreatorActive(false);
         clearMessagesCache(queryClient, conversation?.conversationId);
         queryClient.invalidateQueries([QueryKeys.messages]);
         newConversation();
@@ -45,7 +47,7 @@ const NewChatButton = memo(function NewChatButton({
         }
       }
     },
-    [queryClient, conversation?.conversationId, newConversation, switchToHistory, setActive],
+    [queryClient, conversation?.conversationId, newConversation, switchToHistory, setActive, setDocumentCreatorActive],
   );
 
   return (
@@ -60,7 +62,7 @@ const NewChatButton = memo(function NewChatButton({
           className={layout === 'row' ? rowButtonClass : iconButtonClass}
           onClick={handleClick}
         >
-          <SquarePen className={cn('shrink-0', layout === 'row' ? 'h-5 w-5' : 'h-6 w-6')} />
+          <SquarePen className="h-6 w-6 shrink-0" />
           {layout === 'row' && <span>{localize('com_ui_new_chat')}</span>}
         </a>
       }
@@ -116,10 +118,7 @@ const SearchButton = memo(function SearchButton({
           className={layout === 'row' ? rowButtonClass : iconButtonClass}
           onClick={handleClick}
         >
-          <Search
-            className={cn('shrink-0', layout === 'row' ? 'h-5 w-5' : 'h-6 w-6')}
-            aria-hidden="true"
-          />
+          <Search className="h-6 w-6 shrink-0" aria-hidden="true" />
           {layout === 'row' && <span>{localize('com_nav_search_placeholder')}</span>}
         </Button>
       }
@@ -146,9 +145,11 @@ const NavIconButton = memo(function NavIconButton({
 }) {
   const localize = useLocalize();
   const label = link.id === DEFAULT_PANEL ? localize('com_ui_chats') : localize(link.title);
+  const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
+      setDocumentCreatorActive(false);
       if (link.onClick) {
         link.onClick(e);
         return;
@@ -164,7 +165,7 @@ const NavIconButton = memo(function NavIconButton({
         onExpand?.();
       }
     },
-    [link, isActive, setActive, expanded, onExpand, onCollapse, layout],
+    [link, isActive, setActive, expanded, onExpand, onCollapse, layout, setDocumentCreatorActive],
   );
 
   return (
@@ -183,10 +184,7 @@ const NavIconButton = memo(function NavIconButton({
           )}
           onClick={handleClick}
         >
-          <link.icon
-            className={cn('shrink-0', layout === 'row' ? 'h-5 w-5' : 'h-6 w-6')}
-            aria-hidden="true"
-          />
+          <link.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
           {layout === 'row' && <span>{label}</span>}
         </Button>
       }
@@ -262,6 +260,7 @@ function ExpandedPanel({
   const localize = useLocalize();
   const { active, setActive } = useActivePanel();
   const effectiveActive = resolveActivePanel(active, links);
+  const [documentCreatorActive, setDocumentCreatorActive] = useRecoilState(store.documentCreatorActive);
 
   const toggleLabel = expanded ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar';
   const toggleClick = expanded ? onCollapse : onExpand;
@@ -306,6 +305,30 @@ function ExpandedPanel({
         </div>
         <NewChatButton setActive={setActive} layout="row" />
         <SearchButton expanded={expanded} setActive={setActive} onExpand={onExpand} layout="row" />
+
+        {/* Custom Navigation Tabs - Expanded Mode */}
+        <div className="mt-3 flex flex-col gap-1 border-t border-border-light pt-3">
+          <TooltipAnchor
+            side="right"
+            description={localize('com_ui_doc_creator')}
+            render={
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label={localize('com_ui_doc_creator')}
+                className={cn(
+                  rowButtonClass,
+                  documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100'
+                )}
+                onClick={() => setDocumentCreatorActive(true)}
+              >
+                <FileText className="h-6 w-6 shrink-0" />
+                <span>{localize('com_ui_doc_creator')}</span>
+              </Button>
+            }
+          />
+        </div>
+
         <div className="mt-3 flex flex-col gap-1">
           {visibleLinks.map((link) => (
             <NavIconButton
@@ -330,6 +353,30 @@ function ExpandedPanel({
       <div className="mb-1" />
       <NewChatButton setActive={setActive} />
       <SearchButton expanded={expanded} setActive={setActive} onExpand={onExpand} />
+
+      {/* Custom Navigation Tabs - Collapsed Mode */}
+      <div className="w-8 border-b border-border-light" />
+      <div className="flex flex-col gap-1.5">
+        <TooltipAnchor
+          side="right"
+          description={localize('com_ui_doc_creator')}
+          render={
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={localize('com_ui_doc_creator')}
+              className={cn(
+                iconButtonClass,
+                documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100'
+              )}
+              onClick={() => setDocumentCreatorActive(true)}
+            >
+              <FileText className="h-6 w-6 shrink-0" />
+            </Button>
+          }
+        />
+      </div>
+
       <div className="w-8 border-b border-border-light" />
       <div className="flex flex-col gap-1.5 overflow-y-auto">
         {visibleLinks.map((link) => (

@@ -30,7 +30,13 @@ export default function GroupSidePanel({
   const { promptGroups, groupsQuery, nextPage, prevPage, hasNextPage, hasPreviousPage } = context;
 
   return (
-    <div id="prompts-panel" className={cn('flex h-full w-full flex-col', className)}>
+    <div
+      id="prompts-panel"
+      className={cn(
+        'flex h-full w-full flex-col overflow-hidden border-r border-border-light',
+        className,
+      )}
+    >
       {onClose && (
         <div className="flex items-center justify-end px-2 py-[2px] md:py-2">
           <TooltipAnchor
@@ -53,8 +59,8 @@ export default function GroupSidePanel({
         </div>
       )}
       <div className="relative flex min-h-0 flex-1 flex-col">
-        <div className="scrollbar-gutter-stable flex h-full min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden pl-3 pr-1 text-text-primary">
-          <div className="shrink-0 space-y-2">{children}</div>
+        <div className="scrollbar-gutter-stable flex h-full min-h-0 flex-col gap-2 overflow-y-auto overflow-x-hidden px-4 text-text-primary">
+          <div className="shrink-0 space-y-2 pb-1">{children}</div>
           <List
             groups={promptGroups}
             isLoading={!!groupsQuery.isLoading}

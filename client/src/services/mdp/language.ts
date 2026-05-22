@@ -10,5 +10,5 @@ const SUPPORTED_LANGUAGE_VALUES = new Set<string>(
 );
 
 export function normalizeMdpLanguage(language?: string | null): MdpLanguage {
-  return language && SUPPORTED_LANGUAGE_VALUES.has(language) ? (language as MdpLanguage) : 'en';
+  return language && SUPPORTED_LANGUAGE_VALUES.has(language) ? (language as MdpLanguage) : 'de';
 }

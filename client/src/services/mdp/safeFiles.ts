@@ -367,6 +367,7 @@ export async function createSafeFile({
   llmType,
   lang = 'en',
   localPreviewUrl,
+  role,
 }: {
   file: File;
   rawFileId: string;
@@ -376,6 +377,7 @@ export async function createSafeFile({
   llmType: string;
   lang?: string;
   localPreviewUrl?: string;
+  role?: string;
 }): Promise<MayaSafeFileState> {
   const form = new FormData();
   form.append('file', file, filename);
@@ -390,9 +392,15 @@ export async function createSafeFile({
   if (rawFilepath) {
     form.append('raw_file_path', rawFilepath);
   }
+  if (role) {
+    form.append('file_role', role);
+  }
 
   const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.anonymizeFile, form, {
-    headers: { 'Content-Type': 'multipart/form-data' },
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      ...(role ? { 'File-Role': role } : {}),
+    },
   });
   const fallback: MayaSafeFileState = {
     status: 'scanning',
@@ -406,4 +414,11 @@ export async function createSafeFile({
   }
 
   return initial;
+}
+
+export async function fetchSafeFileBlob(url: string): Promise<Blob> {
+  const response = await mdpClient.get<Blob>(url, {
+    responseType: 'blob',
+  });
+  return response.data;
 }

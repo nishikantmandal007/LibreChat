@@ -124,7 +124,18 @@ export type TPayload = Partial<TMessage> &
      * before the LLM turn runs.
      */
     manualSkills?: string[];
+    /**
+     * Saved prompt selected from the prompt library for this turn. The user
+     * message text still carries the resolved prompt body, while this
+     * structured reference lets backend flows record/use the source prompt.
+     */
+    savedPrompt?: TSavedPromptRef;
   };
+
+export type TSavedPromptRef = {
+  groupId: string;
+  name?: string;
+};
 
 export type TEditedContent =
   | {
@@ -155,6 +166,8 @@ export type TSubmission = {
   addedConvo?: TConversation;
   /** Skills the user invoked via the `$` popover for this submission. */
   manualSkills?: string[];
+  /** Saved prompt selected from the prompt library for this submission. */
+  savedPrompt?: TSavedPromptRef;
 };
 
 export type EventSubmission = Omit<TSubmission, 'initialResponse'> & { initialResponse: TMessage };

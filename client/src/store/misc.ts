@@ -78,7 +78,12 @@ const documentExportEnabled = atom<boolean>({
 
 const documentExportPinned = atomWithLocalStorage<boolean>('documentExportPinned', false);
 
-const mdpAnonymizationLanguage = atomWithLocalStorage<string>('mdpAnonymizationLanguage', 'en');
+const mdpAnonymizationLanguage = atomWithLocalStorage<string>('mdpAnonymizationLanguage', 'de');
+
+const documentCreatorActive = atom<boolean>({
+  key: 'documentCreatorActive',
+  default: false,
+});
 
 export default {
   hideBannerHint,
@@ -92,4 +97,5 @@ export default {
   documentExportEnabled,
   documentExportPinned,
   mdpAnonymizationLanguage,
+  documentCreatorActive,
 };

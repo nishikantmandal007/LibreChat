@@ -23,10 +23,25 @@ function asArray<T>(value: unknown, keys: string[] = []): T[] {
   return [];
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
 function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
+  if (isRecord(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      return isRecord(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
 }
 
 function firstString(...values: unknown[]): string {
@@ -36,6 +51,33 @@ function firstString(...values: unknown[]): string {
     }
   }
   return '';
+}
+
+function parseArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function firstRecordArray(...values: unknown[]): Record<string, unknown>[] {
+  for (const value of values) {
+    const records = parseArray(value).filter(isRecord);
+    if (records.length > 0) {
+      return records;
+    }
+  }
+  return [];
 }
 
 export function toConversation(session: MDPHistorySession): TConversation {
@@ -141,6 +183,13 @@ export async function getSessionMessages(sessionId: string): Promise<TMessage[]>
       text: userText,
       textOccurrence,
     });
+    const metadataRecord = asRecord(promptRecord.metadata);
+    const citations = firstRecordArray(
+      promptRecord.citations,
+      promptRecord.sources,
+      metadataRecord.citations,
+      metadataRecord.sources,
+    );
 
     messages.push({
       messageId: userMessageId,
@@ -171,6 +220,7 @@ export async function getSessionMessages(sessionId: string): Promise<TMessage[]>
       endpoint: MAYA_DEFAULT_ENDPOINT,
       iconURL: MAYA_DEFAULT_ENDPOINT,
       model: MAYA_DEFAULT_MODEL,
+      metadata: citations.length > 0 ? { citations } : undefined,
     });
 
     prevMessageId = assistantMessageId;

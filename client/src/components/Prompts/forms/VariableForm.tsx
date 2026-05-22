@@ -135,7 +135,7 @@ export default function VariableForm({
       text = text.replace(regex, value);
     });
 
-    submitPrompt(text);
+    submitPrompt(text, group._id ? { groupId: group._id, name: group.name } : undefined);
     if (group._id) {
       recordUsage.mutate(group._id);
     }

@@ -686,6 +686,17 @@ export const tMessageSchema = z.object({
     })
     .optional(),
   /**
+   * Saved prompt selected from the prompt library for this turn. The text
+   * field is still the resolved prompt body; this reference preserves the
+   * source prompt for backend use and message history.
+   */
+  savedPrompt: z
+    .object({
+      groupId: z.string(),
+      name: z.string().optional(),
+    })
+    .optional(),
+  /**
    * Skill names the user invoked manually via the `$` popover on this turn.
    * Purely UI metadata — `SkillPills` renders these above the message
    * bubble so users can see which skills they asked for in history and on

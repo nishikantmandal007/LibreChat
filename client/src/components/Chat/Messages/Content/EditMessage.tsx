@@ -66,6 +66,7 @@ const EditMessage = ({
            *  carry the picks forward so the new turn primes the same skills
            *  instead of running unprimed. */
           overrideManualSkills: message.manualSkills,
+          overrideSavedPrompt: message.savedPrompt,
           addedConvo: getAddedConvo() || undefined,
         },
       );
@@ -89,6 +90,7 @@ const EditMessage = ({
            *  the same manual skills so the regenerated response is primed
            *  identically. */
           overrideManualSkills: parentMessage.manualSkills,
+          overrideSavedPrompt: parentMessage.savedPrompt,
           addedConvo: getAddedConvo() || undefined,
         },
       );

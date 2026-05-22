@@ -49,4 +49,25 @@ describe('getSessionMessages', () => {
     expect(messages[0].files).toEqual(files);
     expect(messages[0].metadata).toEqual({ anonymizedPrompt: 'Summarize this PDF' });
   });
+  it('preserves citation metadata for source chips when history is reloaded', async () => {
+    mockedGet.mockResolvedValue({
+      data: {
+        prompts: [
+          {
+            original_prompt: 'Summarize this PDF',
+            anonymized_prompt: 'Summarize this PDF',
+            replaced_response: 'Summary',
+            created_at: '2026-05-17T00:00:00.000Z',
+            citations: [{ file_name: 'anonymized_Project_synopsis.pdf', page: 1 }],
+          },
+        ],
+      },
+    });
+
+    const messages = await getSessionMessages('session-1');
+
+    expect(messages[1].metadata).toEqual({
+      citations: [{ file_name: 'anonymized_Project_synopsis.pdf', page: 1 }],
+    });
+  });
 });

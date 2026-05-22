@@ -27,6 +27,10 @@ jest.mock('~/store', () => {
       isTyping: false,
     },
   });
+  const documentCreatorActiveAtom = atom({
+    key: 'mock-documentCreatorActive',
+    default: false,
+  });
   return {
     __esModule: true,
     default: {
@@ -34,6 +38,7 @@ jest.mock('~/store', () => {
         atom({ key: `mock-conversationByIndex-${counter++}`, default: null }),
       newChatSwitchToHistory: switchAtom,
       search: searchAtom,
+      documentCreatorActive: documentCreatorActiveAtom,
     },
   };
 });
@@ -172,6 +177,22 @@ describe('ExpandedPanel', () => {
 
       expect(mockNewConversation).toHaveBeenCalledTimes(1);
       expect(localStorage.getItem('side:active-panel')).toBe('prompts');
+    });
+  });
+
+  describe('Expanded and collapsed sizing', () => {
+    it('keeps expanded row icons at the same size as collapsed icons', () => {
+      const { unmount } = renderPanel({ expanded: true });
+      const expandedNewChat = screen.getByTestId('new-chat-button');
+      expect(expandedNewChat).toHaveClass('text-base');
+      expect(expandedNewChat).toHaveClass('font-semibold');
+      expect(expandedNewChat.querySelector('svg')).toHaveClass('h-6', 'w-6');
+
+      unmount();
+
+      renderPanel({ expanded: false });
+      const collapsedNewChat = screen.getByTestId('new-chat-button');
+      expect(collapsedNewChat.querySelector('svg')).toHaveClass('h-6', 'w-6');
     });
   });
 });

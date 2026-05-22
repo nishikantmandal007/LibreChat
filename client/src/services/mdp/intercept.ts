@@ -17,12 +17,13 @@ import {
   createWorkspaceBookmark,
   createWorkspacePrompt,
   createWorkspaceSkill,
+  createWorkspaceSkillWithBackend,
   deleteWorkspaceBookmark,
   deleteWorkspacePrompt,
   deleteWorkspacePromptGroup,
-  deleteWorkspaceSkill,
+  deleteWorkspaceSkillWithBackend,
   getWorkspacePromptGroup,
-  getWorkspaceSkill,
+  getWorkspaceSkillWithBackend,
   getWorkspaceSkillStates,
   importWorkspaceSkill,
   listAllWorkspacePromptGroups,
@@ -30,13 +31,14 @@ import {
   listWorkspacePromptCategories,
   listWorkspacePromptGroups,
   listWorkspacePrompts,
-  listWorkspaceSkills,
+  listWorkspaceSkillsWithBackend,
   makeWorkspacePromptProduction,
   recordWorkspacePromptUsage,
   setConversationBookmarks,
   updateWorkspaceBookmark,
   updateWorkspacePromptGroup,
   updateWorkspaceSkill,
+  updateWorkspaceSkillWithBackend,
   updateWorkspaceSkillStates,
 } from './workspaceStore';
 
@@ -408,7 +410,7 @@ async function handleWorkspaceSkillRoute(
     }
     return {
       matched: true,
-      data: listWorkspaceSkills(
+      data: await listWorkspaceSkillsWithBackend(
         params as { category?: string; search?: string; limit?: number; cursor?: string },
       ),
     };
@@ -419,7 +421,7 @@ async function handleWorkspaceSkillRoute(
       getArg<Parameters<typeof createWorkspaceSkill>[0]>(config) ??
       parseBody<Parameters<typeof createWorkspaceSkill>[0]>(config.data) ??
       ({} as Parameters<typeof createWorkspaceSkill>[0]);
-    return { matched: true, data: createWorkspaceSkill(payload) };
+    return { matched: true, data: await createWorkspaceSkillWithBackend(payload) };
   }
 
   if (pathname === '/api/skills/import' && method === 'post') {
@@ -433,17 +435,17 @@ async function handleWorkspaceSkillRoute(
   if (skillMatch) {
     const skillId = decodeURIComponent(skillMatch[1]);
     if (method === 'get') {
-      return { matched: true, data: getWorkspaceSkill(skillId) };
+      return { matched: true, data: await getWorkspaceSkillWithBackend(skillId) };
     }
     if (method === 'patch' || method === 'put') {
       const payload =
         getArg<Parameters<typeof updateWorkspaceSkill>[1]>(config) ??
         parseBody<Parameters<typeof updateWorkspaceSkill>[1]>(config.data) ??
         ({} as Parameters<typeof updateWorkspaceSkill>[1]);
-      return { matched: true, data: updateWorkspaceSkill(skillId, payload) };
+      return { matched: true, data: await updateWorkspaceSkillWithBackend(skillId, payload) };
     }
     if (method === 'delete') {
-      return { matched: true, data: deleteWorkspaceSkill(skillId) };
+      return { matched: true, data: await deleteWorkspaceSkillWithBackend(skillId) };
     }
   }
 

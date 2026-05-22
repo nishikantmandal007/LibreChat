@@ -44,6 +44,11 @@ export interface IMessage extends Document {
     encoding?: string;
   };
   attachments?: unknown[];
+  /** Saved prompt selected from the prompt library for this turn. */
+  savedPrompt?: {
+    groupId: string;
+    name?: string;
+  };
   /** Skills the user invoked manually via the `$` popover on this turn. UI-only metadata for `SkillPills`. */
   manualSkills?: string[];
   /**

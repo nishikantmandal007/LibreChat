@@ -18,8 +18,25 @@ export {
   clearMDPToken,
 } from './auth';
 
+export {
+  listPremadePrompts,
+  getPremadePrompt,
+  createPremadePrompt,
+  updatePremadePrompt,
+  deletePremadePrompt,
+  getPremadePromptDisplay,
+  getLocalizedPremadePromptField,
+  getCurrentPremadePromptLocale,
+} from './premadePrompts';
+export { listWorkspaceSkillsWithBackend } from './workspaceStore';
+export { listDocumentTemplates } from './documentTemplates';
+export { fetchArtifactBlob, exportDocxArtifact } from './artifacts';
+
 export type { MDPChatSubmission, MDPChatResult } from './chat';
 export type { MDPUser } from './auth';
+export type { PremadePrompt, PremadePromptDisplayField } from './premadePrompts';
+export type { MDPArtifact } from './artifacts';
+export type { DocumentTemplate } from './documentTemplates';
 export type {
   MDPChatRequest,
   MDPChatResponse,
@@ -34,4 +51,5 @@ export type {
   MDPAgentChatRequest,
   MDPAgentChatResponse,
   MDPApiResponse,
+  FileRole,
 } from './types';

@@ -122,6 +122,14 @@ const messageSchema: Schema<IMessage> = new Schema(
       default: undefined,
     },
     attachments: { type: [{ type: mongoose.Schema.Types.Mixed }], default: undefined },
+    savedPrompt: {
+      type: {
+        groupId: { type: String, required: true },
+        name: { type: String },
+      },
+      _id: false,
+      default: undefined,
+    },
     /**
      * Skill names the user invoked manually via the `$` popover on this turn.
      * UI metadata only — `SkillPills` on the frontend renders these on

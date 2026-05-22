@@ -101,9 +101,24 @@ export default function useChatFunctions({
     [],
   );
 
+  const drainPendingSavedPrompt = useRecoilCallback(
+    ({ snapshot, reset }) =>
+      (convoId: string) => {
+        const atom = store.pendingSavedPromptByConvoId(convoId);
+        const loadable = snapshot.getLoadable(atom);
+        const savedPrompt = loadable.state === 'hasValue' ? loadable.contents : null;
+        if (savedPrompt) {
+          reset(atom);
+        }
+        return savedPrompt ?? undefined;
+      },
+    [],
+  );
+
   const ask: TAskFunction = (
     {
       text,
+      savedPrompt: propsSavedPrompt,
       overrideConvoId,
       overrideUserMessageId,
       parentMessageId = null,
@@ -119,6 +134,7 @@ export default function useChatFunctions({
       overrideMessages,
       overrideFiles,
       overrideManualSkills,
+      overrideSavedPrompt,
       addedConvo,
     } = {},
   ) => {
@@ -171,6 +187,11 @@ export default function useChatFunctions({
         : isRegenerate || isContinued || isEdited
           ? []
           : drainPendingManualSkills(conversationId ?? Constants.NEW_CONVO);
+    const savedPrompt =
+      overrideSavedPrompt ??
+      (isRegenerate || isContinued || isEdited
+        ? undefined
+        : (propsSavedPrompt ?? drainPendingSavedPrompt(conversationId ?? Constants.NEW_CONVO)));
     const isEditOrContinue = isEdited || isContinued;
 
     let currentMessages: TMessage[] | null = overrideMessages ?? getMessages() ?? [];
@@ -262,6 +283,7 @@ export default function useChatFunctions({
       messageId: isContinued && messageId != null && messageId ? messageId : intermediateId,
       thread_id,
       error: false,
+      savedPrompt,
       /**
        * UI-only metadata. Survives reload because the backend persists the
        * field on the message schema, and `SkillPills` reads straight
@@ -391,6 +413,7 @@ export default function useChatFunctions({
       editedContent,
       addedConvo,
       manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+      savedPrompt,
     };
 
     if (isRegenerate) {
@@ -422,6 +445,7 @@ export default function useChatFunctions({
            *  this the model sees an unprimed turn even though the pills
            *  still show on the user bubble. */
           overrideManualSkills: parentMessage.manualSkills,
+          overrideSavedPrompt: parentMessage.savedPrompt,
         },
       );
     } else {

@@ -1,5 +1,15 @@
-import { renderHook, act } from '@testing-library/react';
+import React from 'react';
+import { RecoilRoot } from 'recoil';
+import { renderHook as originalRenderHook, act } from '@testing-library/react';
 import { Constants, EModelEndpoint, getEndpointFileConfig } from 'librechat-data-provider';
+
+const renderHook: typeof originalRenderHook = (callback, options) => {
+  return originalRenderHook(callback, {
+    ...options,
+    wrapper: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(RecoilRoot, null, children),
+  });
+};
 
 beforeAll(() => {
   global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
@@ -32,9 +42,19 @@ jest.mock('recoil', () => ({
   useSetRecoilState: jest.fn(() => jest.fn()),
 }));
 
-jest.mock('~/store', () => ({
-  ephemeralAgentByConvoId: jest.fn(() => ({ key: 'mock' })),
-}));
+jest.mock('~/store', () => {
+  const { atom } = jest.requireActual('recoil');
+  return {
+    __esModule: true,
+    ephemeralAgentByConvoId: jest.fn(() => ({ key: 'mock' })),
+    default: {
+      mdpAnonymizationLanguage: atom({
+        key: 'mock-mdpAnonymizationLanguage',
+        default: 'en',
+      }),
+    },
+  };
+});
 
 jest.mock('@tanstack/react-query', () => ({
   useQueryClient: jest.fn(() => ({

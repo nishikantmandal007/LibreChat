@@ -1,7 +1,7 @@
 export const FEATURES = {
   AGENTS: false,
   MARKETPLACE: false,
-  PROMPTS: false,
+  PROMPTS: true,
   SKILLS: true,
   MCP: false,
   PRESETS: false,

@@ -449,9 +449,9 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
 
   return (
     <FormProvider {...methods}>
-      <form className="flex w-full" onSubmit={handleSubmit((data) => onSave(data.prompt))}>
+      <form className="flex h-full w-full" onSubmit={handleSubmit((data) => onSave(data.prompt))}>
         <h1 className="sr-only">{localize('com_ui_edit_prompt_page')}</h1>
-        <div className="relative w-full overflow-hidden">
+        <div className="relative h-full w-full overflow-hidden">
           <div
             className="h-full w-full"
             style={{
@@ -459,8 +459,8 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
               transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1)',
             }}
           >
-            <div className="flex h-full">
-              <div className="flex-1 overflow-hidden px-4">
+            <div className="mx-auto flex h-full w-full max-w-6xl">
+              <div className="flex-1 overflow-hidden px-5 py-3 sm:px-8">
                 {/* Mobile Actions Row */}
                 {!isLoadingGroup && group && (
                   <div className="mb-3 mt-2 flex items-center justify-between gap-2 sm:hidden">
@@ -475,7 +475,7 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
                   </div>
                 )}
                 {/* Header: Title + Actions */}
-                <div className="mb-3 mt-2 flex items-center justify-between gap-2">
+                <div className="mb-4 mt-1 flex items-center justify-between gap-2 border-b border-border-light pb-3">
                   {isLoadingGroup ? (
                     <Skeleton className="h-9 w-48" />
                   ) : (

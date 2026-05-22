@@ -94,7 +94,7 @@ function ChatGroupItem({
       return;
     }
 
-    submitPrompt(text);
+    submitPrompt(text, group._id ? { groupId: group._id, name: group.name } : undefined);
     if (group._id) {
       recordUsage.mutate(group._id);
     }
@@ -138,23 +138,23 @@ function ChatGroupItem({
     <>
       <div
         className={cn(
-          'group/prompt relative mb-1.5 rounded-xl border border-border-light bg-transparent transition-colors hover:bg-surface-secondary',
-          !isChatRoute && params.promptId === group._id && 'bg-surface-hover',
+          'group/prompt relative rounded-lg transition-colors',
+          !isChatRoute && params.promptId === group._id
+            ? 'bg-surface-active'
+            : 'hover:bg-surface-hover',
         )}
       >
         {/* Clickable overlay for card */}
         <button
           type="button"
-          className="absolute inset-0 z-0 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary"
+          className="absolute inset-0 z-0 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary"
           onClick={onCardClick}
           aria-label={ariaLabel}
         />
-        <div className="flex items-start gap-2.5 px-3 py-2.5">
-          <CategoryIcon
-            category={group.category ?? ''}
-            className="mt-0.5 size-4 shrink-0"
-            aria-hidden="true"
-          />
+        <div className="flex items-center gap-3 px-3 py-1.5">
+          <span className="flex size-6 shrink-0 items-center justify-center rounded-md border border-border-light bg-surface-primary shadow-sm">
+            <CategoryIcon category={group.category ?? ''} className="size-3.5" aria-hidden="true" />
+          </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <span className="truncate text-sm font-semibold text-text-primary" title={group.name}>
@@ -193,9 +193,7 @@ function ChatGroupItem({
                 />
               )}
             </div>
-            <p className="mt-0.5 line-clamp-2 text-xs leading-relaxed text-text-secondary">
-              {snippet}
-            </p>
+            <p className="mt-0.5 truncate text-xs leading-4 text-text-secondary">{snippet}</p>
           </div>
           <div className="relative z-10 shrink-0">
             <DropdownPopup
@@ -211,7 +209,7 @@ function ChatGroupItem({
                   ref={menuButtonRef}
                   aria-label={localize('com_nav_convo_menu_options')}
                   className={cn(
-                    'flex size-7 items-center justify-center rounded-md text-text-secondary transition-opacity hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary',
+                    'flex size-7 items-center justify-center rounded-md text-text-secondary transition-opacity hover:bg-surface-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring-primary',
                     menuOpen
                       ? 'opacity-100'
                       : 'opacity-0 focus-visible:opacity-100 group-hover/prompt:opacity-100',

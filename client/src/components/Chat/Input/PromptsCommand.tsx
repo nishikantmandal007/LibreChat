@@ -3,7 +3,8 @@ import { ScrollText } from 'lucide-react';
 import { AutoSizer, List } from 'react-virtualized';
 import { Spinner, useCombobox } from '@librechat/client';
 import { useSetRecoilState, useRecoilValue } from 'recoil';
-import type { TPromptGroup, TSkillSummary } from 'librechat-data-provider';
+import { PermissionTypes, Permissions } from 'librechat-data-provider';
+import type { TPromptGroup, TSkillSummary, TSavedPromptRef } from 'librechat-data-provider';
 import type { MentionOption, PromptOption } from '~/common';
 import useInitPopoverInput from '~/hooks/Input/useInitPopoverInput';
 import { removeCharIfLast, detectVariables } from '~/utils';
@@ -13,7 +14,7 @@ import { useAgentsMapContext, usePromptGroupsContext } from '~/Providers';
 import { isEphemeralAgent } from '~/common';
 import { ephemeralAgentByConvoId } from '~/store';
 import MentionItem from './MentionItem';
-import { useLocalize, useSkillActiveState } from '~/hooks';
+import { useHasAccess, useLocalize, useSkillActiveState } from '~/hooks';
 import { filterSkillsForPopover } from './SkillsCommand';
 import store from '~/store';
 
@@ -67,7 +68,7 @@ function PromptsCommand({
 }: {
   index: number;
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement | null>;
-  submitPrompt: (textPrompt: string) => void;
+  submitPrompt: (textPrompt: string, savedPrompt?: TSavedPromptRef) => void;
   conversationId: string;
   agentId?: string | null;
 }) {
@@ -78,6 +79,10 @@ function PromptsCommand({
   const { data, isLoading } = allPromptGroups ?? {};
   const agentsMap = useAgentsMapContext();
   const { isActive } = useSkillActiveState();
+  const hasSkillsAccess = useHasAccess({
+    permissionType: PermissionTypes.SKILLS,
+    permission: Permissions.USE,
+  });
 
   const [activeIndex, setActiveIndex] = useState(0);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -85,6 +90,7 @@ function PromptsCommand({
   const [isVariableDialogOpen, setVariableDialogOpen] = useState(false);
   const [variableGroup, setVariableGroup] = useState<TPromptGroup | null>(null);
   const setShowPromptsPopover = useSetRecoilState(store.showPromptsPopoverFamily(index));
+  const showPromptsPopover = useRecoilValue(store.showPromptsPopoverFamily(index));
   const setEphemeralAgent = useSetRecoilState(ephemeralAgentByConvoId(conversationId));
   const setPendingManualSkills = useSetRecoilState(
     store.pendingManualSkillsByConvoId(conversationId),
@@ -111,12 +117,15 @@ function PromptsCommand({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useSkillsInfiniteQuery({ limit: 50 });
+  } = useSkillsInfiniteQuery({ limit: 50 }, { enabled: showPromptsPopover && hasSkillsAccess });
   const skillPaginationBlockedRef = useRef(false);
 
   const prompts = useMemo(() => (hasAccess ? data?.promptGroups : []), [data, hasAccess]);
   const promptsMap = useMemo(() => (hasAccess ? data?.promptsMap : undefined), [data, hasAccess]);
   const skillOptions: SlashCommandOption[] = useMemo(() => {
+    if (!hasSkillsAccess) {
+      return [];
+    }
     const allSkills: TSkillSummary[] = [];
     for (const page of skillsData?.pages ?? []) {
       allSkills.push(...page.skills);
@@ -129,7 +138,7 @@ function PromptsCommand({
       type: 'skill',
       icon: skillIcon,
     }));
-  }, [skillsData?.pages, agentSkillIds, isActive]);
+  }, [hasSkillsAccess, skillsData?.pages, agentSkillIds, isActive]);
   const slashOptions: SlashCommandOption[] = useMemo(
     () => [...(prompts ?? []), ...skillOptions],
     [prompts, skillOptions],
@@ -185,7 +194,10 @@ function PromptsCommand({
         setVariableDialogOpen(true);
         return;
       } else {
-        submitPrompt(group.productionPrompt?.prompt ?? '');
+        submitPrompt(
+          group.productionPrompt?.prompt ?? '',
+          group._id ? { groupId: group._id, name: group.name } : undefined,
+        );
         if (group._id) {
           recordUsage(group._id);
         }
@@ -226,6 +238,10 @@ function PromptsCommand({
       setVariableGroup(null);
     }
   }, [open]);
+
+  useEffect(() => {
+    setActiveIndex((prev) => Math.min(prev, Math.max(matches.length - 1, 0)));
+  }, [matches.length]);
 
   useEffect(() => {
     return () => {
@@ -296,10 +312,25 @@ function PromptsCommand({
                 textAreaRef.current?.focus();
               }
               if (e.key === 'ArrowDown') {
+                if (matches.length === 0) {
+                  return;
+                }
                 setActiveIndex((prevIndex) => (prevIndex + 1) % matches.length);
               } else if (e.key === 'ArrowUp') {
+                if (matches.length === 0) {
+                  return;
+                }
                 setActiveIndex((prevIndex) => (prevIndex - 1 + matches.length) % matches.length);
               } else if (e.key === 'Enter' || e.key === 'Tab') {
+                if (matches.length === 0) {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                  setOpen(false);
+                  setShowPromptsPopover(false);
+                  textAreaRef.current?.focus();
+                  return;
+                }
                 if (e.key === 'Enter') {
                   e.preventDefault();
                 }

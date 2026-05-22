@@ -586,19 +586,52 @@ export default function useEventHandlers({
           finalMessages = [...messages, requestMessage, responseMessage];
         }
 
-        /* Preserve files from current messages when server response lacks them */
+        /* Preserve client-only fields from current messages when the final server payload is thinner. */
         if (finalMessages.length > 0) {
+          const hasItems = <T>(items?: T[]) => Array.isArray(items) && items.length > 0;
+          const hasCitations = (metadata: unknown) => {
+            const citations = (metadata as Record<string, unknown> | undefined)?.citations;
+            return Array.isArray(citations) && citations.length > 0;
+          };
           const currentMsgMap = new Map(
             currentMessages
-              .filter((m) => m.files && m.files.length > 0)
-              .map((m) => [m.messageId, m.files]),
+              .filter((m) => hasItems(m.files) || hasItems(m.attachments) || m.metadata != null)
+              .map((m) => [
+                m.messageId,
+                { files: m.files, attachments: m.attachments, metadata: m.metadata },
+              ]),
           );
+
           for (let i = 0; i < finalMessages.length; i++) {
             const msg = finalMessages[i];
-            const preservedFiles = currentMsgMap.get(msg.messageId);
-            if (msg.files == null && preservedFiles) {
-              finalMessages[i] = { ...msg, files: preservedFiles };
+            const preserved = currentMsgMap.get(msg.messageId);
+            if (!preserved) {
+              continue;
             }
+
+            let nextMsg = msg;
+            if (!hasItems(nextMsg.files) && hasItems(preserved.files)) {
+              nextMsg = { ...nextMsg, files: preserved.files };
+            }
+            if (!hasItems(nextMsg.attachments) && hasItems(preserved.attachments)) {
+              nextMsg = { ...nextMsg, attachments: preserved.attachments };
+            }
+
+            if (nextMsg.metadata == null && preserved.metadata != null) {
+              nextMsg = { ...nextMsg, metadata: preserved.metadata };
+            } else if (hasCitations(preserved.metadata) && !hasCitations(nextMsg.metadata)) {
+              const preservedMetadata = preserved.metadata as Record<string, unknown>;
+              nextMsg = {
+                ...nextMsg,
+                metadata: {
+                  ...preservedMetadata,
+                  ...((nextMsg.metadata as Record<string, unknown> | undefined) ?? {}),
+                  citations: preservedMetadata.citations,
+                },
+              };
+            }
+
+            finalMessages[i] = nextMsg;
           }
         }
 

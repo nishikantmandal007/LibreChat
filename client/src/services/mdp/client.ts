@@ -12,6 +12,47 @@ export const mdpClient = axios.create({
   },
 });
 
+function getApiErrorMessage(error: unknown): string {
+  if (!axios.isAxiosError(error)) {
+    return error instanceof Error ? error.message : 'API request failed';
+  }
+
+  const data = error.response?.data;
+  if (typeof data === 'string' && data.trim()) {
+    return data;
+  }
+  if (data && typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    if (typeof record.message === 'string' && record.message.trim()) {
+      return record.message;
+    }
+    if (typeof record.error === 'string' && record.error.trim()) {
+      return record.error;
+    }
+  }
+
+  return error.message || 'API request failed';
+}
+
+function isJwtAuthFailure(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) {
+    return false;
+  }
+
+  const status = error.response?.status;
+  if (status !== 401 && status !== 402) {
+    return false;
+  }
+
+  const data = error.response?.data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return false;
+  }
+
+  const authError = (data as Record<string, unknown>).error;
+  return typeof authError === 'string' && /token|signature|authorization/i.test(authError);
+}
+
 mdpClient.interceptors.request.use((config) => {
   const token = localStorage.getItem(MDP_TOKEN_KEY) || import.meta.env.VITE_MDP_JWT_TOKEN;
   if (token) {
@@ -32,10 +73,10 @@ mdpClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (error.response?.status === 401 && getMDPToken()) {
+    if (isJwtAuthFailure(error) && getMDPToken()) {
       localStorage.removeItem(MDP_TOKEN_KEY);
     }
-    return Promise.reject(error);
+    return Promise.reject(new Error(getApiErrorMessage(error)));
   },
 );
 

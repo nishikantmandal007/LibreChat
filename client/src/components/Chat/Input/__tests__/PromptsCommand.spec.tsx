@@ -84,6 +84,7 @@ jest.mock('~/Providers', () => ({
 }));
 
 jest.mock('~/hooks', () => ({
+  useHasAccess: () => true,
   useLocalize: () => (key: string) => key,
   useSkillActiveState: () => ({ isActive: () => true }),
 }));

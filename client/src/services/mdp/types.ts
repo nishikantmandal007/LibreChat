@@ -1,3 +1,5 @@
+export type FileRole = 'case_file' | 'reference_file' | 'knowledge_source';
+
 export interface MDPApiResponse<T> {
   success: boolean;
   message: string;
@@ -12,18 +14,33 @@ export interface MDPChatRequest {
     chat_id?: string;
     original_prompt: string;
     anonymized_prompt?: string;
-    anonymized_values?: Record<string, string>;
+    anonymized_values?: Record<string, string[]>;
     detected_values?: Record<string, string[]>;
     choices?: string[];
     doc?: string;
     docs?: string[];
     manual_skills?: string[];
+    saved_prompt?: {
+      group_id: string;
+      name?: string;
+      prompt: string;
+    };
     skill_instructions?: Array<{
       name: string;
       description?: string;
       body: string;
     }>;
+    file_roles?: Record<string, FileRole>;
   };
+}
+
+export interface MDPCitation {
+  file_name?: string;
+  filename?: string;
+  page?: number | string;
+  chunk_id?: string;
+  text?: string;
+  source?: string;
 }
 
 export interface MDPChatResponse {
@@ -32,16 +49,10 @@ export interface MDPChatResponse {
   replaced_response: string;
   llm_response: string;
   total_tokens: number;
-  anonymized_values: Record<string, string>;
-  file_name?: string;
-  citations?: Array<{
-    file_name?: string;
-    filename?: string;
-    page?: number | string;
-    chunk_id?: string;
-    text?: string;
-    source?: string;
-  }>;
+  anonymized_values: Record<string, string[]>;
+  reidentify_job_id?: string;
+  file_names?: string[];
+  citations?: MDPCitation[];
   artifacts?: Array<{
     artifact_id: string;
     kind?: string;
@@ -78,6 +89,14 @@ export interface MDPPromptData {
   total_tokens: number;
   anonymized_values: string;
   created_at: string;
+  citations?: MDPCitation[] | string;
+  sources?: MDPCitation[] | string;
+  metadata?:
+    | {
+        citations?: MDPCitation[];
+        sources?: MDPCitation[];
+      }
+    | string;
 }
 
 export interface MDPAnonymizeRequest {
