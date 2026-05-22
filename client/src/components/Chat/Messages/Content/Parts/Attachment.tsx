@@ -2,7 +2,9 @@ import { memo, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } fr
 import { Loader2, AlertCircle, Download, ChevronDown, Files as FilesIcon } from 'lucide-react';
 import { Tools } from 'librechat-data-provider';
 import type { TAttachment, TFile, TAttachmentMetadata } from 'librechat-data-provider';
+import { useSetRecoilState } from 'recoil';
 import type { ToolArtifactType } from '~/utils/artifacts';
+import type { SafeFilePreviewState } from '~/store/safeFilePreview';
 import {
   artifactTypeForAttachment,
   bySalience,
@@ -21,9 +23,75 @@ import ToolMermaidArtifact from './ToolMermaidArtifact';
 import ToolArtifactCard from './ToolArtifactCard';
 import { useAttachmentLink } from './LogLink';
 import { useLocalize, useAttachmentPreviewSync, useExpandCollapse } from '~/hooks';
+import { getMayaSafeFileState } from '~/utils/mayaSafeFiles';
 import { cn, getFileType } from '~/utils';
+import store from '~/store';
 
 const COLLAPSED_MAX_HEIGHT = 320;
+
+function getSafeFilePreviewState(attachment: Partial<TAttachment>): SafeFilePreviewState | null {
+  const safeFile = getMayaSafeFileState(attachment);
+  const canOpenSafePreview =
+    safeFile?.status === 'ready' && (safeFile.safeDocId || safeFile.localPreviewOnly);
+  if (!safeFile || !canOpenSafePreview) {
+    return null;
+  }
+
+  const file = attachment as Partial<TFile>;
+  return {
+    fileId:
+      file.file_id ??
+      safeFile.safeDocId ??
+      safeFile.rawFileId ??
+      attachment.filename ??
+      'local-preview',
+    filename: attachment.filename,
+    safeFilename: safeFile.safeFilename ?? attachment.filename,
+    status: safeFile.status,
+    mimeType: safeFile.mimeType ?? file.type,
+    previewAnonymizedUrl: safeFile.localPreviewOnly
+      ? undefined
+      : (safeFile.previewAnonymizedUrl ?? safeFile.downloadUrl ?? attachment.filepath),
+    anonymizedText: safeFile.anonymizedText,
+    previewText: safeFile.promptText,
+    downloadUrl: safeFile.localPreviewOnly
+      ? undefined
+      : (safeFile.downloadUrl ?? safeFile.previewAnonymizedUrl ?? attachment.filepath),
+    previewOnly: safeFile.localPreviewOnly,
+  };
+}
+
+const SafeFileContainer = memo(
+  ({
+    attachment,
+    preview,
+    overrideType,
+    displayName,
+    containerClassName,
+    buttonClassName,
+  }: {
+    attachment: Partial<TAttachment>;
+    preview: SafeFilePreviewState;
+    overrideType?: string;
+    displayName?: string;
+    containerClassName?: string;
+    buttonClassName?: string;
+  }) => {
+    const setSafeFilePreview = useSetRecoilState(store.safeFilePreview);
+
+    return (
+      <FileContainer
+        file={attachment}
+        onClick={() => setSafeFilePreview(preview)}
+        overrideType={overrideType}
+        displayName={displayName}
+        containerClassName={containerClassName}
+        buttonClassName={buttonClassName}
+      />
+    );
+  },
+);
+SafeFileContainer.displayName = 'SafeFileContainer';
 
 /**
  * Card-shaped placeholder for a code-execution office file whose
@@ -136,6 +204,7 @@ const FileAttachment = memo(({ attachment }: { attachment: Partial<TAttachment> 
   const { status: previewStatus, previewError } = useAttachmentPreviewSync(
     attachment as TAttachment,
   );
+  const safeFilePreview = getSafeFilePreviewState(attachment);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 50);
@@ -185,14 +254,25 @@ const FileAttachment = memo(({ attachment }: { attachment: Partial<TAttachment> 
         WebkitFontSmoothing: 'subpixel-antialiased',
       }}
     >
-      <FileContainer
-        file={attachment}
-        onClick={handleDownload}
-        overrideType={extension}
-        displayName={displayFilename(attachment.filename)}
-        containerClassName="max-w-fit"
-        buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
-      />
+      {safeFilePreview ? (
+        <SafeFileContainer
+          attachment={attachment}
+          preview={safeFilePreview}
+          overrideType={extension}
+          displayName={displayFilename(attachment.filename)}
+          containerClassName="max-w-fit"
+          buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
+        />
+      ) : (
+        <FileContainer
+          file={attachment}
+          onClick={handleDownload}
+          overrideType={extension}
+          displayName={displayFilename(attachment.filename)}
+          containerClassName="max-w-fit"
+          buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
+        />
+      )}
     </div>
   );
 });
@@ -336,6 +416,7 @@ const TextAttachment = memo(
     const extension = attachment.filename?.split('.').pop();
     const text = file.text ?? '';
     const visibleFilename = displayFilename(attachment.filename);
+    const safeFilePreview = getSafeFilePreviewState(attachment);
 
     useEffect(() => {
       const timer = setTimeout(() => setIsVisible(true), 50);
@@ -365,16 +446,27 @@ const TextAttachment = memo(
           WebkitFontSmoothing: 'subpixel-antialiased',
         }}
       >
-        {attachment.filepath && showFileChip && (
-          <FileContainer
-            file={attachment}
-            onClick={handleDownload}
-            overrideType={extension}
-            displayName={displayFilename(attachment.filename)}
-            containerClassName="max-w-fit"
-            buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
-          />
-        )}
+        {(attachment.filepath || safeFilePreview) &&
+          showFileChip &&
+          (safeFilePreview ? (
+            <SafeFileContainer
+              attachment={attachment}
+              preview={safeFilePreview}
+              overrideType={extension}
+              displayName={displayFilename(attachment.filename)}
+              containerClassName="max-w-fit"
+              buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
+            />
+          ) : (
+            <FileContainer
+              file={attachment}
+              onClick={handleDownload}
+              overrideType={extension}
+              displayName={displayFilename(attachment.filename)}
+              containerClassName="max-w-fit"
+              buttonClassName="bg-surface-secondary hover:cursor-pointer hover:bg-surface-hover active:bg-surface-secondary focus:bg-surface-hover hover:border-border-heavy active:border-border-heavy"
+            />
+          ))}
         <div className="overflow-hidden rounded-lg bg-surface-secondary">
           {!showFileChip && (
             <div className="flex items-center justify-between gap-2 border-b border-border-light px-3 py-2">

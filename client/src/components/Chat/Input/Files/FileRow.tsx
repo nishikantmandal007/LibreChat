@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useToastContext } from '@librechat/client';
 import { AlertTriangle, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import { EToolResources } from 'librechat-data-provider';
+import { useSetRecoilState } from 'recoil';
 import type { ExtendedFile } from '~/common';
 import { useDeleteFilesMutation } from '~/data-provider';
 import { logger, getCachedPreview, cn } from '~/utils';
@@ -13,6 +14,7 @@ import {
 } from '~/utils/mayaSafeFiles';
 import FileContainer from './FileContainer';
 import { useLocalize } from '~/hooks';
+import store from '~/store';
 import Image from './Image';
 
 export default function FileRow({
@@ -40,6 +42,7 @@ export default function FileRow({
 }) {
   const localize = useLocalize();
   const { showToast } = useToastContext();
+  const setSafeFilePreview = useSetRecoilState(store.safeFilePreview);
   const files = Array.from(_files?.values() ?? []).filter((file) =>
     fileFilter ? fileFilter(file) : true,
   );
@@ -152,6 +155,24 @@ export default function FileRow({
             { map: new Map(), uniqueFiles: [] as ExtendedFile[] },
           )
           .uniqueFiles.map((file: ExtendedFile, index: number) => {
+            const openSafeFilePreview = () => {
+              if (!file.safeFile || !isMayaSafeFileReadyForChat(file)) {
+                return;
+              }
+
+              setSafeFilePreview({
+                fileId: file.file_id,
+                filename: file.filename,
+                safeFilename: file.safeFile.safeFilename,
+                status: file.safeFile.status,
+                mimeType: file.safeFile.mimeType ?? file.type,
+                previewAnonymizedUrl: file.safeFile.previewAnonymizedUrl,
+                anonymizedText: file.safeFile.anonymizedText,
+                previewText: file.safeFile.promptText,
+                downloadUrl: file.safeFile.downloadUrl,
+                previewOnly: file.safeFile.localPreviewOnly,
+              });
+            };
             const handleDelete = () => {
               if (abortUpload && file.progress < 1) {
                 abortUpload();
@@ -167,6 +188,7 @@ export default function FileRow({
             const isImage = file.type?.startsWith('image') ?? false;
             const isSafeFile = Boolean(file.safeFile);
             const isProcessingSafeFile = isSafeFile && isMayaSafeFileProcessing(file);
+            const isReadySafeFile = isSafeFile && isMayaSafeFileReadyForChat(file);
 
             return (
               <div
@@ -188,13 +210,16 @@ export default function FileRow({
                   <FileContainer
                     file={file}
                     onDelete={handleDelete}
+                    onClick={isReadySafeFile ? openSafeFilePreview : undefined}
                     subtitle={renderSafeSubtitle(file)}
                     buttonClassName={
                       isProcessingSafeFile
                         ? 'border-border-light bg-surface-hover-alt hover:bg-surface-hover'
                         : isSafeFile && !isMayaSafeFileReadyForChat(file)
                           ? 'border-sky-400/70 bg-sky-50/50 dark:bg-sky-950/20'
-                          : undefined
+                          : isReadySafeFile
+                            ? 'hover:bg-surface-hover'
+                            : undefined
                     }
                   />
                 )}

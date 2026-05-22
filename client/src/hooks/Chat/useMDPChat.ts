@@ -14,7 +14,11 @@ import { getPromptTextOccurrence, rememberMessageFiles } from '~/services/mdp/me
 import { normalizeMdpLanguage } from '~/services/mdp/language';
 import { MAYA_DEFAULT_ENDPOINT, MAYA_DEFAULT_MODEL } from '~/services/mdp/modelConfig';
 import { getWorkspaceSkillsByNames } from '~/services/mdp/workspaceStore';
-import { getMayaSafeDocIds, getMayaSafeFileState } from '~/utils/mayaSafeFiles';
+import {
+  getMayaPromptOnlyFileText,
+  getMayaSafeDocIds,
+  getMayaSafeFileState,
+} from '~/utils/mayaSafeFiles';
 import store from '~/store';
 
 import type { TSubmission, TMessage, TConversation } from 'librechat-data-provider';
@@ -111,8 +115,11 @@ export default function useMDPChat(
       '';
     const trimmedText = userText.trim();
     const userMessageId = submission.userMessage?.messageId;
+    const submittedFiles = submission.userMessage?.files;
+    const promptOnlyFileText = getMayaPromptOnlyFileText(submittedFiles);
+    const effectiveText = [trimmedText, promptOnlyFileText].filter(Boolean).join('\n\n').trim();
 
-    if (!trimmedText || !userMessageId || lastSubmissionIdRef.current === userMessageId) {
+    if (!effectiveText || !userMessageId || lastSubmissionIdRef.current === userMessageId) {
       return;
     }
 
@@ -129,7 +136,6 @@ export default function useMDPChat(
         submission.initialResponse?.messageId ||
         submission.userMessage?.responseMessageId ||
         crypto.randomUUID();
-      const submittedFiles = submission.userMessage?.files;
       const promptTextOccurrence = getPromptTextOccurrence(submission.messages, trimmedText) + 1;
       const conversationFiles =
         submission.messages?.flatMap((message) => message.files ?? []) ?? [];
@@ -147,15 +153,19 @@ export default function useMDPChat(
       const provisionalConversationId = normalizedSessionId || sessionId || Constants.NEW_CONVO;
       const pendingManualSkills = isImageGen
         ? []
-        : drainPendingManualSkills(provisionalConversationId);
+        : submission.manualSkills?.length || submission.userMessage?.manualSkills?.length
+          ? []
+          : drainPendingManualSkills(provisionalConversationId);
       const manualSkills = isImageGen
         ? []
         : Array.from(
             new Set([
+              ...(submission.manualSkills ?? submission.userMessage?.manualSkills ?? []),
               ...pendingManualSkills,
               ...(isDocumentExport ? [DOCUMENT_EXPORT_SKILL.name] : []),
             ]),
           );
+      const savedPrompt = submission.savedPrompt ?? submission.userMessage?.savedPrompt;
       const workspaceSkillInstructions =
         manualSkills.length > 0
           ? getWorkspaceSkillsByNames(
@@ -188,6 +198,7 @@ export default function useMDPChat(
           isCreatedByUser: true,
           files: submittedFiles,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+          savedPrompt,
           createdAt: pendingNow,
           updatedAt: pendingNow,
         };
@@ -207,6 +218,7 @@ export default function useMDPChat(
           iconURL: selectedEndpoint,
           model: selectedModel,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+          savedPrompt,
         };
         const pendingMessages = upsertMessages(
           getMessages() ?? [],
@@ -225,7 +237,7 @@ export default function useMDPChat(
         }
 
         if (isImageGen) {
-          const imgResult = await generateImage(trimmedText, normalizedSessionId);
+          const imgResult = await generateImage(effectiveText, normalizedSessionId);
           const conversationId = imgResult.sessionId || normalizedSessionId || crypto.randomUUID();
           const now = new Date().toISOString();
 
@@ -240,6 +252,7 @@ export default function useMDPChat(
             isCreatedByUser: true,
             files: submittedFiles,
             manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+            savedPrompt,
             createdAt: now,
             updatedAt: now,
           };
@@ -260,6 +273,7 @@ export default function useMDPChat(
             iconURL: selectedEndpoint,
             model: selectedModel,
             manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+            savedPrompt,
           };
 
           const existingMessages = getMessages() ?? [];
@@ -293,9 +307,10 @@ export default function useMDPChat(
           return;
         }
 
-        const anonymized = await anonymizeText(trimmedText, DEFAULT_PII_CHOICES, mdpLanguage);
+        const anonymized = await anonymizeText(effectiveText, DEFAULT_PII_CHOICES, mdpLanguage);
         const result = await sendChat({
-          text: trimmedText,
+          text: effectiveText,
+          displayText: trimmedText,
           sessionId: normalizedSessionId,
           lang: mdpLanguage,
           userMessageId,
@@ -309,6 +324,7 @@ export default function useMDPChat(
           docIds: docIds.length > 0 ? docIds : undefined,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
           skillInstructions: skillInstructions.length > 0 ? skillInstructions : undefined,
+          savedPrompt: savedPrompt ? { ...savedPrompt, prompt: effectiveText } : undefined,
           files: submittedFiles,
           endpoint: selectedEndpoint,
           model: selectedModel,
@@ -321,6 +337,7 @@ export default function useMDPChat(
           conversationId: result.sessionId,
           responseMessageId: assistantMessageId,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+          savedPrompt,
         };
         await rememberMessageFiles({
           conversationId: result.sessionId,
@@ -338,6 +355,7 @@ export default function useMDPChat(
           content: undefined,
           unfinished: false,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
+          savedPrompt,
         };
 
         const existingMessages = getMessages() ?? [];

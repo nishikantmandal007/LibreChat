@@ -397,12 +397,10 @@ const ChatForm = memo(function ChatForm({
               {SpeechToText && (
                 <AudioRecorder
                   methods={methods}
-                  ask={submitMessage}
                   textAreaRef={textAreaRef}
                   disabled={disableInputs || isNotAppendable}
                   isSubmitting={isSubmitting}
                   setFiles={setFiles}
-                  conversation={conversation}
                   transcriptionLanguage={mdpLanguage}
                 />
               )}

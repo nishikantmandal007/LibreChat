@@ -13,6 +13,10 @@ const PROCESSING_STATUSES = new Set<MayaSafeFileStatus>([
   'indexing',
 ]);
 
+function getPromptOnlyText(state: MayaSafeFileState | undefined): string {
+  return (state?.promptText ?? state?.anonymizedText ?? state?.originalText ?? '').trim();
+}
+
 export function isMayaSafeFileProcessing(file: Pick<ExtendedFile, 'safeFile'>): boolean {
   return Boolean(file.safeFile && PROCESSING_STATUSES.has(file.safeFile.status));
 }
@@ -20,6 +24,9 @@ export function isMayaSafeFileProcessing(file: Pick<ExtendedFile, 'safeFile'>): 
 export function isMayaSafeFileReadyForChat(file: Pick<ExtendedFile, 'safeFile'>): boolean {
   if (!file.safeFile) {
     return true;
+  }
+  if (file.safeFile.localPreviewOnly) {
+    return file.safeFile.status === 'ready' && Boolean(getPromptOnlyText(file.safeFile));
   }
   return file.safeFile.status === 'ready' && Boolean(file.safeFile.safeDocId);
 }
@@ -35,6 +42,9 @@ export function getMayaSafeFileState(file: unknown): MayaSafeFileState | undefin
 
 export function getMayaSafeDocId(file: unknown): string | undefined {
   const state = getMayaSafeFileState(file);
+  if (state?.localPreviewOnly) {
+    return undefined;
+  }
   return state?.status === 'ready' ? state.safeDocId : undefined;
 }
 
@@ -55,6 +65,23 @@ export function getMayaSafeDocIds(files: unknown[] | undefined): string[] {
   return ids;
 }
 
+export function getMayaPromptOnlyFileText(files: unknown[] | undefined): string {
+  if (!files) {
+    return '';
+  }
+
+  return files
+    .map((file) => {
+      const state = getMayaSafeFileState(file);
+      if (!state?.localPreviewOnly || state.status !== 'ready') {
+        return '';
+      }
+      return getPromptOnlyText(state);
+    })
+    .filter(Boolean)
+    .join('\n\n');
+}
+
 export function toMayaSafeMessageFile(
   file: ExtendedFile,
 ): Partial<TFile> & { maya_safe_file?: MayaSafeFileState } {
@@ -71,6 +98,17 @@ export function toMayaSafeMessageFile(
 }
 
 export function getMayaSafeFileStatusLabel(file: Pick<ExtendedFile, 'safeFile'>): string {
+  if (file.safeFile?.localPreviewOnly) {
+    switch (file.safeFile.status) {
+      case 'ready':
+        return 'Prompt-only transcript';
+      case 'failed':
+        return 'Transcript unavailable';
+      default:
+        return 'Preparing transcript...';
+    }
+  }
+
   switch (file.safeFile?.status) {
     case 'uploading':
       return 'Extracting text...';

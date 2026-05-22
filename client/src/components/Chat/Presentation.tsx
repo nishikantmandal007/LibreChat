@@ -7,6 +7,7 @@ import DragDropWrapper from '~/components/Chat/Input/Files/DragDropWrapper';
 import { EditorProvider, ArtifactsProvider } from '~/Providers';
 import { useDeleteFilesMutation } from '~/data-provider';
 import Artifacts from '~/components/Artifacts/Artifacts';
+import SafeFilePreviewPanel from '~/components/Chat/Input/Files/SafeFilePreviewPanel';
 import { SidePanelGroup } from '~/components/SidePanel';
 import { useSetFilesToDelete } from '~/hooks';
 import store from '~/store';
@@ -14,6 +15,7 @@ import store from '~/store';
 export default function Presentation({ children }: { children: React.ReactNode }) {
   const artifacts = useRecoilValue(store.artifactsState);
   const artifactsVisibility = useRecoilValue(store.artifactsVisibility);
+  const safeFilePreview = useRecoilValue(store.safeFilePreview);
   // Render-gating the panel on `currentArtifactId != null` (in addition
   // to visibility + non-empty artifacts) means the side panel only opens
   // when *something* is actively focused. Conversation navigation
@@ -75,9 +77,11 @@ export default function Presentation({ children }: { children: React.ReactNode }
     return null;
   }, [artifactsVisibility, artifacts, currentArtifactId]);
 
+  const sidePanelElement = safeFilePreview ? <SafeFilePreviewPanel /> : artifactsElement;
+
   return (
     <DragDropWrapper className="relative flex w-full grow overflow-hidden bg-presentation">
-      <SidePanelGroup artifacts={artifactsElement}>
+      <SidePanelGroup artifacts={sidePanelElement}>
         <main className="flex h-full flex-col overflow-y-auto" role="main">
           {children}
         </main>

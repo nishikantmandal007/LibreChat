@@ -11,6 +11,7 @@ import type { MDPChatRequest, MDPChatResponse } from './types';
 
 export interface MDPChatSubmission {
   text: string;
+  displayText?: string;
   sessionId?: string;
   userMessageId?: string;
   assistantMessageId?: string;
@@ -148,7 +149,7 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     parentMessageId: submission.parentMessageId ?? '00000000-0000-0000-0000-000000000000',
     responseMessageId: assistantMessageId,
     sender: 'User',
-    text: submission.text,
+    text: submission.displayText ?? submission.text,
     isCreatedByUser: true,
     files: submission.files,
     manualSkills: submission.manualSkills,
