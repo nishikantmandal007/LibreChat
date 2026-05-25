@@ -1611,5 +1611,6 @@
   "com_ui_zoom_in": "Heranzoomen",
   "com_ui_zoom_level": "Zoomstufe",
   "com_ui_zoom_out": "Herauszoomen",
-  "com_user_message": "Du"
+  "com_user_message": "Du",
+  "com_ui_meeting_notes": "Meeting Notes"
 }

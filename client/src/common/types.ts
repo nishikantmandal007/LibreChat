@@ -591,7 +591,7 @@ export type MayaSafeFileState = {
   mimeType?: string;
   ragIndexStatus?: string;
   localPreviewOnly?: boolean;
-  role?: 'case_file' | 'reference_file' | 'knowledge_source';
+  role?: 'case_file' | 'reference_file' | 'knowledge_source' | 'transcription';
   error?: string;
 };
 

@@ -85,15 +85,20 @@ export function getMayaPromptOnlyFileText(files: unknown[] | undefined): string 
 export function toMayaSafeMessageFile(
   file: ExtendedFile,
 ): Partial<TFile> & { maya_safe_file?: MayaSafeFileState } {
+  const safeFile = file.safeFile;
+  const stableSafeFileId = safeFile?.localPreviewOnly
+    ? undefined
+    : (safeFile?.safeDocId ?? safeFile?.safeFileId);
+
   return {
-    file_id: file.file_id,
-    filepath: file.safeFile?.downloadUrl ?? file.filepath,
-    type: file.type ?? '',
+    file_id: stableSafeFileId ?? file.file_id,
+    filepath: safeFile?.localPreviewOnly ? file.filepath : (safeFile?.downloadUrl ?? file.filepath),
+    type: safeFile?.mimeType ?? file.type ?? '',
     height: file.height,
     width: file.width,
     filename: file.filename,
     metadata: file.metadata,
-    maya_safe_file: file.safeFile,
+    maya_safe_file: safeFile,
   };
 }
 

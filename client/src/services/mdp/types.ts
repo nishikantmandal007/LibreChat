@@ -1,4 +1,4 @@
-export type FileRole = 'case_file' | 'reference_file' | 'knowledge_source';
+export type FileRole = 'case_file' | 'reference_file' | 'knowledge_source' | 'transcription';
 
 export interface MDPApiResponse<T> {
   success: boolean;

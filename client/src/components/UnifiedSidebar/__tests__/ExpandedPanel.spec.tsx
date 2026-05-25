@@ -31,6 +31,10 @@ jest.mock('~/store', () => {
     key: 'mock-documentCreatorActive',
     default: false,
   });
+  const meetingNotesActiveAtom = atom({
+    key: 'mock-meetingNotesActive',
+    default: false,
+  });
   return {
     __esModule: true,
     default: {
@@ -39,6 +43,7 @@ jest.mock('~/store', () => {
       newChatSwitchToHistory: switchAtom,
       search: searchAtom,
       documentCreatorActive: documentCreatorActiveAtom,
+      meetingNotesActive: meetingNotesActiveAtom,
     },
   };
 });
@@ -177,6 +182,23 @@ describe('ExpandedPanel', () => {
 
       expect(mockNewConversation).toHaveBeenCalledTimes(1);
       expect(localStorage.getItem('side:active-panel')).toBe('prompts');
+    });
+  });
+
+  describe('Custom workspace pages', () => {
+    it('switches between document creator and meeting notes', () => {
+      renderPanel({ expanded: true });
+
+      const documentButton = screen.getByRole('button', { name: 'com_ui_doc_creator' });
+      const meetingButton = screen.getByRole('button', { name: 'com_ui_meeting_notes' });
+
+      fireEvent.click(meetingButton);
+      expect(meetingButton).toHaveClass('bg-surface-active-alt');
+      expect(documentButton).not.toHaveClass('bg-surface-active-alt');
+
+      fireEvent.click(documentButton);
+      expect(documentButton).toHaveClass('bg-surface-active-alt');
+      expect(meetingButton).not.toHaveClass('bg-surface-active-alt');
     });
   });
 

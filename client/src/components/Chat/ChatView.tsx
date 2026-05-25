@@ -19,6 +19,7 @@ import Footer from './Footer';
 import { cn } from '~/utils';
 import store from '~/store';
 import DocumentCreator from './DocumentCreator';
+import MeetingNotes from './MeetingNotes';
 
 function LoadingSpinner() {
   return (
@@ -35,6 +36,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
   const documentCreatorActive = useRecoilValue(store.documentCreatorActive);
+  const meetingNotesActive = useRecoilValue(store.meetingNotesActive);
 
   const methods = useForm<ChatFormValues>({
     defaultValues: { text: '' },
@@ -79,7 +81,9 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation>
-            {documentCreatorActive ? (
+            {meetingNotesActive ? (
+              <MeetingNotes />
+            ) : documentCreatorActive ? (
               <DocumentCreator />
             ) : (
               <div className="relative flex h-full w-full flex-col">
