@@ -1,7 +1,14 @@
 import { memo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
-import { PanelLeftClose, PanelLeftOpen, Search, SquarePen, FileText } from 'lucide-react';
+import {
+  PanelLeftClose,
+  PanelLeftOpen,
+  Search,
+  SquarePen,
+  FileText,
+  ClipboardList,
+} from 'lucide-react';
 import { QueryKeys } from 'librechat-data-provider';
 import { Button, TooltipAnchor } from '@librechat/client';
 import type { NavLink } from '~/common';
@@ -33,12 +40,14 @@ const NewChatButton = memo(function NewChatButton({
   const conversation = useRecoilValue(store.conversationByIndex(0));
   const switchToHistory = useRecoilValue(store.newChatSwitchToHistory);
   const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
+  const setMeetingNotesActive = useSetRecoilState(store.meetingNotesActive);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
         setDocumentCreatorActive(false);
+        setMeetingNotesActive(false);
         clearMessagesCache(queryClient, conversation?.conversationId);
         queryClient.invalidateQueries([QueryKeys.messages]);
         newConversation();
@@ -47,7 +56,15 @@ const NewChatButton = memo(function NewChatButton({
         }
       }
     },
-    [queryClient, conversation?.conversationId, newConversation, switchToHistory, setActive, setDocumentCreatorActive],
+    [
+      queryClient,
+      conversation?.conversationId,
+      newConversation,
+      switchToHistory,
+      setActive,
+      setDocumentCreatorActive,
+      setMeetingNotesActive,
+    ],
   );
 
   return (
@@ -146,10 +163,12 @@ const NavIconButton = memo(function NavIconButton({
   const localize = useLocalize();
   const label = link.id === DEFAULT_PANEL ? localize('com_ui_chats') : localize(link.title);
   const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
+  const setMeetingNotesActive = useSetRecoilState(store.meetingNotesActive);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       setDocumentCreatorActive(false);
+      setMeetingNotesActive(false);
       if (link.onClick) {
         link.onClick(e);
         return;
@@ -165,7 +184,17 @@ const NavIconButton = memo(function NavIconButton({
         onExpand?.();
       }
     },
-    [link, isActive, setActive, expanded, onExpand, onCollapse, layout, setDocumentCreatorActive],
+    [
+      link,
+      isActive,
+      setActive,
+      expanded,
+      onExpand,
+      onCollapse,
+      layout,
+      setDocumentCreatorActive,
+      setMeetingNotesActive,
+    ],
   );
 
   return (
@@ -260,7 +289,12 @@ function ExpandedPanel({
   const localize = useLocalize();
   const { active, setActive } = useActivePanel();
   const effectiveActive = resolveActivePanel(active, links);
-  const [documentCreatorActive, setDocumentCreatorActive] = useRecoilState(store.documentCreatorActive);
+  const [documentCreatorActive, setDocumentCreatorActive] = useRecoilState(
+    store.documentCreatorActive,
+  );
+  const [meetingNotesActive, setMeetingNotesActive] = useRecoilState(store.meetingNotesActive);
+
+  const customWorkspaceActive = documentCreatorActive || meetingNotesActive;
 
   const toggleLabel = expanded ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar';
   const toggleClick = expanded ? onCollapse : onExpand;
@@ -318,12 +352,37 @@ function ExpandedPanel({
                 aria-label={localize('com_ui_doc_creator')}
                 className={cn(
                   rowButtonClass,
-                  documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100'
+                  documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
                 )}
-                onClick={() => setDocumentCreatorActive(true)}
+                onClick={() => {
+                  setDocumentCreatorActive(true);
+                  setMeetingNotesActive(false);
+                }}
               >
                 <FileText className="h-6 w-6 shrink-0" />
                 <span>{localize('com_ui_doc_creator')}</span>
+              </Button>
+            }
+          />
+          <TooltipAnchor
+            side="right"
+            description={localize('com_ui_meeting_notes')}
+            render={
+              <Button
+                size="icon"
+                variant="ghost"
+                aria-label={localize('com_ui_meeting_notes')}
+                className={cn(
+                  rowButtonClass,
+                  meetingNotesActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
+                )}
+                onClick={() => {
+                  setDocumentCreatorActive(false);
+                  setMeetingNotesActive(true);
+                }}
+              >
+                <ClipboardList className="h-6 w-6 shrink-0" />
+                <span>{localize('com_ui_meeting_notes')}</span>
               </Button>
             }
           />
@@ -334,7 +393,7 @@ function ExpandedPanel({
             <NavIconButton
               key={link.id}
               link={link}
-              isActive={link.id === effectiveActive}
+              isActive={!customWorkspaceActive && link.id === effectiveActive}
               expanded={expanded}
               setActive={setActive}
               onExpand={onExpand}
@@ -367,11 +426,35 @@ function ExpandedPanel({
               aria-label={localize('com_ui_doc_creator')}
               className={cn(
                 iconButtonClass,
-                documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100'
+                documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
               )}
-              onClick={() => setDocumentCreatorActive(true)}
+              onClick={() => {
+                setDocumentCreatorActive(true);
+                setMeetingNotesActive(false);
+              }}
             >
               <FileText className="h-6 w-6 shrink-0" />
+            </Button>
+          }
+        />
+        <TooltipAnchor
+          side="right"
+          description={localize('com_ui_meeting_notes')}
+          render={
+            <Button
+              size="icon"
+              variant="ghost"
+              aria-label={localize('com_ui_meeting_notes')}
+              className={cn(
+                iconButtonClass,
+                meetingNotesActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
+              )}
+              onClick={() => {
+                setDocumentCreatorActive(false);
+                setMeetingNotesActive(true);
+              }}
+            >
+              <ClipboardList className="h-6 w-6 shrink-0" />
             </Button>
           }
         />
@@ -383,7 +466,7 @@ function ExpandedPanel({
           <NavIconButton
             key={link.id}
             link={link}
-            isActive={link.id === effectiveActive}
+            isActive={!customWorkspaceActive && link.id === effectiveActive}
             expanded={expanded ?? true}
             setActive={setActive}
             onExpand={onExpand}

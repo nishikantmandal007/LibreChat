@@ -7,6 +7,7 @@ import type { TConversation, TMessage, TSubmission } from 'librechat-data-provid
 import useMDPChat from '../useMDPChat';
 import { anonymizeText, generateImage, sendChat } from '~/services/mdp';
 import { getWorkspaceSkillsByNames } from '~/services/mdp/workspaceStore';
+import { rememberMessageFiles } from '~/services/mdp/messageFileCache';
 import { getMayaPromptOnlyFileText } from '~/utils/mayaSafeFiles';
 import store from '~/store';
 
@@ -103,6 +104,7 @@ function createSubmission(text: string): TSubmission {
       model: 'gpt-4o',
       modelLabel: 'GPT-4o',
     },
+    isTemporary: false,
   } as TSubmission;
 }
 
@@ -129,7 +131,7 @@ describe('useMDPChat', () => {
           },
         },
       ],
-    } as TMessage;
+    } as unknown as TMessage;
 
     (getMayaPromptOnlyFileText as jest.Mock).mockReturnValue('Hello Alice');
     (anonymizeText as jest.Mock).mockResolvedValue({
@@ -151,7 +153,9 @@ describe('useMDPChat', () => {
     });
 
     renderHook(() => useMDPChat(submission, helpers), {
-      wrapper: createWrapper(),
+      wrapper: createWrapper((snapshot) => {
+        snapshot.set(store.mdpAnonymizationLanguage, 'en');
+      }),
     });
 
     await waitFor(() => expect(sendChat).toHaveBeenCalledTimes(1));
@@ -163,6 +167,30 @@ describe('useMDPChat', () => {
         text: effectivePrompt,
         displayText: 'Voice transcript attached.',
         docIds: undefined,
+      }),
+    );
+    expect(rememberMessageFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'session-1',
+        messageId: 'user-message-1',
+        text: 'Voice transcript attached.',
+        files: submission.userMessage?.files,
+      }),
+    );
+    expect(rememberMessageFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'session-1',
+        messageId: 'user-message-1',
+        text: effectivePrompt,
+        files: submission.userMessage?.files,
+      }),
+    );
+    expect(rememberMessageFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        conversationId: 'session-1',
+        messageId: 'user-message-1',
+        text: 'Voice transcript attached.\n\nHello <NAME>',
+        files: submission.userMessage?.files,
       }),
     );
   });
@@ -203,7 +231,7 @@ describe('useMDPChat', () => {
         text: 'Hallo Alice',
         lang: 'de',
         anonymizedPrompt: 'Hallo <NAME>',
-        anonymizedValues: { Alice: '<NAME>' },
+        anonymizedValues: { Alice: ['<NAME>'] },
         detectedValues: { NAME: ['Alice'] },
       }),
     );

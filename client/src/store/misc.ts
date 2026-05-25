@@ -85,6 +85,11 @@ const documentCreatorActive = atom<boolean>({
   default: false,
 });
 
+const meetingNotesActive = atom<boolean>({
+  key: 'meetingNotesActive',
+  default: false,
+});
+
 export default {
   hideBannerHint,
   messageAttachmentsMap,
@@ -98,4 +103,5 @@ export default {
   documentExportPinned,
   mdpAnonymizationLanguage,
   documentCreatorActive,
+  meetingNotesActive,
 };

@@ -589,22 +589,35 @@ export default function useEventHandlers({
         /* Preserve client-only fields from current messages when the final server payload is thinner. */
         if (finalMessages.length > 0) {
           const hasItems = <T>(items?: T[]) => Array.isArray(items) && items.length > 0;
-          const hasCitations = (metadata: unknown) => {
-            const citations = (metadata as Record<string, unknown> | undefined)?.citations;
-            return Array.isArray(citations) && citations.length > 0;
+          const hasMetadataItems = (metadata: unknown, key: 'citations' | 'artifacts') => {
+            const items = (metadata as Record<string, unknown> | undefined)?.[key];
+            return Array.isArray(items) && items.length > 0;
           };
+          const preservableMessages = currentMessages.filter(
+            (m) => hasItems(m.files) || hasItems(m.attachments) || m.metadata != null,
+          );
           const currentMsgMap = new Map(
-            currentMessages
-              .filter((m) => hasItems(m.files) || hasItems(m.attachments) || m.metadata != null)
+            preservableMessages.map((m) => [
+              m.messageId,
+              { files: m.files, attachments: m.attachments, metadata: m.metadata },
+            ]),
+          );
+          const currentAssistantByParentId = new Map(
+            preservableMessages
+              .filter((m) => !m.isCreatedByUser && m.parentMessageId)
               .map((m) => [
-                m.messageId,
+                m.parentMessageId,
                 { files: m.files, attachments: m.attachments, metadata: m.metadata },
               ]),
           );
 
           for (let i = 0; i < finalMessages.length; i++) {
             const msg = finalMessages[i];
-            const preserved = currentMsgMap.get(msg.messageId);
+            const preserved =
+              currentMsgMap.get(msg.messageId) ??
+              (!msg.isCreatedByUser && msg.parentMessageId
+                ? currentAssistantByParentId.get(msg.parentMessageId)
+                : undefined);
             if (!preserved) {
               continue;
             }
@@ -617,18 +630,32 @@ export default function useEventHandlers({
               nextMsg = { ...nextMsg, attachments: preserved.attachments };
             }
 
-            if (nextMsg.metadata == null && preserved.metadata != null) {
-              nextMsg = { ...nextMsg, metadata: preserved.metadata };
-            } else if (hasCitations(preserved.metadata) && !hasCitations(nextMsg.metadata)) {
+            if (preserved.metadata != null) {
               const preservedMetadata = preserved.metadata as Record<string, unknown>;
-              nextMsg = {
-                ...nextMsg,
-                metadata: {
-                  ...preservedMetadata,
-                  ...((nextMsg.metadata as Record<string, unknown> | undefined) ?? {}),
-                  citations: preservedMetadata.citations,
-                },
-              };
+              const nextMetadata =
+                (nextMsg.metadata as Record<string, unknown> | undefined) ?? undefined;
+              let mergedMetadata = nextMetadata;
+
+              if (mergedMetadata == null) {
+                mergedMetadata = preservedMetadata;
+              } else {
+                for (const key of ['citations', 'artifacts'] as const) {
+                  if (
+                    hasMetadataItems(preservedMetadata, key) &&
+                    !hasMetadataItems(mergedMetadata, key)
+                  ) {
+                    mergedMetadata = {
+                      ...preservedMetadata,
+                      ...mergedMetadata,
+                      [key]: preservedMetadata[key],
+                    };
+                  }
+                }
+              }
+
+              if (mergedMetadata !== nextMsg.metadata) {
+                nextMsg = { ...nextMsg, metadata: mergedMetadata };
+              }
             }
 
             finalMessages[i] = nextMsg;

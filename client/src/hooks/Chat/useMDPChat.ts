@@ -46,6 +46,17 @@ function getDisplayModelName(model?: string | null, fallback?: string | null): s
   return label === MAYA_DEFAULT_MODEL ? 'GPT-4o' : label;
 }
 
+function normalizeAnonymizedValues(
+  values?: Record<string, string | string[]>,
+): Record<string, string[]> | undefined {
+  if (!values) {
+    return undefined;
+  }
+  return Object.fromEntries(
+    Object.entries(values).map(([key, value]) => [key, Array.isArray(value) ? value : [value]]),
+  );
+}
+
 function upsertMessages(
   messages: TMessage[],
   userMessage: TMessage,
@@ -317,7 +328,7 @@ export default function useMDPChat(
           assistantMessageId,
           parentMessageId: submission.userMessage?.parentMessageId ?? NO_PARENT,
           anonymizedPrompt: anonymized.anonymized_prompt,
-          anonymizedValues: anonymized.anonymized_values,
+          anonymizedValues: normalizeAnonymizedValues(anonymized.anonymized_values),
           detectedValues: anonymized.detected_values,
           choices: DEFAULT_PII_CHOICES,
           docId: docIds[0],
@@ -339,13 +350,26 @@ export default function useMDPChat(
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
           savedPrompt,
         };
-        await rememberMessageFiles({
-          conversationId: result.sessionId,
-          messageId: userMessageId,
-          text: trimmedText,
-          textOccurrence: promptTextOccurrence,
-          files: submittedFiles,
-        });
+        if (submittedFiles?.length) {
+          const cacheTextKeys = Array.from(
+            new Set(
+              [trimmedText, effectiveText, anonymized.anonymized_prompt]
+                .map((value) => value?.trim())
+                .filter((value): value is string => Boolean(value)),
+            ),
+          );
+          await Promise.all(
+            cacheTextKeys.map((textKey) =>
+              rememberMessageFiles({
+                conversationId: result.sessionId,
+                messageId: userMessageId,
+                text: textKey,
+                textOccurrence: textKey === trimmedText ? promptTextOccurrence : undefined,
+                files: submittedFiles,
+              }),
+            ),
+          );
+        }
         const assistantMessage: TMessage = {
           ...submission.initialResponse,
           ...result.assistantMessage,
