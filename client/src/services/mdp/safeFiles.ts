@@ -4,15 +4,11 @@ import { normalizeMdpLanguage } from './language';
 
 import type { MayaSafeFilePiiSummary, MayaSafeFileState, MayaSafeFileStatus } from '~/common';
 
-function buildFileUrl(base: string, fileId: string | undefined): string | undefined {
-  if (!fileId) {
+function buildDownloadUrl(safeFileId: string | undefined): string | undefined {
+  if (!safeFileId) {
     return undefined;
   }
-  return `${base}/${encodeURIComponent(fileId)}`;
-}
-
-function buildDownloadUrl(safeFileId: string | undefined): string | undefined {
-  return buildFileUrl(`${MDP_ENDPOINTS.anonymizeFile}/download`, safeFileId);
+  return `${MDP_ENDPOINTS.anonymisedUpload}/${encodeURIComponent(safeFileId)}/download`;
 }
 
 const POLL_INTERVAL_MS = 1200;
@@ -381,8 +377,6 @@ export async function createSafeFile({
 }): Promise<MayaSafeFileState> {
   const form = new FormData();
   form.append('file', file, filename);
-  form.append('safe_chat', 'true');
-  form.append('requestId', crypto.randomUUID());
   form.append('raw_file_id', rawFileId);
   form.append('file_id', rawFileId);
   form.append('file_name', filename);
@@ -396,7 +390,7 @@ export async function createSafeFile({
     form.append('file_role', role);
   }
 
-  const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.anonymizeFile, form, {
+  const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.anonymisedUpload, form, {
     headers: {
       'Content-Type': 'multipart/form-data',
       ...(role ? { 'File-Role': role } : {}),

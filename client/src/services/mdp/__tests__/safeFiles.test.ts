@@ -29,8 +29,8 @@ describe('normalizeSafeFileResponse', () => {
     expect(result.rawFileId).toBe('raw-file-1');
     expect(result.safeFilename).toBe('anonymized_Project_synopsis.pdf');
     expect(result.mimeType).toBe('application/pdf');
-    expect(result.downloadUrl).toBe('/mdp/ai-safe/anonymize-file/download/safe-doc-1');
-    expect(result.previewAnonymizedUrl).toBe('/mdp/ai-safe/anonymize-file/download/safe-doc-1');
+    expect(result.downloadUrl).toBe('/mdp/ai-safe/anonymised-upload/safe-doc-1/download');
+    expect(result.previewAnonymizedUrl).toBe('/mdp/ai-safe/anonymised-upload/safe-doc-1/download');
   });
 
   it('does not use the raw uploaded file id for safe-copy downloads', () => {
@@ -43,7 +43,7 @@ describe('normalizeSafeFileResponse', () => {
 
     expect(result.safeFileId).toBe('safe-doc-2');
     expect(result.rawFileId).toBe('raw-upload-id');
-    expect(result.downloadUrl).toBe('/mdp/ai-safe/anonymize-file/download/safe-doc-2');
+    expect(result.downloadUrl).toBe('/mdp/ai-safe/anonymised-upload/safe-doc-2/download');
   });
 });
 
@@ -71,17 +71,16 @@ describe('createSafeFile', () => {
     const form = mockedPost.mock.calls[0][1] as FormData;
 
     expect(mockedPost).toHaveBeenCalledWith(
-      '/mdp/ai-safe/anonymize-file',
+      '/mdp/ai-safe/anonymised-upload',
       expect.any(FormData),
       expect.objectContaining({
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
     );
-    expect(form.get('safe_chat')).toBe('true');
     expect(form.get('lang')).toBe('de');
   });
 
-  it('falls back to English for unsupported language values', async () => {
+  it('falls back to German for unsupported language values', async () => {
     mockedPost.mockResolvedValue({
       data: {
         status: 'ready',
@@ -99,6 +98,6 @@ describe('createSafeFile', () => {
 
     const form = mockedPost.mock.calls[0][1] as FormData;
 
-    expect(form.get('lang')).toBe('en');
+    expect(form.get('lang')).toBe('de');
   });
 });

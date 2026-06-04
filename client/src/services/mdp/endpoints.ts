@@ -13,6 +13,7 @@ export const MDP_ENDPOINTS = {
   sessionDelete: `${BASE}/session/delete`,
   sessionTokenUsage: `${BASE}/session/get-token-usage`,
   anonymizeFile: `${BASE}/anonymize-file`,
+  anonymisedUpload: `${BASE}/anonymised-upload`,
   generateImage: `${BASE}/generate-image`,
   image: `${BASE}/image`,
   setModelParams: `${BASE}/set-model-params`,
