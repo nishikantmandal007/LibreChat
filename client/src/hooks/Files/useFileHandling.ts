@@ -4,6 +4,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { useToastContext } from '@librechat/client';
 import { useQueryClient } from '@tanstack/react-query';
 import {
+  megabyte,
   QueryKeys,
   Constants,
   EToolResources,
@@ -13,7 +14,12 @@ import {
   defaultAssistantsVersion,
 } from 'librechat-data-provider';
 import debounce from 'lodash/debounce';
-import type { EModelEndpoint, TEndpointsConfig, TError } from 'librechat-data-provider';
+import type {
+  EModelEndpoint,
+  TEndpointsConfig,
+  TError,
+  EndpointFileConfig,
+} from 'librechat-data-provider';
 import type { ExtendedFile, FileSetter, MayaSafeFileState } from '~/common';
 import type { TConversation } from 'librechat-data-provider';
 import { logger, validateFiles, cachePreview, getCachedPreview, removePreviewEntry } from '~/utils';
@@ -47,6 +53,20 @@ export type FileHandlingState = {
 };
 
 const noop = () => {};
+const SAFE_UPLOAD_FILE_LIMIT = 5;
+const SAFE_UPLOAD_TOTAL_SIZE_LIMIT = 30 * megabyte;
+
+const capSafeUploadConfig = (endpointFileConfig: EndpointFileConfig): EndpointFileConfig => ({
+  ...endpointFileConfig,
+  fileLimit: Math.min(
+    endpointFileConfig.fileLimit ?? SAFE_UPLOAD_FILE_LIMIT,
+    SAFE_UPLOAD_FILE_LIMIT,
+  ),
+  totalSizeLimit: Math.min(
+    endpointFileConfig.totalSizeLimit ?? SAFE_UPLOAD_TOTAL_SIZE_LIMIT,
+    SAFE_UPLOAD_TOTAL_SIZE_LIMIT,
+  ),
+});
 
 const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: FileHandlingState) => {
   const localize = useLocalize();
@@ -290,11 +310,14 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
     /* Validate files */
     let filesAreValid: boolean;
     try {
-      const endpointFileConfig = getEndpointFileConfig({
+      const baseEndpointFileConfig = getEndpointFileConfig({
         endpoint,
         fileConfig,
         endpointType,
       });
+      const endpointFileConfig = agent_id || assistant_id
+        ? baseEndpointFileConfig
+        : capSafeUploadConfig(baseEndpointFileConfig);
 
       filesAreValid = validateFiles({
         files,

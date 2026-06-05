@@ -1,7 +1,13 @@
 import React from 'react';
 import { RecoilRoot } from 'recoil';
 import { renderHook as originalRenderHook, act } from '@testing-library/react';
-import { Constants, EModelEndpoint, getEndpointFileConfig } from 'librechat-data-provider';
+import {
+  Constants,
+  EModelEndpoint,
+  getEndpointFileConfig,
+  megabyte,
+} from 'librechat-data-provider';
+import type { EndpointFileConfig } from 'librechat-data-provider';
 
 const renderHook: typeof originalRenderHook = (callback, options) => {
   return originalRenderHook(callback, {
@@ -19,6 +25,17 @@ beforeAll(() => {
 const mockShowToast = jest.fn();
 const mockSetFilesLoading = jest.fn();
 const mockMutate = jest.fn();
+const SAFE_UPLOAD_FILE_LIMIT = 5;
+const SAFE_UPLOAD_TOTAL_SIZE_LIMIT = 30 * megabyte;
+
+const withSafeUploadCap = (config: EndpointFileConfig): EndpointFileConfig => ({
+  ...config,
+  fileLimit: Math.min(config.fileLimit ?? SAFE_UPLOAD_FILE_LIMIT, SAFE_UPLOAD_FILE_LIMIT),
+  totalSizeLimit: Math.min(
+    config.totalSizeLimit ?? SAFE_UPLOAD_TOTAL_SIZE_LIMIT,
+    SAFE_UPLOAD_TOTAL_SIZE_LIMIT,
+  ),
+});
 
 let mockConversation: Record<string, string | null | undefined> = {};
 
@@ -147,7 +164,7 @@ describe('useFileHandling', () => {
         endpointType: 'custom',
         fileConfig: null,
       });
-      expect(validateCall.endpointFileConfig).toEqual(configResult);
+      expect(validateCall.endpointFileConfig).toEqual(withSafeUploadCap(configResult));
     });
 
     it('uses endpointOverride for validation instead of conversation endpoint', async () => {
@@ -175,7 +192,7 @@ describe('useFileHandling', () => {
         endpointType: EModelEndpoint.agents,
         fileConfig: null,
       });
-      expect(validateCall.endpointFileConfig).toEqual(agentsConfig);
+      expect(validateCall.endpointFileConfig).toEqual(withSafeUploadCap(agentsConfig));
     });
 
     it('falls back to conversation endpoint when endpointOverride is undefined', async () => {
@@ -201,7 +218,7 @@ describe('useFileHandling', () => {
         endpointType: undefined,
         fileConfig: null,
       });
-      expect(validateCall.endpointFileConfig).toEqual(anthropicConfig);
+      expect(validateCall.endpointFileConfig).toEqual(withSafeUploadCap(anthropicConfig));
     });
 
     it('sends correct endpoint in upload form data when override is set', async () => {
@@ -226,6 +243,13 @@ describe('useFileHandling', () => {
       });
 
       expect(mockMutate).toHaveBeenCalledTimes(1);
+      const validateCall = mockValidateFiles.mock.calls[0][0];
+      const agentsConfig = getEndpointFileConfig({
+        endpoint: EModelEndpoint.agents,
+        endpointType: EModelEndpoint.agents,
+        fileConfig: null,
+      });
+      expect(validateCall.endpointFileConfig).toEqual(agentsConfig);
       const formData: FormData = mockMutate.mock.calls[0][0];
       expect(formData.get('endpoint')).toBe(EModelEndpoint.agents);
       expect(formData.get('endpointType')).toBe(EModelEndpoint.agents);
