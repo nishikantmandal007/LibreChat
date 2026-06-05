@@ -224,6 +224,15 @@ const useFileHandlingCore = (params: UseFileHandling | undefined, fileState: Fil
     formData.append('file', extendedFile.file as File, encodeURIComponent(filename));
     formData.append('file_id', extendedFile.file_id);
     formData.append('lang', mdpLanguage || 'en');
+    const privacyContextId = conversation?.conversationId;
+    if (
+      !agent_id &&
+      !assistant_id &&
+      privacyContextId &&
+      privacyContextId !== Constants.NEW_CONVO
+    ) {
+      formData.append('privacy_context_id', privacyContextId);
+    }
 
     const width = extendedFile.width ?? 0;
     const height = extendedFile.height ?? 0;

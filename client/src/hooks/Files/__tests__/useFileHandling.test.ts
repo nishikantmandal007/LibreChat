@@ -165,6 +165,9 @@ describe('useFileHandling', () => {
         fileConfig: null,
       });
       expect(validateCall.endpointFileConfig).toEqual(withSafeUploadCap(configResult));
+      expect(mockMutate).toHaveBeenCalledTimes(1);
+      const formData: FormData = mockMutate.mock.calls[0][0];
+      expect(formData.get('privacy_context_id')).toBe('convo-1');
     });
 
     it('uses endpointOverride for validation instead of conversation endpoint', async () => {

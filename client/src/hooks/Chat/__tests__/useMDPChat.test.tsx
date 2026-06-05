@@ -198,6 +198,10 @@ describe('useMDPChat', () => {
   it('passes the selected anonymization language through anonymizeText and sendChat', async () => {
     const helpers = createChatHelpers();
     const submission = createSubmission('  Hallo Alice  ');
+    submission.conversation = {
+      ...submission.conversation,
+      conversationId: 'session-1',
+    } as TConversation;
 
     (anonymizeText as jest.Mock).mockResolvedValue({
       anonymized_prompt: 'Hallo <NAME>',
@@ -225,7 +229,9 @@ describe('useMDPChat', () => {
 
     await waitFor(() => expect(sendChat).toHaveBeenCalledTimes(1));
 
-    expect(anonymizeText).toHaveBeenCalledWith('Hallo Alice', ['NAME', 'EMAIL'], 'de');
+    expect(anonymizeText).toHaveBeenCalledWith('Hallo Alice', ['NAME', 'EMAIL'], 'de', {
+      privacyContextId: 'session-1',
+    });
     expect(sendChat).toHaveBeenCalledWith(
       expect.objectContaining({
         text: 'Hallo Alice',

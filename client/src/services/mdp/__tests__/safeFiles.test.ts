@@ -66,6 +66,7 @@ describe('createSafeFile', () => {
       filename: 'report.txt',
       llmType: 'openai',
       lang: 'de',
+      privacyContextId: 'chat-1',
     });
 
     const form = mockedPost.mock.calls[0][1] as FormData;
@@ -78,6 +79,7 @@ describe('createSafeFile', () => {
       }),
     );
     expect(form.get('lang')).toBe('de');
+    expect(form.get('privacy_context_id')).toBe('chat-1');
   });
 
   it('falls back to German for unsupported language values', async () => {

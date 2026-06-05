@@ -28,7 +28,7 @@ describe('uploadFile', () => {
       data: {
         status: 'ready',
         safe_doc_id: 'safe-doc-1',
-        download_url: '/mdp/ai-safe/anonymize-file/download/safe-doc-1',
+        download_url: '/mdp/ai-safe/anonymised-upload/safe-doc-1/download',
       },
     });
 
@@ -36,21 +36,22 @@ describe('uploadFile', () => {
     form.append('file', new File(['Alice lives in Berlin'], 'notes.txt', { type: 'text/plain' }));
     form.append('file_id', 'temp-file-1');
     form.append('lang', 'de');
+    form.append('privacy_context_id', 'chat-1');
 
     const result = await uploadFile(form);
     const safeForm = mockedPost.mock.calls[0][1] as FormData;
 
     expect(mockedPost).toHaveBeenCalledTimes(1);
     expect(mockedPost).toHaveBeenCalledWith(
-      '/mdp/ai-safe/anonymize-file',
+      '/mdp/ai-safe/anonymised-upload',
       expect.any(FormData),
       expect.objectContaining({
         headers: { 'Content-Type': 'multipart/form-data' },
       }),
     );
-    expect(safeForm.get('safe_chat')).toBe('true');
     expect(safeForm.get('file_id')).toBe('temp-file-1');
     expect(safeForm.get('lang')).toBe('de');
+    expect(safeForm.get('privacy_context_id')).toBe('chat-1');
     expect(result.file_id).toBe('safe-doc-1');
     expect(result.safeFile?.safeDocId).toBe('safe-doc-1');
   });

@@ -318,7 +318,11 @@ export default function useMDPChat(
           return;
         }
 
-        const anonymized = await anonymizeText(effectiveText, DEFAULT_PII_CHOICES, mdpLanguage);
+        const anonymized = normalizedSessionId
+          ? await anonymizeText(effectiveText, DEFAULT_PII_CHOICES, mdpLanguage, {
+              privacyContextId: normalizedSessionId,
+            })
+          : await anonymizeText(effectiveText, DEFAULT_PII_CHOICES, mdpLanguage);
         const result = await sendChat({
           text: effectiveText,
           displayText: trimmedText,

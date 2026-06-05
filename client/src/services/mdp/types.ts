@@ -103,6 +103,8 @@ export interface MDPAnonymizeRequest {
   prompt: string;
   choices: string[];
   lang?: string;
+  privacy_context_id?: string;
+  project_id?: string;
   model?: string;
   requires_anonymization?: boolean;
   case_correction?: boolean;

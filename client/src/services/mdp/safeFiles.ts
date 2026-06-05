@@ -364,6 +364,7 @@ export async function createSafeFile({
   lang = 'en',
   localPreviewUrl,
   role,
+  privacyContextId,
 }: {
   file: File;
   rawFileId: string;
@@ -374,6 +375,7 @@ export async function createSafeFile({
   lang?: string;
   localPreviewUrl?: string;
   role?: string;
+  privacyContextId?: string;
 }): Promise<MayaSafeFileState> {
   const form = new FormData();
   form.append('file', file, filename);
@@ -388,6 +390,9 @@ export async function createSafeFile({
   }
   if (role) {
     form.append('file_role', role);
+  }
+  if (privacyContextId) {
+    form.append('privacy_context_id', privacyContextId);
   }
 
   const response = await mdpClient.post<unknown>(MDP_ENDPOINTS.anonymisedUpload, form, {

@@ -28,6 +28,7 @@ export async function uploadFile(formData: FormData): Promise<TFileUpload> {
   const llmType = formData.get('llm_type')?.toString() || 'openai';
   const lang = normalizeMdpLanguage(formData.get('lang')?.toString());
   const role = formData.get('file_role')?.toString();
+  const privacyContextId = formData.get('privacy_context_id')?.toString();
   const filename = file.name;
   const mimeType = file.type || 'application/octet-stream';
   const localPreviewUrl = URL.createObjectURL(file);
@@ -64,6 +65,7 @@ export async function uploadFile(formData: FormData): Promise<TFileUpload> {
       lang,
       localPreviewUrl,
       role,
+      privacyContextId,
     });
   } catch (error) {
     safeFile = {
