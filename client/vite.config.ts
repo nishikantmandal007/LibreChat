@@ -32,9 +32,10 @@ const NODE_POLYFILL_SHIMS: Record<string, string> = {
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname, '..'), ['VITE_']);
   const mdpApiUrl = env.VITE_MDP_API_URL || process.env.VITE_MDP_API_URL || 'http://localhost:4000';
+  const configuredBase = env.VITE_BASE_HREF?.trim() || (command === 'serve' ? '/' : '/librechat/');
 
   return {
-    base: '',
+    base: configuredBase,
     server: {
       allowedHosts:
         (process.env.VITE_ALLOWED_HOSTS && process.env.VITE_ALLOWED_HOSTS.split(',')) || [],

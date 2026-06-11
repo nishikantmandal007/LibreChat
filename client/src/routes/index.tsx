@@ -4,6 +4,7 @@ import { MarketplaceProvider } from '~/components/Agents/MarketplaceContext';
 import AgentMarketplace from '~/components/Agents/Marketplace';
 import { AuthContextProvider } from '~/hooks/AuthContext';
 import { FEATURES } from '~/config/features';
+import { normalizeBaseHref } from '~/utils/baseHref';
 import RouteErrorBoundary from './RouteErrorBoundary';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
@@ -31,7 +32,7 @@ const loadSkillsView = () =>
   }));
 
 const baseEl = document.querySelector('base');
-const baseHref = baseEl?.getAttribute('href') || '/';
+const baseHref = normalizeBaseHref(baseEl?.getAttribute('href'));
 
 const buildProtectedChildren = (): RouteObject[] => {
   const children: RouteObject[] = [
