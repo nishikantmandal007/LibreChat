@@ -2,7 +2,7 @@ import { memo, useRef, useMemo, useEffect, useState, useCallback } from 'react';
 import { useWatch } from 'react-hook-form';
 import { TextareaAutosize } from '@librechat/client';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { Constants, isAssistantsEndpoint, isAgentsEndpoint } from 'librechat-data-provider';
+import { Constants, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { TConversation } from 'librechat-data-provider';
 import type { ExtendedFile, FileSetter, ConvoGenerator } from '~/common';
 import {
@@ -23,22 +23,17 @@ import {
 } from '~/hooks';
 import { hasMayaSafeFileBlocker } from '~/utils/mayaSafeFiles';
 import PendingManualSkillsChips from './PendingManualSkillsChips';
-import { cn, getModelSpec, removeFocusRings } from '~/utils';
-import { useGetStartupConfig } from '~/data-provider';
-import { mainTextareaId, BadgeItem } from '~/common';
+import { cn, removeFocusRings } from '~/utils';
+import { mainTextareaId } from '~/common';
 import AttachFileChat from './Files/AttachFileChat';
 import FileFormChat from './Files/FileFormChat';
-import TextareaHeader from './TextareaHeader';
 import SkillsCommand from './SkillsCommand';
 import PromptsCommand from './PromptsCommand';
 import AudioRecorder from './AudioRecorder';
+import ToolsDropdown from './ToolsDropdown';
 import CollapseChat from './CollapseChat';
-import StreamAudio from './StreamAudio';
 import StopButton from './StopButton';
 import SendButton from './SendButton';
-import EditBadges from './EditBadges';
-import BadgeRow from './BadgeRow';
-import Mention from './Mention';
 import store from '~/store';
 
 interface ChatFormProps {
@@ -74,42 +69,25 @@ const ChatForm = memo(function ChatForm({
   const [, setIsScrollable] = useState(false);
   const [visualRowCount, setVisualRowCount] = useState(1);
   const [isTextAreaFocused, setIsTextAreaFocused] = useState(false);
-  const [backupBadges, setBackupBadges] = useState<Pick<BadgeItem, 'id'>[]>([]);
 
   const SpeechToText = true;
-  const TextToSpeech = useRecoilValue(store.textToSpeech);
   const chatDirection = useRecoilValue(store.chatDirection);
-  const automaticPlayback = useRecoilValue(store.automaticPlayback);
   const maximizeChatSpace = useRecoilValue(store.maximizeChatSpace);
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
   const isTemporary = useRecoilValue(store.isTemporary);
   const mdpLanguage = useRecoilValue(store.mdpAnonymizationLanguage);
 
-  const [badges, setBadges] = useRecoilState(store.chatBadges);
-  const [isEditingBadges, setIsEditingBadges] = useRecoilState(store.isEditingBadges);
   const [showStopButton, setShowStopButton] = useRecoilState(store.showStopButtonByIndex(index));
-  const plusPopoverAtom = useMemo(() => store.showPlusPopoverFamily(index), [index]);
-  const mentionPopoverAtom = useMemo(() => store.showMentionPopoverFamily(index), [index]);
 
   const { requiresKey } = useRequiresKey();
   const methods = useChatFormContext();
-  const {
-    generateConversation,
-    conversation: addedConvo,
-    setConversation: setAddedConvo,
-  } = useAddedChatContext();
+  useAddedChatContext();
   const assistantMap = useAssistantsMapContext();
-  const { data: startupConfig } = useGetStartupConfig();
 
   const endpoint = useMemo(
     () => conversation?.endpointType ?? conversation?.endpoint,
     [conversation?.endpointType, conversation?.endpoint],
   );
-  const modelSpec = useMemo(
-    () => getModelSpec({ specName: conversation?.spec, startupConfig }),
-    [conversation?.spec, startupConfig],
-  );
-  const hideBadgeRow = modelSpec?.hideBadgeRow === true;
   const conversationId = useMemo(
     () => conversation?.conversationId ?? Constants.NEW_CONVO,
     [conversation?.conversationId],
@@ -212,25 +190,6 @@ const ChatForm = memo(function ChatForm({
     }
   }, [textValue]);
 
-  useEffect(() => {
-    if (isEditingBadges && backupBadges.length === 0) {
-      setBackupBadges([...badges]);
-    }
-  }, [isEditingBadges, badges, backupBadges.length]);
-
-  const handleSaveBadges = useCallback(() => {
-    setIsEditingBadges(false);
-    setBackupBadges([]);
-  }, [setIsEditingBadges, setBackupBadges]);
-
-  const handleCancelBadges = useCallback(() => {
-    if (backupBadges.length > 0) {
-      setBadges([...backupBadges]);
-    }
-    setIsEditingBadges(false);
-    setBackupBadges([]);
-  }, [backupBadges, setBadges, setIsEditingBadges]);
-
   const isMoreThanThreeRows = visualRowCount > 3;
 
   const baseClasses = useMemo(
@@ -259,21 +218,6 @@ const ChatForm = memo(function ChatForm({
     >
       <div className="relative flex h-full flex-1 items-stretch md:flex-col">
         <div className={cn('flex w-full items-center', isRTL && 'flex-row-reverse')}>
-          <Mention
-            index={index}
-            popoverAtom={plusPopoverAtom}
-            newConversation={generateConversation}
-            textAreaRef={textAreaRef}
-            commandChar="+"
-            placeholder="com_ui_add_model_preset"
-            includeAssistants={false}
-          />
-          <Mention
-            index={index}
-            popoverAtom={mentionPopoverAtom}
-            newConversation={newConversation}
-            textAreaRef={textAreaRef}
-          />
           <PromptsCommand
             index={index}
             textAreaRef={textAreaRef}
@@ -297,15 +241,7 @@ const ChatForm = memo(function ChatForm({
                 : 'border-border-light bg-surface-chat',
             )}
           >
-            <TextareaHeader addedConvo={addedConvo} setAddedConvo={setAddedConvo} />
             <PendingManualSkillsChips conversationId={conversationId} />
-            {/* WIP */}
-            <EditBadges
-              isEditingChatBadges={isEditingBadges}
-              handleCancelBadges={handleCancelBadges}
-              handleSaveBadges={handleSaveBadges}
-              setBadges={setBadges}
-            />
             <FileFormChat
               conversation={conversation}
               files={files}
@@ -378,21 +314,7 @@ const ChatForm = memo(function ChatForm({
                   setFilesLoading={setFilesLoading}
                 />
               </div>
-              <BadgeRow
-                showEphemeralBadges={
-                  !!endpoint &&
-                  !hideBadgeRow &&
-                  !isAgentsEndpoint(endpoint) &&
-                  !isAssistantsEndpoint(endpoint)
-                }
-                isSubmitting={isSubmitting}
-                conversationId={conversationId}
-                specName={conversation?.spec}
-                onChange={setBadges}
-                isInChat={
-                  Array.isArray(conversation?.messages) && conversation.messages.length >= 1
-                }
-              />
+              <ToolsDropdown disabled={disableInputs} />
               <div className="mx-auto flex" />
               {SpeechToText && (
                 <AudioRecorder
@@ -424,7 +346,6 @@ const ChatForm = memo(function ChatForm({
                 )}
               </div>
             </div>
-            {TextToSpeech && automaticPlayback && <StreamAudio index={index} />}
           </div>
         </div>
       </div>

@@ -13,26 +13,43 @@ export interface MDPChatRequest {
     lang: string;
     chat_id?: string;
     original_prompt: string;
+    model_key?: string;
+    chat_model?: string;
     anonymized_prompt?: string;
     anonymized_values?: Record<string, string[]>;
     detected_values?: Record<string, string[]>;
     choices?: string[];
     doc?: string;
     docs?: string[];
-    manual_skills?: string[];
-    saved_prompt?: {
-      group_id: string;
-      name?: string;
-      prompt: string;
-    };
     skill_instructions?: Array<{
       name: string;
       description?: string;
       body: string;
     }>;
-    file_roles?: Record<string, FileRole>;
   };
 }
+
+export interface MDPChatModelCatalogItem {
+  key: string;
+  label: string;
+  provider: string;
+  company?: string;
+  endpoint?: string;
+  default?: boolean;
+}
+
+export interface MDPChatModelCatalog {
+  default_model: string;
+  models: MDPChatModelCatalogItem[];
+  models_by_endpoint?: Record<string, string[]>;
+}
+
+// export interface MDPActivityItem {
+//   type?: string;
+//   label?: string;
+//   detail?: string;
+//   sources?: string[];
+// }
 
 export interface MDPCitation {
   file_name?: string;
@@ -52,24 +69,26 @@ export interface MDPChatResponse {
   anonymized_values: Record<string, string[]>;
   reidentify_job_id?: string;
   file_names?: string[];
-  citations?: MDPCitation[];
-  artifacts?: Array<{
-    artifact_id: string;
-    kind?: string;
-    format?: string;
-    content_type?: string;
-    filename?: string;
-    download_url?: string;
-    preview_url?: string;
-    metadata?: Record<string, unknown>;
-    created_at?: string;
-  }>;
-  workflow?: {
-    privacy?: string;
-    rag?: string;
-    skills?: string[];
-    artifact_count?: number;
-  };
+  // citations?: MDPCitation[];
+  // activity?: MDPActivityItem[];
+  // artifacts?: Array<{
+  //   artifact_id: string;
+  //   kind?: string;
+  //   format?: string;
+  //   content_type?: string;
+  //   filename?: string;
+  //   download_url?: string;
+  //   preview_url?: string;
+  //   metadata?: Record<string, unknown>;
+  //   created_at?: string;
+  // }>;
+  model_key?: string;
+  // workflow?: {
+  //   privacy?: string;
+  //   rag?: string;
+  //   skills?: string[];
+  //   artifact_count?: number;
+  // };
 }
 
 export interface MDPSession {
@@ -89,6 +108,7 @@ export interface MDPPromptData {
   total_tokens: number;
   anonymized_values: string;
   created_at: string;
+  model_key?: string;
   citations?: MDPCitation[] | string;
   sources?: MDPCitation[] | string;
   metadata?:

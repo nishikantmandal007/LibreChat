@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { roleDefaults, SystemRoles, Constants } from 'librechat-data-provider';
+import { EModelEndpoint, roleDefaults, SystemRoles, Constants } from 'librechat-data-provider';
 import {
   listSessions,
   getSessionConversation,
@@ -43,6 +43,7 @@ import {
 } from './workspaceStore';
 
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { MDPChatModelCatalog } from './types';
 
 const EMPTY_ARRAY: never[] = [];
 const EMPTY_OBJECT = {};
@@ -208,6 +209,44 @@ async function transcribeSpeech(config: InternalAxiosRequestConfig): Promise<{ t
   return { text: normalizeSpeechText(response.data) };
 }
 
+async function getMayaModelsConfig(): Promise<unknown> {
+  try {
+    const response = await mdpClient.get<MDPChatModelCatalog>(MDP_ENDPOINTS.chatModels);
+    const catalog = response.data;
+    const modelsByEndpoint = catalog.models_by_endpoint;
+    const groupedModels = {
+      [EModelEndpoint.openAI]: modelsByEndpoint?.[EModelEndpoint.openAI] ?? [],
+      [EModelEndpoint.anthropic]: modelsByEndpoint?.[EModelEndpoint.anthropic] ?? [],
+    };
+
+    if (
+      groupedModels[EModelEndpoint.openAI].length ||
+      groupedModels[EModelEndpoint.anthropic].length
+    ) {
+      return groupedModels;
+    }
+
+    for (const model of catalog.models ?? []) {
+      if (model.provider === 'anthropic_foundry') {
+        groupedModels[EModelEndpoint.anthropic].push(model.key);
+      } else if (model.key) {
+        groupedModels[EModelEndpoint.openAI].push(model.key);
+      }
+    }
+
+    if (
+      groupedModels[EModelEndpoint.openAI].length ||
+      groupedModels[EModelEndpoint.anthropic].length
+    ) {
+      return groupedModels;
+    }
+  } catch {
+    // Use the static catalogue when the backend is unavailable during local startup.
+  }
+
+  return MAYA_MODELS;
+}
+
 function staticRoute(pathname: string): { matched: boolean; data: unknown } {
   const entries = Object.entries(MOCK_ROUTES).sort((a, b) => b[0].length - a[0].length);
   for (const [route, data] of entries) {
@@ -282,7 +321,22 @@ function handleWorkspacePromptRoute(
   searchParams: URLSearchParams,
 ): { matched: boolean; data: unknown } {
   if (pathname === '/api/categories' && method === 'get') {
-    return { matched: true, data: listWorkspacePromptCategories() };
+    const DEFAULT_CATEGORIES = [
+      { value: '', label: 'com_ui_all' },
+      { value: 'general', label: 'General' },
+      { value: 'code', label: 'Code' },
+      { value: 'write', label: 'Writing' },
+      { value: 'idea', label: 'Ideas' },
+      { value: 'finance', label: 'Finance' },
+      { value: 'hr', label: 'HR' },
+      { value: 'it', label: 'IT' },
+      { value: 'sales', label: 'Sales' },
+      { value: 'teach_or_explain', label: 'Education' },
+    ];
+    const custom = listWorkspacePromptCategories()
+      .filter((c: string) => !DEFAULT_CATEGORIES.some((d) => d.value === c))
+      .map((c: string) => ({ value: c, label: c, custom: true }));
+    return { matched: true, data: [...DEFAULT_CATEGORIES, ...custom] };
   }
 
   if (pathname === '/api/prompts/all' && method === 'get') {
@@ -567,6 +621,10 @@ async function resolveApiData(
   if (pathname.startsWith('/api/files/') && pathname.endsWith('/preview') && method === 'get') {
     const fileId = decodeURIComponent(pathname.split('/')[3] ?? '');
     return { file_id: fileId, status: 'ready' };
+  }
+
+  if (pathname === '/api/models' && method === 'get') {
+    return getMayaModelsConfig();
   }
 
   const route = staticRoute(pathname);

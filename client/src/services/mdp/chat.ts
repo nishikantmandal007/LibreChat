@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from 'uuid';
 import { mdpClient } from './client';
 import { MDP_ENDPOINTS } from './endpoints';
-import { endpointToMayaLLM, MAYA_DEFAULT_MODEL } from './modelConfig';
+import {
+  endpointToMayaLLM,
+  getModelCatalogItem,
+  MAYA_CHAT_MODEL_LABELS,
+  MAYA_DEFAULT_MODEL,
+} from './modelConfig';
 import { formatMayaAssistantText } from './format';
 import { invalidateSessionsCache } from './history';
 import { normalizeMdpLanguage } from './language';
@@ -38,6 +43,7 @@ export interface MDPChatSubmission {
   files?: TMessage['files'];
   endpoint?: string | null;
   model?: string | null;
+  webSearchEnabled?: boolean;
 }
 
 export interface MDPChatResult {
@@ -107,28 +113,23 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
       lang: normalizeMdpLanguage(submission.lang),
       chat_id: submission.sessionId,
       original_prompt: submission.text,
+      model_key: model,
       anonymized_prompt: submission.anonymizedPrompt,
       anonymized_values: submission.anonymizedValues,
       detected_values: submission.detectedValues,
       choices: submission.choices,
       doc: submission.docId,
       docs: submission.docIds,
-      manual_skills: submission.manualSkills,
-      saved_prompt: submission.savedPrompt
-        ? {
-            group_id: submission.savedPrompt.groupId,
-            name: submission.savedPrompt.name,
-            prompt: submission.savedPrompt.prompt,
-          }
-        : undefined,
       skill_instructions: submission.skillInstructions,
-      file_roles: submission.fileRoles,
     },
   };
 
   const response = await mdpClient.post<MDPChatResponse>(MDP_ENDPOINTS.chat, request);
   const data = response.data;
-  const modelLabel = model === MAYA_DEFAULT_MODEL ? 'GPT-4o' : model;
+  const resolvedModel = data.model_key || model;
+  const catalogItem = getModelCatalogItem(resolvedModel);
+  const modelLabel = catalogItem?.label ?? MAYA_CHAT_MODEL_LABELS[resolvedModel] ?? resolvedModel;
+  const responseEndpoint = catalogItem?.endpoint ?? submission.endpoint;
   const responseText = data.replaced_response || data.llm_response || '';
 
   const now = new Date().toISOString();
@@ -152,35 +153,24 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     text: submission.displayText ?? submission.text,
     isCreatedByUser: true,
     files: submission.files,
-    manualSkills: submission.manualSkills,
-    savedPrompt: submission.savedPrompt
-      ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
-      : undefined,
+    // manualSkills: submission.manualSkills,
+    // savedPrompt: submission.savedPrompt
+    //   ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
+    //   : undefined,
     createdAt: now,
     updatedAt: now,
-    metadata:
-      anonymizedPrompt || submission.savedPrompt
-        ? {
-            ...(anonymizedPrompt ? { anonymizedPrompt } : {}),
-            ...(submission.savedPrompt
-              ? {
-                  savedPrompt: {
-                    groupId: submission.savedPrompt.groupId,
-                    name: submission.savedPrompt.name,
-                  },
-                }
-              : {}),
-          }
-        : undefined,
+    metadata: anonymizedPrompt ? { anonymizedPrompt } : undefined,
   };
 
-  const citationData = data.citations?.filter(Boolean) ?? [];
-  const artifactData = data.artifacts?.filter(Boolean) ?? [];
-  const metadata = {
-    ...(citationData.length > 0 ? { citations: citationData } : {}),
-    ...(artifactData.length > 0 ? { artifacts: artifactData } : {}),
-    ...(data.workflow ? { workflow: data.workflow } : {}),
-  };
+  // const citationData = data.citations?.filter(Boolean) ?? [];
+  // const artifactData = data.artifacts?.filter(Boolean) ?? [];
+  // const activityData = data.activity?.filter(Boolean) ?? [];
+  // const metadata = {
+  //   ...(citationData.length > 0 ? { citations: citationData } : {}),
+  //   ...(activityData.length > 0 ? { activity: activityData } : {}),
+  //   ...(artifactData.length > 0 ? { artifacts: artifactData } : {}),
+  //   ...(data.workflow ? { workflow: data.workflow } : {}),
+  // };
   const assistantMessage: TMessage = {
     messageId: assistantMessageId,
     conversationId,
@@ -188,19 +178,18 @@ export async function sendChat(submission: MDPChatSubmission): Promise<MDPChatRe
     sender: modelLabel,
     text: formatMayaAssistantText({
       responseText,
-      modelLabel,
     }),
     isCreatedByUser: false,
     createdAt: now,
     updatedAt: now,
-    endpoint: submission.endpoint || undefined,
-    iconURL: submission.endpoint || undefined,
-    model,
-    manualSkills: submission.manualSkills,
-    savedPrompt: submission.savedPrompt
-      ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
-      : undefined,
-    metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
+    endpoint: responseEndpoint || undefined,
+    iconURL: responseEndpoint || undefined,
+    model: resolvedModel,
+    // manualSkills: submission.manualSkills,
+    // savedPrompt: submission.savedPrompt
+    //   ? { groupId: submission.savedPrompt.groupId, name: submission.savedPrompt.name }
+    //   : undefined,
+    // metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
   };
 
   return {

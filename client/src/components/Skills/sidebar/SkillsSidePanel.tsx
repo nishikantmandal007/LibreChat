@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import { useListSkillsQuery } from '~/data-provider';
+import { useToastContext } from '@librechat/client';
+import { useListSkillsQuery, useImportSkillMutation } from '~/data-provider';
 import { useDebounce, useHasAccess, useLocalize } from '~/hooks';
 import { CreateSkillMenu } from '../buttons';
 import SkillListPanel from '../lists/SkillList';
@@ -17,11 +18,16 @@ interface SkillsSidePanelProps {
  * Header: "Skills" title + search icon + create menu (+ dropdown).
  * Body: "My Skills" collapsible section with skill list.
  */
+const ACCEPTED_EXTENSIONS = /\.(md|skill)$/i;
+
 export default function SkillsSidePanel({ className }: SkillsSidePanelProps) {
   const localize = useLocalize();
+  const navigate = useNavigate();
+  const { showToast } = useToastContext();
   const { skillId: activeSkillId } = useParams();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   const debouncedSearch = useDebounce(searchTerm, 250);
 
   const hasCreateAccess = useHasAccess({
@@ -32,6 +38,34 @@ export default function SkillsSidePanel({ className }: SkillsSidePanelProps) {
   const listQuery = useListSkillsQuery({ search: debouncedSearch || undefined, limit: 50 });
   const skills = useMemo(() => listQuery.data?.skills ?? [], [listQuery.data]);
 
+  const importMutation = useImportSkillMutation({
+    onSuccess: (skill) => {
+      if (skill?._id) {
+        showToast({ status: 'success', message: localize('com_ui_skill_created') });
+        navigate(`/skills/${skill._id}`);
+      }
+    },
+    onError: () => {
+      showToast({ status: 'error', message: localize('com_ui_create_skill_upload_error') });
+    },
+  });
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (!file || !ACCEPTED_EXTENSIONS.test(file.name)) {
+        showToast({ status: 'error', message: 'Drop a .md or .skill file' });
+        return;
+      }
+      const formData = new FormData();
+      formData.append('file', file, file.name);
+      importMutation.mutate(formData);
+    },
+    [importMutation, showToast],
+  );
+
   const handleCloseSearch = () => {
     setSearchOpen(false);
     setSearchTerm('');
@@ -41,8 +75,12 @@ export default function SkillsSidePanel({ className }: SkillsSidePanelProps) {
     <div
       className={cn(
         'flex h-full w-full flex-col overflow-hidden border-r border-border-light',
+        isDragging && 'ring-2 ring-inset ring-ring-primary bg-surface-hover/50',
         className,
       )}
+      onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+      onDragLeave={() => setIsDragging(false)}
+      onDrop={handleDrop}
     >
       {/* Header — title+icons or inline search input */}
       <div className="flex items-center justify-between px-4 py-2">

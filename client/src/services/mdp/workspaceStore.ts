@@ -36,6 +36,7 @@ const SKILLS_KEY = 'maya:workspace:skills';
 const SKILL_STATES_KEY = 'maya:workspace:skill-states';
 const SKILL_FAVORITES_KEY = 'maya:workspace:skill-favorites';
 const BACKEND_PROMPT_MAP_KEY = 'maya:workspace:backend-prompt-map';
+const BACKEND_PROMPT_GROUP_MAP_KEY = 'maya:workspace:backend-prompt-group-map';
 const BACKEND_SKILL_PREFIX = 'backend_';
 const USER_ID = 'guest';
 const USER_NAME = 'Guest';
@@ -443,6 +444,7 @@ export function createWorkspacePrompt(payload: TCreatePrompt): TCreatePromptResp
   const timestamp = nowIso();
   const groupId = payload.prompt.groupId ?? createId('prompt_group');
   let group = records.find((record) => record._id === groupId);
+  const isNewGroup = !group;
 
   if (!group) {
     group = {
@@ -478,6 +480,8 @@ export function createWorkspacePrompt(payload: TCreatePrompt): TCreatePromptResp
   group.updatedAt = timestamp;
   savePromptRecords(records);
 
+  syncPromptGroupToBackend(group).catch(() => {});
+
   return {
     prompt,
     group: toPromptGroup(group),
@@ -501,11 +505,15 @@ export function updateWorkspacePromptGroup(
   group.isPublic = payload.isPublic ?? group.isPublic;
   group.updatedAt = nowIso();
   savePromptRecords(records);
+
+  syncPromptGroupToBackend(group).catch(() => {});
+
   return toPromptGroup(group);
 }
 
 export function deleteWorkspacePromptGroup(groupId: string): { message: string } {
   savePromptRecords(getPromptRecords().filter((group) => group._id !== groupId));
+  deletePromptGroupFromBackend(groupId).catch(() => {});
   return { message: 'Prompt group deleted' };
 }
 
@@ -519,6 +527,7 @@ export function deleteWorkspacePrompt(promptId: string, groupId: string): TDelet
   group.prompts = group.prompts.filter((prompt) => prompt._id !== promptId);
   if (group.prompts.length === 0) {
     savePromptRecords(records.filter((record) => record._id !== groupId));
+    deletePromptGroupFromBackend(groupId).catch(() => {});
     return { prompt: promptId, promptGroup: { id: groupId, message: 'Prompt group deleted' } };
   }
 
@@ -528,6 +537,7 @@ export function deleteWorkspacePrompt(promptId: string, groupId: string): TDelet
   }
   group.updatedAt = nowIso();
   savePromptRecords(records);
+  syncPromptGroupToBackend(group).catch(() => {});
   return { prompt: promptId };
 }
 
@@ -588,6 +598,50 @@ function removeBackendPromptId(localId: string): void {
   const map = getBackendPromptMap();
   delete map[localId];
   writeJson(BACKEND_PROMPT_MAP_KEY, map);
+}
+
+function getBackendPromptGroupMap(): Record<string, string> {
+  return readJson<Record<string, string>>(BACKEND_PROMPT_GROUP_MAP_KEY, {});
+}
+
+function setBackendPromptGroupId(groupId: string, backendId: string): void {
+  const map = getBackendPromptGroupMap();
+  map[groupId] = backendId;
+  writeJson(BACKEND_PROMPT_GROUP_MAP_KEY, map);
+}
+
+function removeBackendPromptGroupId(groupId: string): void {
+  const map = getBackendPromptGroupMap();
+  delete map[groupId];
+  writeJson(BACKEND_PROMPT_GROUP_MAP_KEY, map);
+}
+
+function promptGroupToPremadePrompt(group: StoredPromptGroup): Partial<PremadePrompt> {
+  return {
+    name: group.name,
+    description: group.oneliner || '',
+    body: group.productionPrompt?.prompt || group.prompts[0]?.prompt || '',
+    category: group.category || '',
+    output_format: 'Prompt',
+  };
+}
+
+async function syncPromptGroupToBackend(group: StoredPromptGroup): Promise<void> {
+  const existingBackendId = getBackendPromptGroupMap()[group._id];
+  if (existingBackendId) {
+    await updatePremadePrompt(existingBackendId, promptGroupToPremadePrompt(group));
+  } else {
+    const backendPrompt = await createPremadePrompt(promptGroupToPremadePrompt(group));
+    setBackendPromptGroupId(group._id, backendPrompt.id);
+  }
+}
+
+async function deletePromptGroupFromBackend(groupId: string): Promise<void> {
+  const backendId = getBackendPromptGroupMap()[groupId];
+  if (backendId) {
+    await deletePremadePrompt(backendId);
+    removeBackendPromptGroupId(groupId);
+  }
 }
 
 function backendSkillId(promptId: string): string {

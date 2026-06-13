@@ -1,4 +1,4 @@
-import { useForm } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   SKILL_DESCRIPTION_MAX_LENGTH,
 } from 'librechat-data-provider';
 import { useCreateSkillMutation } from '~/data-provider';
+import CategorySelector from '../forms/CategorySelector';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -28,11 +29,11 @@ interface FormValues {
   name: string;
   description: string;
   body: string;
+  category: string;
 }
 
 /**
- * Minimal create-skill dialog matching Claude.ai's "Write skill instructions"
- * modal: name, description, instructions. No category, no invocation mode.
+ * Create-skill dialog: name, description, category, and instructions.
  */
 export default function CreateSkillDialog({
   isOpen,
@@ -45,15 +46,16 @@ export default function CreateSkillDialog({
   const navigate = useNavigate();
   const { showToast } = useToastContext();
 
+  const methods = useForm<FormValues>({
+    defaultValues: { name: defaultName, description: defaultDescription, body: defaultBody, category: '' },
+    mode: 'onChange',
+  });
   const {
     register,
     handleSubmit,
     reset,
     formState: { isValid, isSubmitting, errors },
-  } = useForm<FormValues>({
-    defaultValues: { name: defaultName, description: defaultDescription, body: defaultBody },
-    mode: 'onChange',
-  });
+  } = methods;
 
   const createSkill = useCreateSkillMutation({
     onSuccess: (skill) => {
@@ -82,6 +84,7 @@ export default function CreateSkillDialog({
       name: data.name.trim(),
       description: data.description.trim(),
       body: data.body,
+      category: data.category || undefined,
     });
   };
 
@@ -95,13 +98,17 @@ export default function CreateSkillDialog({
   return (
     <OGDialog open={isOpen} onOpenChange={setIsOpen}>
       <OGDialogContent className="w-11/12 max-w-5xl overflow-hidden">
+        <FormProvider {...methods}>
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex max-h-[80vh] min-w-0 flex-col gap-3 overflow-hidden p-1 sm:gap-4 sm:p-2"
         >
-          <h2 className="text-lg font-bold text-text-primary">
-            {localize('com_ui_skill_write_instructions')}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-text-primary">
+              {localize('com_ui_skill_write_instructions')}
+            </h2>
+            <CategorySelector />
+          </div>
 
           {/* Skill name */}
           <div className="flex flex-col gap-1.5">
@@ -188,6 +195,7 @@ export default function CreateSkillDialog({
             </Button>
           </div>
         </form>
+        </FormProvider>
       </OGDialogContent>
     </OGDialog>
   );
