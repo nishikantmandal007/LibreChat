@@ -13,7 +13,7 @@ import 'katex/dist/contrib/copy-tex.js';
 const LOGIN_URL =
   import.meta.env.VITE_MDP_LOGIN_URL ?? 'https://dev.mayadataprivacy.in/login';
 
-if (!isAuthenticated()) {
+if (!import.meta.env.DEV && !isAuthenticated()) {
   const returnTo = encodeURIComponent(window.location.href);
   window.location.replace(`${LOGIN_URL}?redirect=${returnTo}`);
 } else {
