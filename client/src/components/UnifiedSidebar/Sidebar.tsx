@@ -54,7 +54,7 @@ function Sidebar({
   }
 
   return (
-    <div className="flex h-full w-full flex-col items-center">
+    <div className="aisafe-sidebar-shell flex h-full w-full flex-col items-center overflow-hidden">
       <ExpandedPanel
         links={links}
         expanded={expanded}
