@@ -1823,6 +1823,8 @@ body {
 .dark html {
   --tw-bg-opacity: 1;
   background-color: rgba(33, 33, 33, var(--tw-bg-opacity));
+  background-image: radial-gradient(100% 100% at 50% 0%, rgba(50, 50, 65, 0.25) 0%, rgba(15, 15, 20, 0.45) 100%), linear-gradient(180deg, #212125 0%, #17171a 50%, #0c0c10 100%);
+  background-attachment: fixed;
 }
 #__next,
 #root {

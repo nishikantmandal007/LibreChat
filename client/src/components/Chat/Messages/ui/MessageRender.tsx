@@ -235,7 +235,7 @@ const MessageRender = memo(function MessageRender({
         )}
       >
         <div className={cn('relative flex max-w-[85%] flex-col items-end', 'user-turn')}>
-          <div className="rounded-2xl border border-white/[0.12] bg-white/[0.45] px-4 py-2.5 text-text-primary backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.08] dark:bg-white/[0.08] dark:text-white">
+          <div className="glass-surface rounded-2xl px-4 py-2.5 text-text-primary dark:text-white">
             <div className="flex min-h-[20px] max-w-full flex-grow flex-col gap-0">
               <MessageContext.Provider value={messageContextValue}>
                 <div
@@ -318,7 +318,7 @@ const MessageRender = memo(function MessageRender({
           hasParallelContent ? 'w-full' : 'w-11/12',
           'agent-turn',
           !hasParallelContent &&
-            'rounded-2xl border border-black/[0.08] bg-white/[0.38] px-4 py-3 shadow-sm backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.08] dark:bg-white/[0.08]',
+            'glass-surface rounded-2xl px-4 py-3 shadow-sm',
         )}
       >
         {!hasParallelContent && (

@@ -241,7 +241,7 @@ const ChatForm = memo(function ChatForm({
               isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
               isTemporary
                 ? 'border-violet-800/60 bg-violet-950/10'
-                : 'border-black/[0.14] bg-white/[0.34] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.16] dark:bg-gray-900/[0.48]',
+                : 'glass-surface',
             )}
           >
             <PendingManualSkillsChips conversationId={conversationId} />

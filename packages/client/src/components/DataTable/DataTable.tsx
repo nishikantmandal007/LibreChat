@@ -431,7 +431,7 @@ function DataTable<TData extends Record<string, unknown>, TValue>({
   return (
     <div
       className={cn(
-        'relative flex w-full flex-col overflow-hidden rounded-lg border border-border-light bg-background',
+        'glass-surface relative flex w-full flex-col overflow-hidden rounded-lg',
         'h-[calc(100vh-8rem)] max-h-[80vh]',
         className,
       )}
