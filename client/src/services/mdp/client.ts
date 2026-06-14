@@ -2,7 +2,7 @@ import axios from 'axios';
 
 import type { MDPApiResponse } from './types';
 
-const MDP_TOKEN_KEY = 'mdp_jwt_token';
+const MDP_TOKEN_KEY = 'jwtToken';
 const MDP_API_BASE_URL = import.meta.env.VITE_MDP_API_BASE_URL || '';
 
 export const mdpClient = axios.create({
