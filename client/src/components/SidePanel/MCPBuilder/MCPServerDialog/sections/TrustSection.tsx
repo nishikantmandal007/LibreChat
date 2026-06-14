@@ -1,3 +1,5 @@
+import DOMPurify from 'dompurify';
+import { useMemo } from 'react';
 import { useFormContext, Controller } from 'react-hook-form';
 import { Checkbox, Label } from '@librechat/client';
 import { useLocalize, useLocalizedConfig } from '~/hooks';
@@ -12,6 +14,26 @@ export default function TrustSection() {
     control,
     formState: { errors },
   } = useFormContext<MCPServerFormData>();
+
+  const sanitizer = useMemo(() => {
+    const instance = DOMPurify();
+    instance.addHook('afterSanitizeAttributes', (node) => {
+      if (node.tagName && node.tagName === 'A') {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+    return instance;
+  }, []);
+
+  const sanitizeHTML = (htmlStr: string) => {
+    return sanitizer.sanitize(htmlStr, {
+      ALLOWED_TAGS: ['a', 'strong', 'b', 'em', 'i', 'br', 'code', 'span'],
+      ALLOWED_ATTR: ['href', 'class', 'target', 'rel'],
+      ALLOW_DATA_ATTR: false,
+      ALLOW_ARIA_ATTR: false,
+    });
+  };
 
   return (
     <div className="rounded-lg border border-border-light bg-surface-secondary p-2">
@@ -40,10 +62,10 @@ export default function TrustSection() {
             {startupConfig?.interface?.mcpServers?.trustCheckbox?.label ? (
               <span
                 dangerouslySetInnerHTML={{
-                  __html: getLocalizedValue(
+                  __html: sanitizeHTML(getLocalizedValue(
                     startupConfig.interface.mcpServers.trustCheckbox.label,
                     localize('com_ui_trust_app'),
-                  ),
+                  )),
                 }}
               />
             ) : (
@@ -57,10 +79,10 @@ export default function TrustSection() {
             {startupConfig?.interface?.mcpServers?.trustCheckbox?.subLabel ? (
               <span
                 dangerouslySetInnerHTML={{
-                  __html: getLocalizedValue(
+                  __html: sanitizeHTML(getLocalizedValue(
                     startupConfig.interface.mcpServers.trustCheckbox.subLabel,
                     localize('com_agents_mcp_trust_subtext'),
-                  ),
+                  )),
                 }}
               />
             ) : (
