@@ -68,9 +68,8 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
           'outline-none! z-40 flex max-h-[min(450px,var(--popover-available-height))] w-full',
           'w-[var(--menu-width,auto)] min-w-[300px] flex-col overflow-auto rounded-xl border border-border-light',
           'border-black/[0.12] bg-white/[0.34] text-[0.9375rem] text-text-primary shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.12] dark:bg-gray-950/[0.44]',
-          parent ? 'px-0.5 py-0.5' : 'px-3 py-2',
+          'p-2',
           'max-w-[calc(100vw-4rem)] sm:max-h-[calc(65vh)] sm:max-w-[400px]',
-          searchable && 'p-0',
         )}
       >
         <SearchableContext.Provider value={searchable}>
@@ -82,7 +81,7 @@ export const CustomMenu = React.forwardRef<HTMLDivElement, CustomMenuProps>(func
                     autoSelect
                     render={combobox}
                     className={cn(
-                      'peer flex h-10 w-full items-center justify-center rounded-lg border-none bg-transparent px-3 text-base',
+                      'peer flex h-10 w-full items-center justify-center rounded-lg border border-black/20 bg-transparent px-3 text-base dark:border-white/20',
                       'sm:h-10 sm:text-[0.9375rem]',
                       'focus:outline-none focus:ring-0 focus-visible:ring-2 focus-visible:ring-primary',
                     )}
@@ -170,7 +169,10 @@ export const CustomMenuItem = React.forwardRef<HTMLDivElement, CustomMenuItemPro
       blurOnHoverEnd: false,
       ...props,
       className: cn(
-        'relative flex cursor-default items-center gap-2 rounded-lg px-3 py-1.5 outline-none! scroll-m-1 scroll-mt-[calc(var(--combobox-height,0px)+var(--label-height,4px))] aria-disabled:opacity-25 data-[active-item]:bg-black/[0.075] data-[active-item]:text-black dark:data-[active-item]:bg-white/10 dark:data-[active-item]:text-white text-[0.9375rem] min-w-0 w-full before:absolute before:left-0 before:top-1 before:bottom-1 before:w-0.5 before:bg-transparent before:rounded-full data-[active-item]:before:bg-black dark:data-[active-item]:before:bg-white',
+        'relative flex cursor-default items-center gap-2 rounded-lg px-3 py-2 outline-none! scroll-m-1 transition-all duration-200',
+        'bg-white/[0.4] dark:bg-gray-800/[0.4] shadow-sm border border-black/[0.05] dark:border-white/[0.05] mb-1',
+        'data-[active-item]:bg-white dark:data-[active-item]:bg-gray-800 data-[active-item]:shadow-md',
+        'text-[0.9375rem] min-w-0 w-full',
         props.className,
       ),
     };
