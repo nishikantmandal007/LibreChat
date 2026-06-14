@@ -7,6 +7,7 @@ import {
   invalidateSessionsCache,
 } from './history';
 import { mdpClient } from './client';
+import { getCurrentUser } from './auth';
 import { MDP_ENDPOINTS } from './endpoints';
 import { renameSession, deleteSession } from './session';
 import { uploadFile as uploadMayaFile } from './files';
@@ -64,7 +65,6 @@ const MOCK_ROUTES: Record<string, unknown> = {
   '/api/endpoints': MAYA_ENDPOINTS,
   '/api/models': MAYA_MODELS,
   '/api/user/terms': { termsAccepted: true },
-  '/api/user': GUEST_USER,
   '/api/banner': '',
   '/api/roles/USER': roleDefaults[SystemRoles.USER],
   '/api/roles/ADMIN': roleDefaults[SystemRoles.ADMIN],
@@ -625,6 +625,21 @@ async function resolveApiData(
 
   if (pathname === '/api/models' && method === 'get') {
     return getMayaModelsConfig();
+  }
+
+  if (pathname === '/api/user' && method === 'get') {
+    const mdpUser = getCurrentUser();
+    if (mdpUser) {
+      return {
+        id: mdpUser.id,
+        email: mdpUser.email,
+        name: mdpUser.name,
+        username: mdpUser.email,
+        role: SystemRoles.USER,
+        provider: 'local',
+      };
+    }
+    return GUEST_USER;
   }
 
   const route = staticRoute(pathname);
