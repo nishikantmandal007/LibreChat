@@ -124,11 +124,11 @@ const InputWithDropdown = React.forwardRef<HTMLInputElement, InputWithDropdownPr
                 role="option"
                 aria-selected={index === highlightedIndex}
                 className={cn(
-                  'cursor-pointer rounded-md px-3 py-2',
-                  'focus:bg-surface-tertiary focus:outline-none focus:ring-1 focus:ring-inset focus:ring-ring-primary',
+                  'cursor-pointer rounded-lg px-3 py-2 transition-colors duration-150',
+                  'focus:bg-[var(--glass-bg-hover)] focus:outline-none',
                   index === highlightedIndex
-                    ? 'bg-surface-active text-primary'
-                    : 'text-secondary hover:bg-surface-tertiary',
+                    ? 'bg-[var(--glass-bg-active)] text-[var(--glass-text)]'
+                    : 'text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-hover)]',
                 )}
                 onClick={() => handleSelect(option)}
                 onKeyDown={(e) => {

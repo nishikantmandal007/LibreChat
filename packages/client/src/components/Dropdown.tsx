@@ -111,7 +111,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       >
         {options.map((item, index) => {
           if (isDivider(item)) {
-            return <div key={`divider-${index}`} className="my-1 border-t border-border-heavy" />;
+            return <div key={`divider-${index}`} className="my-1 border-t border-[var(--glass-border-outer)]" />;
           }
 
           const option = typeof item === 'string' ? { value: item, label: item } : item;

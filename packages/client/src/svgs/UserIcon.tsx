@@ -1,9 +1,10 @@
-export default function UserIcon() {
+export default function UserIcon({ className = '' }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="18"
-      height="18"
+      width="1em"
+      height="1em"
+      className={className}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

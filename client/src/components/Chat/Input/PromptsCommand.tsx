@@ -132,7 +132,7 @@ function PromptsCommand({
     }
     return filterSkillsForPopover(allSkills, { agentSkillIds, isActive }).map((skill) => ({
       id: skill._id,
-      label: `Skill · ${skill.displayTitle ?? skill.name}`,
+      label: skill.displayTitle ?? skill.name,
       value: skill.name,
       description: skill.description,
       type: 'skill',
@@ -297,7 +297,7 @@ function PromptsCommand({
       setVariableDialogOpen={setVariableDialogOpen}
       textAreaRef={textAreaRef}
     >
-      <div className="absolute bottom-28 z-10 w-full space-y-2">
+      <div className="absolute bottom-full left-2 z-20 mb-2 w-[min(28rem,calc(100%-1rem))] space-y-2">
         <div className="popover border-token-border-light rounded-2xl border bg-surface-tertiary-alt p-2 shadow-lg">
           <input
             ref={initInputRef}

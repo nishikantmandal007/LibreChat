@@ -290,7 +290,7 @@ function SkillsCommandContent({
   };
 
   return (
-    <div className="absolute bottom-28 z-10 w-full space-y-2">
+    <div className="absolute bottom-full left-2 z-20 mb-2 w-[min(28rem,calc(100%-1rem))] space-y-2">
       <div className="popover glass-surface rounded-2xl p-2 shadow-lg">
         <input
           ref={initInputRef}

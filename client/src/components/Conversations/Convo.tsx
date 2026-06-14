@@ -178,8 +178,8 @@ export default function Conversation({
     <div
       ref={containerRef}
       className={cn(
-        'group relative flex h-12 w-full items-center rounded-lg outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-black dark:focus-visible:ring-white md:h-[38px]',
-        isActiveConvo || isPopoverActive ? 'bg-surface-active-alt' : 'hover:bg-surface-active-alt',
+        'group relative flex h-12 w-full items-center rounded-xl outline-none transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--glass-border-hover)] md:h-[38px]',
+        isActiveConvo || isPopoverActive ? 'bg-[var(--glass-bg-active)]' : 'hover:bg-[var(--glass-bg-hover)]',
       )}
       role="button"
       tabIndex={renaming ? -1 : 0}

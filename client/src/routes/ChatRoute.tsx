@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useRecoilCallback, useRecoilValue } from 'recoil';
+import { useRecoilCallback, useRecoilValue, useSetRecoilState } from 'recoil';
 import { Spinner, useToastContext } from '@librechat/client';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Constants, EModelEndpoint } from 'librechat-data-provider';
@@ -48,6 +48,7 @@ export default function ChatRoute() {
   useIdChangeEffect(conversationId);
   const { hasSetConversation, conversation } = store.useCreateConversationAtom(index);
   const { newConversation } = useNewConvo();
+  const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
   const { showToast } = useToastContext();
   const localize = useLocalize();
 
@@ -118,6 +119,10 @@ export default function ChatRoute() {
         template: conversation ? conversation : undefined,
         ...(preset ? { preset } : {}),
       });
+
+      if (preset?.model === 'image-gen-v1') {
+        setImageGenEnabled(true);
+      }
 
       hasSetConversation.current = true;
     } else if (initialConvoQuery.data && endpointsQuery.data && modelsQuery.data) {

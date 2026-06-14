@@ -33,7 +33,7 @@ export default function GroupSidePanel({
     <div
       id="prompts-panel"
       className={cn(
-        'flex h-full w-full flex-col overflow-hidden border-r border-border-light',
+        'flex h-full w-full flex-col overflow-hidden border-r border-white/[0.10]',
         className,
       )}
     >
@@ -69,7 +69,7 @@ export default function GroupSidePanel({
         </div>
         <div
           className={cn(
-            'pointer-events-none inset-x-0 bottom-0 bg-gradient-to-t from-surface-primary-alt from-60% to-transparent px-3 pb-2',
+            'pointer-events-none inset-x-0 bottom-0 bg-gradient-to-t from-transparent to-transparent px-3 pb-2',
           )}
         >
           <div className="pointer-events-auto">

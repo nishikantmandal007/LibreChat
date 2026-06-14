@@ -12,13 +12,13 @@ export function Toast() {
      * a relatively recognizable color scheme for toasts without compromising accessibility.
      * */
     [NotificationSeverity.INFO]:
-      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-xl',
+      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-2xl',
     [NotificationSeverity.SUCCESS]:
-      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-xl',
+      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-2xl',
     [NotificationSeverity.WARNING]:
-      'border-amber-400/35 bg-amber-500/10 text-text-primary backdrop-blur-xl',
+      'border-amber-400/35 bg-amber-500/10 text-text-primary backdrop-blur-2xl',
     [NotificationSeverity.ERROR]:
-      'border-red-400/35 bg-red-500/10 text-text-primary backdrop-blur-xl',
+      'border-red-400/35 bg-red-500/10 text-text-primary backdrop-blur-2xl',
   };
 
   return (

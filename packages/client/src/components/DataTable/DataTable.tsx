@@ -438,7 +438,7 @@ function DataTable<TData extends Record<string, unknown>, TValue>({
       role="region"
       aria-label={localize('com_ui_data_table')}
     >
-      <div className="flex w-full shrink-0 items-center gap-2 border-b border-border-light md:gap-3">
+      <div className="flex w-full shrink-0 items-center gap-2 border-b border-[var(--glass-border-outer)] md:gap-3">
         {shouldShowSearch && <DataTableSearch value={searchTerm} onChange={setSearchTerm} />}
         {customActionsRenderer &&
           customActionsRenderer({
@@ -524,9 +524,9 @@ function DataTable<TData extends Record<string, unknown>, TValue>({
                       key={header.id}
                       scope="col"
                       className={cn(
-                        'border-b border-border-light px-2 py-2 md:px-3 md:py-2',
+                        'border-b border-[var(--glass-border-outer)] px-2 py-2 md:px-3 md:py-2',
                         isSelectHeader && 'px-0 text-center',
-                        canSort && 'cursor-pointer hover:bg-surface-tertiary',
+                        canSort && 'cursor-pointer hover:bg-[var(--glass-bg-hover)]',
                         meta?.className,
                         header.column.getIsResizing() && 'bg-surface-tertiary/60',
                         isDesktopOnly && 'hidden md:table-cell',

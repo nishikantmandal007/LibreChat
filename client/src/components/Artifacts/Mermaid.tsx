@@ -44,7 +44,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ content, isDarkMode = t
       } catch (error) {
         console.error('Mermaid rendering error:', error);
         if (mermaidRef.current) {
-          mermaidRef.current.innerHTML = 'Error rendering diagram';
+          mermaidRef.current.textContent = 'Error rendering diagram';
         }
       }
     };

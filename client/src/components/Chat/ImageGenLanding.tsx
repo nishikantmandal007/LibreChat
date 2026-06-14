@@ -30,7 +30,7 @@ export default function ImageGenLanding() {
   );
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-y-auto">
+    <div className="imagegen-landing relative flex h-full w-full flex-col items-center overflow-y-auto">
       <div className="pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-2 gap-2 p-4 opacity-15">
         {SAMPLE_IMAGES.map((src) => (
           <img
@@ -43,12 +43,12 @@ export default function ImageGenLanding() {
         ))}
       </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-surface-primary/80 via-surface-primary/60 to-surface-primary/90" />
+      <div className="from-surface-primary/80 via-surface-primary/60 to-surface-primary/90 pointer-events-none absolute inset-0 bg-gradient-to-b" />
 
-      <div className="relative z-10 my-auto flex flex-col items-center gap-6 px-4 pb-24 pt-16">
+      <div className="relative z-10 my-auto flex w-full flex-col items-center gap-5 px-4 pb-16 pt-14 sm:gap-6 sm:pb-20 sm:pt-16">
         <SplitText
           text="Bring your imagination to life"
-          className="text-3xl font-bold text-text-primary sm:text-5xl"
+          className="imagegen-hero-title max-w-4xl px-2 text-3xl font-bold leading-[1.16] text-text-primary sm:text-5xl"
           delay={50}
           textAlign="center"
           animationFrom={{ opacity: 0, transform: 'translate3d(0,40px,0)' }}
@@ -57,17 +57,13 @@ export default function ImageGenLanding() {
           threshold={0}
           rootMargin="0px"
         />
-        <p className="animate-fadeIn max-w-md text-center text-base text-text-secondary">
-          Describe what you'd like to see, and AI will create it for you
-        </p>
-
-        <div className="mt-4 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="mt-2 grid w-full max-w-2xl grid-cols-1 gap-3 sm:mt-4 sm:grid-cols-2">
           {STARTER_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               type="button"
               onClick={() => handleCardClick(prompt)}
-              className="rounded-xl border border-border-medium bg-surface-primary/70 px-4 py-3 text-left text-sm text-text-secondary backdrop-blur-sm transition-colors hover:border-border-heavy hover:bg-surface-hover hover:text-text-primary"
+              className="bg-surface-primary/70 rounded-xl border border-border-medium px-4 py-3 text-left text-sm text-text-secondary backdrop-blur-sm transition-colors hover:border-border-heavy hover:bg-surface-hover hover:text-text-primary"
             >
               {prompt}
             </button>

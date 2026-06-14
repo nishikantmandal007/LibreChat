@@ -52,19 +52,19 @@ function MultiSelectPop({
             <button
               data-testid="select-dropdown-button"
               className={cn(
-                'relative flex flex-col rounded-md border border-black/10 bg-white py-2 pl-3 pr-10 text-left focus:outline-none focus:ring-0 focus:ring-offset-0 dark:border-gray-700 dark:bg-gray-800 sm:text-sm',
+                'glass-surface relative flex flex-col rounded-xl py-2 pl-3 pr-10 text-left text-[var(--glass-text)] focus:outline-none focus:ring-0 focus:ring-offset-0 sm:text-sm',
                 'pointer-cursor font-normal',
-                'hover:bg-gray-50 radix-state-open:bg-gray-50 dark:hover:bg-gray-700 dark:radix-state-open:bg-gray-700',
+                'hover:bg-[var(--glass-bg-hover)] radix-state-open:bg-[var(--glass-bg-active)]',
               )}
             >
               {' '}
               {showLabel && (
-                <label className="block text-xs text-gray-700 dark:text-gray-500">{title}</label>
+                <label className="block text-xs text-[var(--glass-text-secondary)]">{title}</label>
               )}
               <span className="inline-flex" id={excludeIds[2]}>
                 <span
                   className={cn(
-                    'flex h-6 items-center gap-1 text-sm text-gray-800 dark:text-white',
+                    'flex h-6 items-center gap-1 text-sm text-[var(--glass-text)]',
                     !showLabel ? 'text-xs' : '',
                   )}
                 >
@@ -96,7 +96,7 @@ function MultiSelectPop({
                   viewBox="0 0 24 24"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="h-4 w-4 text-gray-400"
+                  className="h-4 w-4 text-[var(--glass-text-secondary)]"
                   height="1em"
                   width="1em"
                   xmlns="http://www.w3.org/2000/svg"
@@ -112,7 +112,7 @@ function MultiSelectPop({
               side="bottom"
               align="center"
               className={cn(
-                'mt-2 max-h-[52vh] min-w-full overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-700 dark:text-white',
+                'aisafe-glass-dialog backdrop-blur-2xl mt-2 max-h-[52vh] min-w-full overflow-hidden overflow-y-auto rounded-xl text-[var(--glass-text)] shadow-lg',
                 hasSearchRender && 'relative',
               )}
             >
@@ -137,7 +137,7 @@ function MultiSelectPop({
                           className="icon-sm mr-1 rounded-sm bg-cover"
                         />
                       ) : (
-                        <Wrench className="icon-sm mr-1 rounded-sm bg-white bg-cover dark:bg-gray-800" />
+                        <Wrench className="icon-sm mr-1 rounded-sm bg-[var(--glass-bg-subtle)] bg-cover" />
                       )
                     }
                   />

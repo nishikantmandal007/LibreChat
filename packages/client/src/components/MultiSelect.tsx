@@ -111,8 +111,8 @@ export default function MultiSelect<T extends string>({
         <Select
           ref={selectRef}
           className={cn(
-            'flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm',
-            'bg-surface-tertiary text-text-primary shadow-sm hover:cursor-pointer hover:bg-surface-hover',
+            'glass-input flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm',
+            'text-[var(--glass-text)] hover:cursor-pointer hover:border-[var(--glass-border-hover)]',
             'outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
             selectClassName,
             selectedValues.length > 0 && selectItemsClassName != null && selectItemsClassName,

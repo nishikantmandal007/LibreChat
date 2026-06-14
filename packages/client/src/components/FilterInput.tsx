@@ -33,14 +33,14 @@ const FilterInput = React.forwardRef<HTMLInputElement, FilterInputProps>(
           placeholder=" "
           aria-label={label}
           className={cn(
-            'peer flex h-9 w-full rounded-lg border border-border-light bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50',
+            'peer flex h-9 w-full rounded-lg border border-[var(--glass-border-outer)] bg-transparent px-3 py-2 text-sm text-[var(--glass-text)] ring-offset-background placeholder:text-[var(--glass-text-secondary)] focus-visible:outline-none focus-visible:border-[var(--glass-border-hover)] disabled:cursor-not-allowed disabled:opacity-50',
             className,
           )}
           {...props}
         />
         <label
           htmlFor={inputId}
-          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-text-secondary transition-all duration-200 peer-focus:top-0 peer-focus:glass-surface-subtle peer-focus:px-1 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:glass-surface-subtle peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-xs"
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[var(--glass-text-secondary)] transition-all duration-200 peer-focus:top-0 peer-focus:glass-surface-subtle peer-focus:px-1 peer-focus:text-xs peer-[:not(:placeholder-shown)]:top-0 peer-[:not(:placeholder-shown)]:glass-surface-subtle peer-[:not(:placeholder-shown)]:px-1 peer-[:not(:placeholder-shown)]:text-xs"
         >
           {label}
         </label>

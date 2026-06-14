@@ -1,7 +1,6 @@
 import { memo, useCallback, useRef, useState } from 'react';
-import { MicOff } from 'lucide-react';
 import { FileSources } from 'librechat-data-provider';
-import { useToastContext, TooltipAnchor, ListeningIcon, Spinner } from '@librechat/client';
+import { useToastContext, TooltipAnchor, ListeningIcon } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { useChatFormContext } from '~/Providers';
 import { globalAudioId } from '~/common';
@@ -134,16 +133,22 @@ export default memo(function AudioRecorder({
           return;
         }
 
-        const transcriptFile = createTranscriptPreviewFile(text);
-        setFiles?.((currentFiles) => {
-          const nextFiles = new Map(currentFiles);
-          nextFiles.set(transcriptFile.file_id, transcriptFile);
-          return nextFiles;
-        });
-
+        const wordCount = text.split(/\s+/).filter(Boolean).length;
         const existing = getValues('text') || '';
-        setValue('text', appendTranscriptPromptNote(existing), { shouldValidate: true });
-        showToast({ message: 'Voice transcript attached to message', status: 'success' });
+
+        if (wordCount <= 100) {
+          setValue('text', existing ? `${existing}\n${text}` : text, { shouldValidate: true });
+          showToast({ message: 'Voice transcript added to message', status: 'success' });
+        } else {
+          const transcriptFile = createTranscriptPreviewFile(text);
+          setFiles?.((currentFiles) => {
+            const nextFiles = new Map(currentFiles);
+            nextFiles.set(transcriptFile.file_id, transcriptFile);
+            return nextFiles;
+          });
+          setValue('text', appendTranscriptPromptNote(existing), { shouldValidate: true });
+          showToast({ message: 'Voice transcript attached to message', status: 'success' });
+        }
 
         requestAnimationFrame(() => {
           textAreaRef.current?.focus();
@@ -210,11 +215,16 @@ export default memo(function AudioRecorder({
   }, [isListening, startRecording, stopRecording]);
 
   const renderIcon = () => {
-    if (isListening) {
-      return <MicOff className="stroke-red-500" />;
-    }
-    if (isLoading) {
-      return <Spinner className="stroke-text-secondary" />;
+    if (isListening || isLoading) {
+      return (
+        <span className={cn('voice-waveform', isLoading ? 'text-text-secondary' : 'text-blue-500')}>
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </span>
+      );
     }
     return <ListeningIcon className="stroke-text-secondary" />;
   };
@@ -231,7 +241,8 @@ export default memo(function AudioRecorder({
           disabled={disabled}
           className={cn(
             'flex size-10 items-center justify-center rounded-full p-1 transition-colors hover:bg-surface-hover',
-            isListening && 'animate-pulse bg-red-500/10',
+            isListening && 'bg-blue-500/10 text-blue-500',
+            isLoading && 'bg-surface-hover',
           )}
           title={localize('com_ui_use_micrphone')}
           aria-pressed={isListening}

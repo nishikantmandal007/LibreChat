@@ -84,7 +84,7 @@ export default function ExportModal({
       {children}
       <OGDialogTemplate
         title={localize('com_nav_export_conversation')}
-        className="max-w-full sm:max-w-2xl"
+        className="w-full sm:max-w-lg"
         main={
           <div className="flex w-full flex-col items-center gap-6">
             <div className="grid w-full gap-6 sm:grid-cols-2">

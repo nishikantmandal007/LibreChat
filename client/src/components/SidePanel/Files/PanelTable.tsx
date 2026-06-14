@@ -213,12 +213,12 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
         onChange={(event) => table.getColumn('filename')?.setFilterValue(event.target.value)}
       />
 
-      <div className="rounded-lg border border-border-light bg-transparent shadow-sm transition-colors">
+      <div className="rounded-lg border border-[var(--glass-border-outer)] bg-transparent shadow-sm transition-colors">
         <div className="overflow-hidden">
           <Table className="table-fixed">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id} className="border-b border-border-light">
+                <TableRow key={headerGroup.id} className="border-b border-[var(--glass-border-outer)]">
                   {headerGroup.headers.map((header, index) => (
                     <TableHead
                       key={header.id}

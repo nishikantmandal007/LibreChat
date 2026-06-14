@@ -98,7 +98,7 @@ const TableRowComponent = <TData, TValue>({
   return (
     <TableRow
       data-state={row.getIsSelected() ? 'selected' : undefined}
-      className="motion-safe:animate-fadeIn border-b border-border-light transition-all duration-300 ease-out hover:bg-surface-secondary"
+      className="motion-safe:animate-fadeIn border-b border-[var(--glass-border-outer)] transition-all duration-300 ease-out hover:bg-[var(--glass-bg-hover)]"
       style={{
         animationDelay: `${index * 20}ms`,
         transform: `translateY(${isSearching ? '4px' : '0'})`,
@@ -377,7 +377,7 @@ export default function DataTable<TData, TValue>({
     const firstDataColumnIndex = tableColumns[0]?.id === 'select' ? 1 : 0;
 
     return (
-      <TableRow key={index} className="motion-safe:animate-fadeIn border-b border-border-light">
+      <TableRow key={index} className="motion-safe:animate-fadeIn border-b border-[var(--glass-border-outer)]">
         {tableColumns.map((column, columnIndex) => {
           const style = getColumnStyle(column as TableColumn<TData, TValue>, isSmallScreen);
           const isFirstDataColumn = columnIndex === firstDataColumnIndex;
@@ -428,20 +428,20 @@ export default function DataTable<TData, TValue>({
       <div
         ref={tableContainerRef}
         className={cn(
-          'relative min-h-0 max-w-full flex-1 overflow-x-auto overflow-y-auto rounded-md border border-black/10 dark:border-white/10',
+          'relative min-h-0 max-w-full flex-1 overflow-x-auto overflow-y-auto rounded-md border border-[var(--glass-border-outer)]',
           'transition-all duration-300 ease-out',
           isSearching && 'bg-surface-secondary/50',
           className,
         )}
       >
         <Table className="w-full min-w-[300px] table-fixed border-separate border-spacing-0">
-          <TableHeader className="sticky top-0 z-50 bg-surface-secondary">
+          <TableHeader className="sticky top-0 z-50 bg-[var(--glass-bg-subtle)]">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-border-light">
+              <TableRow key={headerGroup.id} className="border-b border-[var(--glass-border-outer)]">
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className="whitespace-nowrap bg-surface-secondary px-2 py-2 text-left text-sm font-medium text-text-secondary sm:px-4"
+                    className="whitespace-nowrap bg-[var(--glass-bg-subtle)] px-2 py-2 text-left text-sm font-medium text-[var(--glass-text-secondary)] sm:px-4"
                     style={getColumnStyle(
                       header.column.columnDef as TableColumn<TData, TValue>,
                       isSmallScreen,

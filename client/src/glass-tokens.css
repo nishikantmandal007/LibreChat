@@ -1,0 +1,545 @@
+/*
+ * ============================================================================
+ * LIQUID GLASS DESIGN TOKEN SYSTEM
+ * ============================================================================
+ *
+ * A 5-level glass hierarchy inspired by Apple's Liquid Glass design language
+ * (iOS 26 / macOS Tahoe), adapted for web with CSS custom properties.
+ *
+ * HIERARCHY:
+ *   Level 0 — Background   : The deepest layer behind everything
+ *   Level 1 — Surface      : Primary content surfaces (sidebar, main area)
+ *   Level 2 — Elevated     : Cards, panels, sections within surfaces
+ *   Level 3 — Overlay       : Dialogs, modals, dropdowns, popovers
+ *   Level 4 — Prominent    : Buttons, interactive controls, badges
+ *
+ * APPLE'S APPROACH TO BUTTONS ON GLASS:
+ *   Apple uses two strategies for interactive controls on glass surfaces:
+ *
+ *   1. Glass buttons (.buttonStyle(.glass)) — translucent controls that
+ *      inherit the glass material. Used for secondary/toolbar actions where
+ *      the button should feel integrated with its glass container. These
+ *      use a slightly more opaque glass with an .interactive() modifier
+ *      that brightens on hover and compresses on press.
+ *
+ *   2. Prominent glass (.glassProminent) — a tinted, higher-contrast glass
+ *      variant used for primary actions. The tint color shows through the
+ *      glass material, giving it a colored but still translucent appearance.
+ *      This is NOT a solid color — it is still glass, just with a stronger
+ *      color tint and higher opacity. Apple never uses fully opaque/solid
+ *      buttons on glass surfaces in the Liquid Glass language.
+ *
+ *   RECOMMENDATION FOR WEB:
+ *   - Primary actions: Use Level 4 "prominent" tokens with your brand tint.
+ *     These are slightly more opaque glass with a color tint showing through.
+ *   - Secondary actions: Use Level 4 "interactive" tokens — neutral glass
+ *     that brightens on hover and slightly depresses on active.
+ *   - Tertiary/ghost actions: Use transparent background with glass hover
+ *     state only.
+ *   - AVOID fully solid/opaque buttons on glass surfaces — they break the
+ *     material continuity that defines Liquid Glass.
+ *
+ * USAGE:
+ *   These tokens are designed to be dropped into your :root{} and .dark{}
+ *   blocks. Apply them with standard CSS:
+ *
+ *   .glass-surface {
+ *     background: var(--glass-1-bg);
+ *     backdrop-filter: blur(var(--glass-1-blur)) saturate(var(--glass-1-saturate));
+ *     border: var(--glass-1-border);
+ *     box-shadow: var(--glass-1-shadow);
+ *   }
+ *   .glass-surface:hover {
+ *     background: var(--glass-1-bg-hover);
+ *     border: var(--glass-1-border-hover);
+ *     box-shadow: var(--glass-1-shadow-hover);
+ *   }
+ *
+ * PERFORMANCE NOTES:
+ *   - backdrop-filter triggers compositing; use will-change: backdrop-filter
+ *     only on elements that animate.
+ *   - Lower blur values (8-16px) are cheaper than higher ones (20-30px).
+ *     We compensate with higher saturate values at lower levels.
+ *   - Avoid stacking more than 2 glass layers — glass sampling other glass
+ *     is expensive and visually muddy (Apple explicitly warns against this).
+ *
+ * ============================================================================
+ */
+
+/* ---- LIGHT MODE ---- */
+:root {
+
+  /* ==== Shared timing & easing ==== */
+  --glass-ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --glass-duration-fast: 120ms;
+  --glass-duration-base: 180ms;
+  --glass-duration-slow: 280ms;
+
+  /* ==== Focus ring (shared across all levels) ==== */
+  --glass-focus-ring: 0 0 0 2px rgba(56, 182, 255, 0.45);
+  --glass-focus-ring-offset: 0 0 0 4px rgba(56, 182, 255, 0.15);
+
+  /*
+   * ---- LEVEL 0: BACKGROUND ----
+   * The deepest layer. Sits behind all content.
+   * Minimal glass effect — mostly tinted, very subtle blur.
+   * Think: page background, app shell behind sidebar.
+   */
+  --glass-0-bg:              rgba(245, 245, 247, 0.72);
+  --glass-0-bg-hover:        rgba(245, 245, 247, 0.80);
+  --glass-0-bg-active:       rgba(245, 245, 247, 0.85);
+  --glass-0-blur:            8px;
+  --glass-0-saturate:        180%;
+  --glass-0-border:          1px solid rgba(255, 255, 255, 0.30);
+  --glass-0-border-hover:    1px solid rgba(255, 255, 255, 0.40);
+  --glass-0-shadow:          0 1px 2px rgba(0, 0, 0, 0.04);
+  --glass-0-shadow-hover:    0 2px 4px rgba(0, 0, 0, 0.06);
+  --glass-0-shadow-active:   0 1px 1px rgba(0, 0, 0, 0.05);
+
+  /*
+   * ---- LEVEL 1: SURFACE ----
+   * Primary content surfaces: sidebar, main content area, header bar.
+   * Moderate translucency — content behind is visible but softened.
+   * This is the "navigation layer" in Apple's hierarchy.
+   */
+  --glass-1-bg:              rgba(255, 255, 255, 0.45);
+  --glass-1-bg-hover:        rgba(255, 255, 255, 0.55);
+  --glass-1-bg-active:       rgba(255, 255, 255, 0.62);
+  --glass-1-blur:            16px;
+  --glass-1-saturate:        160%;
+  --glass-1-border:          1px solid rgba(255, 255, 255, 0.40);
+  --glass-1-border-hover:    1px solid rgba(255, 255, 255, 0.55);
+  --glass-1-shadow:          0 4px 16px rgba(0, 0, 0, 0.06),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  --glass-1-shadow-hover:    0 6px 24px rgba(0, 0, 0, 0.08),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --glass-1-shadow-active:   0 2px 8px rgba(0, 0, 0, 0.06),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.45);
+
+  /*
+   * ---- LEVEL 2: ELEVATED ----
+   * Cards, panels, sections floating within a surface.
+   * More opaque than surfaces — provides clear visual separation.
+   * Deeper shadow to lift off the surface beneath.
+   */
+  --glass-2-bg:              rgba(255, 255, 255, 0.55);
+  --glass-2-bg-hover:        rgba(255, 255, 255, 0.65);
+  --glass-2-bg-active:       rgba(255, 255, 255, 0.72);
+  --glass-2-blur:            20px;
+  --glass-2-saturate:        150%;
+  --glass-2-border:          1px solid rgba(255, 255, 255, 0.45);
+  --glass-2-border-hover:    1px solid rgba(255, 255, 255, 0.60);
+  --glass-2-shadow:          0 8px 32px rgba(0, 0, 0, 0.08),
+                             0 1px 3px rgba(0, 0, 0, 0.04),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --glass-2-shadow-hover:    0 12px 40px rgba(0, 0, 0, 0.10),
+                             0 2px 4px rgba(0, 0, 0, 0.05),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  --glass-2-shadow-active:   0 4px 16px rgba(0, 0, 0, 0.08),
+                             0 1px 2px rgba(0, 0, 0, 0.04),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.50);
+
+  /*
+   * ---- LEVEL 3: OVERLAY ----
+   * Dialogs, modals, dropdowns, popovers, context menus.
+   * Higher opacity for readability — these demand attention.
+   * Pronounced shadow for "floating above everything" depth.
+   */
+  --glass-3-bg:              rgba(255, 255, 255, 0.70);
+  --glass-3-bg-hover:        rgba(255, 255, 255, 0.78);
+  --glass-3-bg-active:       rgba(255, 255, 255, 0.82);
+  --glass-3-blur:            24px;
+  --glass-3-saturate:        140%;
+  --glass-3-border:          1px solid rgba(255, 255, 255, 0.50);
+  --glass-3-border-hover:    1px solid rgba(255, 255, 255, 0.65);
+  --glass-3-shadow:          0 16px 48px rgba(0, 0, 0, 0.12),
+                             0 4px 12px rgba(0, 0, 0, 0.06),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  --glass-3-shadow-hover:    0 20px 56px rgba(0, 0, 0, 0.14),
+                             0 6px 16px rgba(0, 0, 0, 0.07),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  --glass-3-shadow-active:   0 8px 24px rgba(0, 0, 0, 0.10),
+                             0 2px 6px rgba(0, 0, 0, 0.05),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+  /*
+   * ---- LEVEL 4: PROMINENT (Interactive Controls) ----
+   * Buttons, toggles, badges, chips, interactive controls.
+   * Two sub-variants:
+   *   "interactive" — neutral glass for secondary actions
+   *   "prominent"   — tinted glass for primary actions (uses brand color)
+   */
+
+  /* -- Level 4 Interactive (secondary buttons, toolbar items) -- */
+  --glass-4-bg:              rgba(255, 255, 255, 0.40);
+  --glass-4-bg-hover:        rgba(255, 255, 255, 0.55);
+  --glass-4-bg-active:       rgba(255, 255, 255, 0.65);
+  --glass-4-blur:            12px;
+  --glass-4-saturate:        170%;
+  --glass-4-border:          1px solid rgba(255, 255, 255, 0.35);
+  --glass-4-border-hover:    1px solid rgba(255, 255, 255, 0.50);
+  --glass-4-border-active:   1px solid rgba(255, 255, 255, 0.55);
+  --glass-4-shadow:          0 2px 8px rgba(0, 0, 0, 0.06),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --glass-4-shadow-hover:    0 4px 12px rgba(0, 0, 0, 0.08),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  --glass-4-shadow-active:   0 1px 4px rgba(0, 0, 0, 0.06),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.40);
+  --glass-4-scale-active:    0.97;
+
+  /* -- Level 4 Prominent (primary buttons — tinted glass with brand color) -- */
+  /* Uses teal/brand color tint showing through the glass material */
+  --glass-4p-bg:             rgba(13, 148, 136, 0.25);
+  --glass-4p-bg-hover:       rgba(13, 148, 136, 0.35);
+  --glass-4p-bg-active:      rgba(13, 148, 136, 0.42);
+  --glass-4p-blur:           12px;
+  --glass-4p-saturate:       180%;
+  --glass-4p-border:         1px solid rgba(13, 148, 136, 0.30);
+  --glass-4p-border-hover:   1px solid rgba(13, 148, 136, 0.45);
+  --glass-4p-border-active:  1px solid rgba(13, 148, 136, 0.50);
+  --glass-4p-shadow:         0 2px 8px rgba(13, 148, 136, 0.12),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.30);
+  --glass-4p-shadow-hover:   0 4px 16px rgba(13, 148, 136, 0.18),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --glass-4p-shadow-active:  0 1px 6px rgba(13, 148, 136, 0.15),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  --glass-4p-text:           rgba(255, 255, 255, 0.95);
+  --glass-4p-scale-active:   0.97;
+
+  /* -- Level 4 Destructive (delete, remove — red-tinted glass) -- */
+  --glass-4d-bg:             rgba(220, 38, 38, 0.18);
+  --glass-4d-bg-hover:       rgba(220, 38, 38, 0.28);
+  --glass-4d-bg-active:      rgba(220, 38, 38, 0.35);
+  --glass-4d-border:         1px solid rgba(220, 38, 38, 0.25);
+  --glass-4d-border-hover:   1px solid rgba(220, 38, 38, 0.40);
+  --glass-4d-shadow:         0 2px 8px rgba(220, 38, 38, 0.10),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  --glass-4d-shadow-hover:   0 4px 16px rgba(220, 38, 38, 0.16),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.25);
+
+  /*
+   * ---- TEXT ON GLASS ----
+   * Glass surfaces need slightly different text treatment for legibility.
+   * Apple uses "vibrant" text that adapts to background — for web, we use
+   * semi-transparent black/white with enough contrast.
+   */
+  --glass-text-primary:      rgba(10, 10, 10, 0.88);
+  --glass-text-secondary:    rgba(10, 10, 10, 0.58);
+  --glass-text-tertiary:     rgba(10, 10, 10, 0.40);
+  --glass-text-on-prominent: rgba(255, 255, 255, 0.95);
+
+  /*
+   * ---- GLASS DIVIDERS & SEPARATORS ----
+   * Thin lines within glass surfaces for visual grouping.
+   */
+  --glass-divider:           rgba(0, 0, 0, 0.06);
+  --glass-divider-strong:    rgba(0, 0, 0, 0.10);
+}
+
+
+/* ---- DARK MODE ---- */
+.dark {
+
+  /* ==== Focus ring (dark) ==== */
+  --glass-focus-ring: 0 0 0 2px rgba(56, 182, 255, 0.55);
+  --glass-focus-ring-offset: 0 0 0 4px rgba(56, 182, 255, 0.20);
+
+  /*
+   * ---- LEVEL 0: BACKGROUND (dark) ----
+   * Deep, near-opaque dark surface. Very subtle translucency.
+   * In dark mode, backgrounds are more opaque to avoid visual noise
+   * from bright content bleeding through dark glass.
+   */
+  --glass-0-bg:              rgba(18, 18, 20, 0.80);
+  --glass-0-bg-hover:        rgba(18, 18, 20, 0.85);
+  --glass-0-bg-active:       rgba(18, 18, 20, 0.88);
+  --glass-0-blur:            8px;
+  --glass-0-saturate:        160%;
+  --glass-0-border:          1px solid rgba(255, 255, 255, 0.06);
+  --glass-0-border-hover:    1px solid rgba(255, 255, 255, 0.10);
+  --glass-0-shadow:          0 1px 2px rgba(0, 0, 0, 0.20);
+  --glass-0-shadow-hover:    0 2px 4px rgba(0, 0, 0, 0.25);
+  --glass-0-shadow-active:   0 1px 1px rgba(0, 0, 0, 0.22);
+
+  /*
+   * ---- LEVEL 1: SURFACE (dark) ----
+   * Dark translucent panels. White highlight borders are very subtle
+   * in dark mode — just enough to define edges.
+   */
+  --glass-1-bg:              rgba(255, 255, 255, 0.06);
+  --glass-1-bg-hover:        rgba(255, 255, 255, 0.10);
+  --glass-1-bg-active:       rgba(255, 255, 255, 0.14);
+  --glass-1-blur:            16px;
+  --glass-1-saturate:        150%;
+  --glass-1-border:          1px solid rgba(255, 255, 255, 0.08);
+  --glass-1-border-hover:    1px solid rgba(255, 255, 255, 0.14);
+  --glass-1-shadow:          0 4px 16px rgba(0, 0, 0, 0.20),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-1-shadow-hover:    0 6px 24px rgba(0, 0, 0, 0.26),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  --glass-1-shadow-active:   0 2px 8px rgba(0, 0, 0, 0.18),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  /*
+   * ---- LEVEL 2: ELEVATED (dark) ----
+   * Slightly brighter than surfaces. The white overlay is still very
+   * restrained — too bright and it glows harshly against dark backgrounds.
+   */
+  --glass-2-bg:              rgba(255, 255, 255, 0.08);
+  --glass-2-bg-hover:        rgba(255, 255, 255, 0.12);
+  --glass-2-bg-active:       rgba(255, 255, 255, 0.16);
+  --glass-2-blur:            20px;
+  --glass-2-saturate:        140%;
+  --glass-2-border:          1px solid rgba(255, 255, 255, 0.10);
+  --glass-2-border-hover:    1px solid rgba(255, 255, 255, 0.16);
+  --glass-2-shadow:          0 8px 32px rgba(0, 0, 0, 0.28),
+                             0 1px 3px rgba(0, 0, 0, 0.15),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-2-shadow-hover:    0 12px 40px rgba(0, 0, 0, 0.32),
+                             0 2px 4px rgba(0, 0, 0, 0.18),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-2-shadow-active:   0 4px 16px rgba(0, 0, 0, 0.24),
+                             0 1px 2px rgba(0, 0, 0, 0.12),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /*
+   * ---- LEVEL 3: OVERLAY (dark) ----
+   * Modals and popovers in dark mode need more opacity to be readable.
+   * Shadows are deeper and more pronounced against dark backdrops.
+   */
+  --glass-3-bg:              rgba(30, 30, 34, 0.82);
+  --glass-3-bg-hover:        rgba(30, 30, 34, 0.86);
+  --glass-3-bg-active:       rgba(30, 30, 34, 0.90);
+  --glass-3-blur:            24px;
+  --glass-3-saturate:        130%;
+  --glass-3-border:          1px solid rgba(255, 255, 255, 0.10);
+  --glass-3-border-hover:    1px solid rgba(255, 255, 255, 0.16);
+  --glass-3-shadow:          0 16px 48px rgba(0, 0, 0, 0.40),
+                             0 4px 12px rgba(0, 0, 0, 0.20),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-3-shadow-hover:    0 20px 56px rgba(0, 0, 0, 0.45),
+                             0 6px 16px rgba(0, 0, 0, 0.22),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-3-shadow-active:   0 8px 24px rgba(0, 0, 0, 0.35),
+                             0 2px 6px rgba(0, 0, 0, 0.16),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.05);
+
+  /*
+   * ---- LEVEL 4: PROMINENT — Interactive (dark) ----
+   * Glass buttons in dark mode use white overlay for visibility.
+   */
+  --glass-4-bg:              rgba(255, 255, 255, 0.08);
+  --glass-4-bg-hover:        rgba(255, 255, 255, 0.14);
+  --glass-4-bg-active:       rgba(255, 255, 255, 0.18);
+  --glass-4-blur:            12px;
+  --glass-4-saturate:        160%;
+  --glass-4-border:          1px solid rgba(255, 255, 255, 0.10);
+  --glass-4-border-hover:    1px solid rgba(255, 255, 255, 0.18);
+  --glass-4-border-active:   1px solid rgba(255, 255, 255, 0.22);
+  --glass-4-shadow:          0 2px 8px rgba(0, 0, 0, 0.18),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-4-shadow-hover:    0 4px 12px rgba(0, 0, 0, 0.22),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-4-shadow-active:   0 1px 4px rgba(0, 0, 0, 0.16),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --glass-4-scale-active:    0.97;
+
+  /* -- Level 4 Prominent (dark — tinted glass with brand color) -- */
+  --glass-4p-bg:             rgba(13, 148, 136, 0.22);
+  --glass-4p-bg-hover:       rgba(13, 148, 136, 0.32);
+  --glass-4p-bg-active:      rgba(13, 148, 136, 0.40);
+  --glass-4p-blur:           12px;
+  --glass-4p-saturate:       170%;
+  --glass-4p-border:         1px solid rgba(13, 148, 136, 0.28);
+  --glass-4p-border-hover:   1px solid rgba(13, 148, 136, 0.42);
+  --glass-4p-border-active:  1px solid rgba(13, 148, 136, 0.48);
+  --glass-4p-shadow:         0 2px 8px rgba(13, 148, 136, 0.16),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  --glass-4p-shadow-hover:   0 4px 16px rgba(13, 148, 136, 0.24),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  --glass-4p-shadow-active:  0 1px 6px rgba(13, 148, 136, 0.20),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-4p-text:           rgba(255, 255, 255, 0.95);
+  --glass-4p-scale-active:   0.97;
+
+  /* -- Level 4 Destructive (dark — red-tinted glass) -- */
+  --glass-4d-bg:             rgba(220, 38, 38, 0.16);
+  --glass-4d-bg-hover:       rgba(220, 38, 38, 0.26);
+  --glass-4d-bg-active:      rgba(220, 38, 38, 0.32);
+  --glass-4d-border:         1px solid rgba(220, 38, 38, 0.22);
+  --glass-4d-border-hover:   1px solid rgba(220, 38, 38, 0.36);
+  --glass-4d-shadow:         0 2px 8px rgba(220, 38, 38, 0.14),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --glass-4d-shadow-hover:   0 4px 16px rgba(220, 38, 38, 0.20),
+                             inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  /*
+   * ---- TEXT ON GLASS (dark) ----
+   */
+  --glass-text-primary:      rgba(255, 255, 255, 0.92);
+  --glass-text-secondary:    rgba(255, 255, 255, 0.58);
+  --glass-text-tertiary:     rgba(255, 255, 255, 0.38);
+  --glass-text-on-prominent: rgba(255, 255, 255, 0.95);
+
+  /*
+   * ---- GLASS DIVIDERS (dark) ----
+   */
+  --glass-divider:           rgba(255, 255, 255, 0.06);
+  --glass-divider-strong:    rgba(255, 255, 255, 0.12);
+}
+
+
+/*
+ * ============================================================================
+ * UTILITY CLASSES
+ * ============================================================================
+ * Optional convenience classes. You can use these directly or reference
+ * the tokens above in your own component styles.
+ * ============================================================================
+ */
+
+/* Base glass mixin pattern — apply to any element */
+.glass-0 {
+  background: var(--glass-0-bg);
+  backdrop-filter: blur(var(--glass-0-blur)) saturate(var(--glass-0-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-0-blur)) saturate(var(--glass-0-saturate));
+  border: var(--glass-0-border);
+  box-shadow: var(--glass-0-shadow);
+  transition:
+    background var(--glass-duration-base) var(--glass-ease),
+    border var(--glass-duration-base) var(--glass-ease),
+    box-shadow var(--glass-duration-base) var(--glass-ease);
+}
+
+.glass-1 {
+  background: var(--glass-1-bg);
+  backdrop-filter: blur(var(--glass-1-blur)) saturate(var(--glass-1-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-1-blur)) saturate(var(--glass-1-saturate));
+  border: var(--glass-1-border);
+  box-shadow: var(--glass-1-shadow);
+  transition:
+    background var(--glass-duration-base) var(--glass-ease),
+    border var(--glass-duration-base) var(--glass-ease),
+    box-shadow var(--glass-duration-base) var(--glass-ease);
+}
+
+.glass-2 {
+  background: var(--glass-2-bg);
+  backdrop-filter: blur(var(--glass-2-blur)) saturate(var(--glass-2-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-2-blur)) saturate(var(--glass-2-saturate));
+  border: var(--glass-2-border);
+  box-shadow: var(--glass-2-shadow);
+  transition:
+    background var(--glass-duration-base) var(--glass-ease),
+    border var(--glass-duration-base) var(--glass-ease),
+    box-shadow var(--glass-duration-base) var(--glass-ease);
+}
+
+.glass-3 {
+  background: var(--glass-3-bg);
+  backdrop-filter: blur(var(--glass-3-blur)) saturate(var(--glass-3-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-3-blur)) saturate(var(--glass-3-saturate));
+  border: var(--glass-3-border);
+  box-shadow: var(--glass-3-shadow);
+  transition:
+    background var(--glass-duration-base) var(--glass-ease),
+    border var(--glass-duration-base) var(--glass-ease),
+    box-shadow var(--glass-duration-base) var(--glass-ease);
+}
+
+.glass-4 {
+  background: var(--glass-4-bg);
+  backdrop-filter: blur(var(--glass-4-blur)) saturate(var(--glass-4-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-4-blur)) saturate(var(--glass-4-saturate));
+  border: var(--glass-4-border);
+  box-shadow: var(--glass-4-shadow);
+  transition:
+    background var(--glass-duration-fast) var(--glass-ease),
+    border var(--glass-duration-fast) var(--glass-ease),
+    box-shadow var(--glass-duration-fast) var(--glass-ease),
+    transform var(--glass-duration-fast) var(--glass-ease);
+}
+.glass-4:hover {
+  background: var(--glass-4-bg-hover);
+  border: var(--glass-4-border-hover);
+  box-shadow: var(--glass-4-shadow-hover);
+}
+.glass-4:active {
+  background: var(--glass-4-bg-active);
+  border: var(--glass-4-border-active);
+  box-shadow: var(--glass-4-shadow-active);
+  transform: scale(var(--glass-4-scale-active));
+}
+.glass-4:focus-visible {
+  box-shadow: var(--glass-4-shadow), var(--glass-focus-ring);
+  outline: none;
+}
+
+.glass-4-prominent {
+  background: var(--glass-4p-bg);
+  backdrop-filter: blur(var(--glass-4p-blur)) saturate(var(--glass-4p-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-4p-blur)) saturate(var(--glass-4p-saturate));
+  border: var(--glass-4p-border);
+  box-shadow: var(--glass-4p-shadow);
+  color: var(--glass-4p-text);
+  transition:
+    background var(--glass-duration-fast) var(--glass-ease),
+    border var(--glass-duration-fast) var(--glass-ease),
+    box-shadow var(--glass-duration-fast) var(--glass-ease),
+    transform var(--glass-duration-fast) var(--glass-ease);
+}
+.glass-4-prominent:hover {
+  background: var(--glass-4p-bg-hover);
+  border: var(--glass-4p-border-hover);
+  box-shadow: var(--glass-4p-shadow-hover);
+}
+.glass-4-prominent:active {
+  background: var(--glass-4p-bg-active);
+  border: var(--glass-4p-border-active);
+  box-shadow: var(--glass-4p-shadow-active);
+  transform: scale(var(--glass-4p-scale-active));
+}
+.glass-4-prominent:focus-visible {
+  box-shadow: var(--glass-4p-shadow), var(--glass-focus-ring);
+  outline: none;
+}
+
+.glass-4-destructive {
+  background: var(--glass-4d-bg);
+  backdrop-filter: blur(var(--glass-4-blur)) saturate(var(--glass-4-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-4-blur)) saturate(var(--glass-4-saturate));
+  border: var(--glass-4d-border);
+  box-shadow: var(--glass-4d-shadow);
+  transition:
+    background var(--glass-duration-fast) var(--glass-ease),
+    border var(--glass-duration-fast) var(--glass-ease),
+    box-shadow var(--glass-duration-fast) var(--glass-ease),
+    transform var(--glass-duration-fast) var(--glass-ease);
+}
+.glass-4-destructive:hover {
+  background: var(--glass-4d-bg-hover);
+  border: var(--glass-4d-border-hover);
+  box-shadow: var(--glass-4d-shadow-hover);
+}
+.glass-4-destructive:active {
+  transform: scale(var(--glass-4-scale-active));
+}
+
+/* Fallback for browsers without backdrop-filter */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-0 { background: rgba(245, 245, 247, 0.92); }
+  .glass-1 { background: rgba(255, 255, 255, 0.88); }
+  .glass-2 { background: rgba(255, 255, 255, 0.90); }
+  .glass-3 { background: rgba(255, 255, 255, 0.94); }
+  .glass-4 { background: rgba(255, 255, 255, 0.85); }
+  .glass-4-prominent { background: rgba(13, 148, 136, 0.65); }
+  .glass-4-destructive { background: rgba(220, 38, 38, 0.55); }
+
+  .dark .glass-0 { background: rgba(18, 18, 20, 0.95); }
+  .dark .glass-1 { background: rgba(30, 30, 34, 0.90); }
+  .dark .glass-2 { background: rgba(38, 38, 42, 0.92); }
+  .dark .glass-3 { background: rgba(30, 30, 34, 0.95); }
+  .dark .glass-4 { background: rgba(255, 255, 255, 0.12); }
+  .dark .glass-4-prominent { background: rgba(13, 148, 136, 0.55); }
+  .dark .glass-4-destructive { background: rgba(220, 38, 38, 0.45); }
+}

@@ -45,7 +45,6 @@ const NewChatButton = memo(function NewChatButton({
         newConversation({
           template: { endpoint: MAYA_DEFAULT_ENDPOINT, model: MAYA_DEFAULT_MODEL },
           buildDefault: false,
-          disableParams: true,
         });
         if (switchToHistory) {
           setActive(DEFAULT_PANEL);

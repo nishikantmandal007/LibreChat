@@ -37,7 +37,7 @@ export default function InlinePromptsView() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-y-auto bg-presentation">
+    <div className="aisafe-chat-bg flex h-full w-full flex-col overflow-y-auto">
       {isNew ? (
         <CreatePromptForm onSuccess={handleCreateSuccess} />
       ) : (

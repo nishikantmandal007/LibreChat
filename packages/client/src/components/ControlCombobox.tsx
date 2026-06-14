@@ -178,9 +178,9 @@ function ControlCombobox({
                   key={item.id}
                   {...item}
                   className={cn(
-                    'flex w-full cursor-pointer items-center px-3 text-sm',
-                    'text-text-primary hover:bg-surface-tertiary',
-                    'data-[active-item]:bg-surface-tertiary',
+                    'flex w-full cursor-pointer items-center rounded-lg px-3 text-sm transition-colors duration-150',
+                    'text-[var(--glass-text)] hover:bg-[var(--glass-bg-hover)]',
+                    'data-[active-item]:bg-[var(--glass-bg-hover)]',
                   )}
                   render={<Ariakit.SelectItem value={value} />}
                 >

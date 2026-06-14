@@ -31,12 +31,12 @@ export default function MultiSearch({
   return (
     <div
       className={cn(
-        'focus:to-surface-primary/50 group sticky left-0 top-0 z-10 flex h-12 items-center gap-2 bg-gradient-to-b from-surface-tertiary-alt from-65% to-transparent px-3 py-2 text-text-primary transition-colors duration-300 focus:bg-gradient-to-b focus:from-surface-primary',
+        'group sticky left-0 top-0 z-10 flex h-12 items-center gap-2 border-b border-[var(--glass-border-outer)] px-3 py-2 text-[var(--glass-text)] transition-colors duration-200',
         className,
       )}
     >
       <Search
-        className="h-4 w-4 text-text-secondary-alt transition-colors duration-300"
+        className="h-4 w-4 text-[var(--glass-text-secondary)] transition-colors duration-200"
         aria-hidden={'true'}
       />
       <input
@@ -46,7 +46,7 @@ export default function MultiSearch({
         onChange={onChangeHandler}
         placeholder={String(placeholder ?? 'Search...')}
         aria-label="Search Model"
-        className="flex-1 rounded-md border-none bg-transparent px-2.5 py-2 text-sm placeholder-text-secondary focus:outline-none focus:ring-1 focus:ring-ring-primary"
+        className="flex-1 rounded-md border-none bg-transparent px-2.5 py-2 text-sm text-[var(--glass-text)] placeholder-[var(--glass-text-secondary)] focus:outline-none"
       />
       <button
         className={cn(

@@ -105,7 +105,7 @@ export default function Presentation({ children }: { children: React.ReactNode }
   return (
     <DragDropWrapper className="relative flex w-full grow overflow-hidden">
       <SidePanelGroup artifacts={sidePanelElement} className={bgClass} style={gradientStyle}>
-        <main className="flex h-full flex-col overflow-y-auto" role="main">
+        <main className="relative z-10 flex h-full flex-col overflow-y-auto" role="main">
           {children}
         </main>
       </SidePanelGroup>

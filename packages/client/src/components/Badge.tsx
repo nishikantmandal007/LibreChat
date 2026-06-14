@@ -68,11 +68,11 @@ export default function Badge({
       onClick={handleClick}
       className={cn(
         'group relative inline-flex items-center gap-1.5 rounded-full px-4 py-1.5',
-        'border border-border-medium text-sm font-medium transition-shadow',
+        'border border-[var(--glass-border-outer)] text-sm font-medium transition-all duration-200',
         '@container-[600px]:w-full size-9 p-2',
         isActive
-          ? 'bg-surface-active shadow-md'
-          : 'bg-surface-chat shadow-sm hover:bg-surface-hover hover:shadow-md',
+          ? 'bg-[var(--glass-bg-active)] shadow-md'
+          : 'bg-[var(--glass-bg)] shadow-sm hover:bg-[var(--glass-bg-hover)] hover:border-[var(--glass-border-hover)] hover:shadow-md',
         'active:scale-95 active:shadow-inner',
         isMoveable && 'cursor-move',
         isDisabled && 'cursor-not-allowed opacity-50 hover:shadow-sm',

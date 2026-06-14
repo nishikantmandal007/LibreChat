@@ -140,7 +140,7 @@ export const SkeletonRows = memo(
   }) => (
     <>
       {Array.from({ length: count }, (_, index) => (
-        <TableRow key={`skeleton-${index}`} className="h-[56px] border-b border-border-light">
+        <TableRow key={`skeleton-${index}`} className="h-[56px] border-b border-[var(--glass-border-outer)]">
           {columns.map((column) => {
             const columnKey = String(
               column.id ?? ('accessorKey' in column && column.accessorKey) ?? '',

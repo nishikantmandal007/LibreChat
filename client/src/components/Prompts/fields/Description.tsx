@@ -41,7 +41,7 @@ const Description = ({
   }
 
   return (
-    <div className="rounded-xl border border-border-medium">
+    <div className="rounded-xl border border-white/[0.12] bg-white/[0.04] backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.02]">
       <label
         htmlFor="prompt-description"
         className="block px-4 pt-2 text-sm text-text-secondary md:hidden"
@@ -64,7 +64,7 @@ const Description = ({
           />
           <label
             htmlFor="prompt-description"
-            className="pointer-events-none absolute left-0 top-0.5 hidden max-w-[calc(100%-3.5rem)] origin-[0] translate-y-2 scale-100 rounded bg-presentation px-1 text-sm text-text-secondary transition-transform duration-200 peer-placeholder-shown:translate-y-2 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 md:block"
+            className="pointer-events-none absolute left-0 top-0.5 hidden max-w-[calc(100%-3.5rem)] origin-[0] translate-y-2 scale-100 rounded bg-transparent px-1 text-sm text-text-secondary transition-transform duration-200 peer-placeholder-shown:translate-y-2 peer-placeholder-shown:scale-100 peer-focus:-translate-y-3 peer-focus:scale-75 peer-focus:text-text-primary peer-[:not(:placeholder-shown)]:-translate-y-3 peer-[:not(:placeholder-shown)]:scale-75 md:block"
           >
             {localize('com_ui_description_placeholder')}
           </label>

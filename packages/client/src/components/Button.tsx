@@ -10,14 +10,14 @@ const buttonVariants = cva(
       variant: {
         default: 'glass-surface rounded-xl text-[var(--glass-text)] font-medium',
         destructive:
-          'bg-surface-destructive text-destructive-foreground hover:bg-surface-destructive-hover',
+          'glass-surface rounded-xl border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/30',
         outline:
           'glass-surface-subtle rounded-xl text-[var(--glass-text)] border-[var(--glass-border-outer)] hover:bg-[var(--glass-bg-hover)]',
         secondary: 'glass-surface-subtle rounded-xl text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-hover)]',
         ghost: 'hover:bg-[var(--glass-bg-subtle)] hover:text-accent-foreground rounded-xl',
         link: 'text-primary underline-offset-4 hover:underline',
         // hardcoded text color because of WCAG contrast issues (text-white)
-        submit: 'bg-surface-submit text-white hover:bg-surface-submit-hover',
+        submit: 'glass-surface rounded-xl border-teal-500/20 bg-teal-500/15 text-teal-300 hover:bg-teal-500/25 hover:border-teal-500/30',
         glass:
           'glass-surface rounded-xl text-[var(--glass-text)] font-medium',
       },

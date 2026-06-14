@@ -1,5 +1,4 @@
-import { useCallback } from 'react';
-import { useGetStartupConfig } from '~/data-provider';
+import InspirationalQuote from './InspirationalQuote';
 import { useLocalize, useAuthContext } from '~/hooks';
 
 export default function Landing({
@@ -7,32 +6,25 @@ export default function Landing({
 }: {
   centerFormOnLanding: boolean;
 }) {
-  const { data: startupConfig } = useGetStartupConfig();
   const { user } = useAuthContext();
   const localize = useLocalize();
-
-  const getCustomWelcome = useCallback(() => {
-    if (typeof startupConfig?.interface?.customWelcome !== 'string') {
-      return null;
-    }
-    const customWelcome = startupConfig.interface.customWelcome;
-    if (user?.name && customWelcome.includes('{{user.name}}')) {
-      return customWelcome.replace(/{{user.name}}/g, user.name);
-    }
-    return customWelcome;
-  }, [startupConfig?.interface?.customWelcome, user?.name]);
-
-  const greetingText = getCustomWelcome() ?? localize('com_ui_privacy_hero_quote');
+  const displayName = user?.name ?? user?.username ?? localize('com_nav_user');
+  const hour = new Date().getHours();
+  let dayPart = 'Good evening';
+  if (hour >= 5 && hour < 12) {
+    dayPart = 'Good morning';
+  } else if (hour >= 12 && hour < 17) {
+    dayPart = 'Good afternoon';
+  }
+  const greetingText = `${dayPart}, ${displayName}`;
 
   return (
-    <div className="relative mb-0 flex max-h-full w-full flex-col items-center justify-center overflow-visible pb-6 transition-all duration-200">
+    <div className="aisafe-landing relative mb-0 flex max-h-full w-full flex-col items-center justify-center overflow-visible pb-6 transition-all duration-200">
       <div className="relative z-10 flex flex-col items-center gap-3 p-2 text-center">
-        <h1 className="aisafe-hero-quote animate-fadeIn max-w-4xl px-4 text-3xl font-medium italic leading-tight text-text-primary sm:text-5xl">
+        <h1 className="aisafe-hero-quote animate-fadeIn max-w-4xl px-4 text-3xl font-bold leading-tight text-text-primary sm:text-5xl">
           {greetingText}
         </h1>
-        <div className="animate-fadeIn text-text-secondary/90 max-w-md text-center text-sm font-medium">
-          {localize('com_ui_privacy_assistant_tagline')}
-        </div>
+        <InspirationalQuote className="animate-fadeIn px-4 whitespace-nowrap" />
       </div>
     </div>
   );

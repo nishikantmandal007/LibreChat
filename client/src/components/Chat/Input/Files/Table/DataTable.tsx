@@ -129,11 +129,11 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
           />
         </div>
       </div>
-      <div className="relative grid h-full max-h-[calc(100vh-20rem)] min-h-[calc(100vh-20rem)] w-full flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-md border border-black/10 dark:border-white/10">
+      <div className="relative grid h-full max-h-[calc(100vh-20rem)] min-h-[calc(100vh-20rem)] w-full flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-md border border-[var(--glass-border-outer)]">
         <Table className="w-full min-w-[300px] border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-50">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-b border-border-light">
+              <TableRow key={headerGroup.id} className="border-b border-[var(--glass-border-outer)]">
                 {headerGroup.headers.map((header, _index) => {
                   const size = header.getSize();
                   const style: Style = {

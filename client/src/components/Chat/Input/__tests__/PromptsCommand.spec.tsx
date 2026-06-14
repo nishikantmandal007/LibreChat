@@ -150,7 +150,7 @@ describe('PromptsCommand slash skills', () => {
       />,
     );
 
-    const skillButton = await screen.findByRole('button', { name: /Skill · Brand Guidelines/i });
+    const skillButton = await screen.findByRole('button', { name: /Brand Guidelines/i });
     await act(async () => {
       await user.click(skillButton);
     });

@@ -1,9 +1,9 @@
 /* AnimatedTabs.css */
 .animated-tab-panel {
   transition-property: opacity, translate;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
-  animation-duration: 300ms;
+  transition-timing-function: var(--ease-glass, cubic-bezier(0.4, 0, 0.2, 1));
+  transition-duration: var(--duration-slow, 300ms);
+  animation-duration: var(--duration-slow, 300ms);
 }
 
 /* Sliding underline animation for tabs */
@@ -17,7 +17,7 @@
   bottom: 0;
   height: 2px;
   background-color: currentColor; /* Inherit color from active tab */
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--duration-slow, 300ms) var(--ease-glass, cubic-bezier(0.4, 0, 0.2, 1));
   left: var(--tab-left, 0);
   width: var(--tab-width, 0);
 }

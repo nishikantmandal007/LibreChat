@@ -87,16 +87,16 @@ function ViewToggle({
   return (
     <div
       role="group"
-      className="inline-flex h-7 rounded-lg bg-surface-tertiary p-0.5 text-sm font-medium"
+      className="inline-flex h-7 rounded-lg bg-[var(--glass-bg-subtle)] border border-[var(--glass-border-outer)] p-0.5 text-sm font-medium"
     >
       <button
         type="button"
         onClick={() => setViewMode('rendered')}
         className={cn(
-          'flex items-center justify-center rounded-md px-1.5 transition-colors',
+          'flex items-center justify-center rounded-md px-1.5 transition-all duration-200',
           viewMode === 'rendered'
-            ? 'bg-surface-primary text-text-primary shadow-sm'
-            : 'text-text-secondary hover:text-text-primary',
+            ? 'bg-[var(--glass-bg)] text-[var(--glass-text)] shadow-sm'
+            : 'text-[var(--glass-text-secondary)] hover:text-[var(--glass-text)]',
         )}
         aria-label={localize('com_ui_skill_view_rendered')}
         aria-pressed={viewMode === 'rendered'}
@@ -107,10 +107,10 @@ function ViewToggle({
         type="button"
         onClick={() => setViewMode('source')}
         className={cn(
-          'flex items-center justify-center rounded-md px-1.5 transition-colors',
+          'flex items-center justify-center rounded-md px-1.5 transition-all duration-200',
           viewMode === 'source'
-            ? 'bg-surface-primary text-text-primary shadow-sm'
-            : 'text-text-secondary hover:text-text-primary',
+            ? 'bg-[var(--glass-bg)] text-[var(--glass-text)] shadow-sm'
+            : 'text-[var(--glass-text-secondary)] hover:text-[var(--glass-text)]',
         )}
         aria-label={localize('com_ui_skill_view_source')}
         aria-pressed={viewMode === 'source'}

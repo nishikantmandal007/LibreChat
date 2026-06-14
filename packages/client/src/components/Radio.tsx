@@ -81,7 +81,7 @@ const Radio = memo(function Radio({
   if (options.length === 0) {
     return (
       <div
-        className="relative inline-flex items-center rounded-lg bg-muted p-1 opacity-50"
+        className="relative inline-flex items-center rounded-lg bg-[var(--glass-bg-subtle)] border border-[var(--glass-border-outer)] p-1 opacity-50"
         role="radiogroup"
         aria-labelledby={ariaLabelledBy}
       >
@@ -96,13 +96,13 @@ const Radio = memo(function Radio({
 
   return (
     <div
-      className={`relative ${fullWidth ? 'flex' : 'inline-flex'} items-center rounded-lg bg-muted ${className}`}
+      className={`relative ${fullWidth ? 'flex' : 'inline-flex'} items-center rounded-lg bg-[var(--glass-bg-subtle)] border border-[var(--glass-border-outer)] ${className}`}
       role="radiogroup"
       aria-labelledby={ariaLabelledBy}
     >
       {selectedIndex >= 0 && isMounted && (
         <div
-          className="pointer-events-none absolute inset-y-0 rounded-md border border-border/50 bg-background shadow-sm transition-all duration-300 ease-out"
+          className="pointer-events-none absolute inset-y-0 rounded-md border border-[var(--glass-border-hover)] bg-[var(--glass-bg)] shadow-sm transition-all duration-300 ease-out"
           style={backgroundStyle}
         />
       )}

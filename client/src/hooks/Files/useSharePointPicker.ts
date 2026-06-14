@@ -78,13 +78,8 @@ export default function useSharePointPicker({
             });
 
             const command = message.data.data;
-            console.log('SharePoint picker command:', command);
-
             switch (command.command) {
               case 'authenticate':
-                console.log('Authentication requested, providing token');
-                console.log('Command details:', command); // Add this line
-                console.log('Token available:', !!token?.access_token); // Add this line
                 if (token?.access_token) {
                   port.postMessage({
                     type: 'result',
