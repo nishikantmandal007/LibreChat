@@ -30,12 +30,13 @@ export function getCurrentUser(): MDPUser | null {
     return null;
   }
 
-  const rawName = payload.preferred_username.split('@')[0] || payload.preferred_username;
+  const emailUser = payload.preferred_username.split('@')[0] || payload.preferred_username;
+  const firstName = emailUser.split('.')[0];
   return {
     id: payload.sub,
     email: payload.preferred_username,
     organizationId: payload.OrganizationId,
-    name: rawName.charAt(0).toUpperCase() + rawName.slice(1),
+    name: firstName.charAt(0).toUpperCase() + firstName.slice(1),
   };
 }
 
