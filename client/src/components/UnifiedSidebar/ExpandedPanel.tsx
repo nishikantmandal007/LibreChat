@@ -1,14 +1,7 @@
 import { memo, useCallback, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRecoilValue, useSetRecoilState, useRecoilState } from 'recoil';
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  Search,
-  SquarePen,
-  FileText,
-  ClipboardList,
-} from 'lucide-react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { PanelLeftClose, PanelLeftOpen, Search, SquarePen } from 'lucide-react';
 import { QueryKeys } from 'librechat-data-provider';
 import { Button, TooltipAnchor } from '@librechat/client';
 import type { NavLink } from '~/common';
@@ -16,15 +9,16 @@ import { CLOSE_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import { useActivePanel, resolveActivePanel, DEFAULT_PANEL } from '~/Providers';
 import { useLocalize, useNewConvo } from '~/hooks';
 import { clearMessagesCache, cn } from '~/utils';
+import { MAYA_DEFAULT_ENDPOINT, MAYA_DEFAULT_MODEL } from '~/services/mdp/modelConfig';
 import store from '~/store';
 import AccountSettings from '~/components/Nav/AccountSettings';
 
 type NavLayout = 'icon' | 'row';
 
 const rowButtonClass =
-  'flex h-12 w-full items-center justify-start gap-3 rounded-xl px-3 text-base font-semibold text-text-primary transition-colors hover:bg-surface-hover';
+  'aisafe-sidebar-nav-item flex h-11 w-full items-center justify-start gap-3 rounded-xl px-3 text-base font-semibold text-text-primary transition-all duration-300 ease-out';
 const iconButtonClass =
-  'flex h-11 w-11 items-center justify-center rounded-xl text-text-primary transition-colors hover:bg-surface-hover';
+  'aisafe-sidebar-nav-item flex h-10 w-10 items-center justify-center rounded-xl text-text-primary transition-all duration-300 ease-out';
 const AISAFE_BRAND_NAME = 'AI Safe';
 
 const NewChatButton = memo(function NewChatButton({
@@ -39,18 +33,20 @@ const NewChatButton = memo(function NewChatButton({
   const { newConversation } = useNewConvo();
   const conversation = useRecoilValue(store.conversationByIndex(0));
   const switchToHistory = useRecoilValue(store.newChatSwitchToHistory);
-  const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
-  const setMeetingNotesActive = useSetRecoilState(store.meetingNotesActive);
+  const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       if (e.button === 0 && !e.ctrlKey && !e.metaKey) {
         e.preventDefault();
-        setDocumentCreatorActive(false);
-        setMeetingNotesActive(false);
         clearMessagesCache(queryClient, conversation?.conversationId);
         queryClient.invalidateQueries([QueryKeys.messages]);
-        newConversation();
+        setImageGenEnabled(false);
+        newConversation({
+          template: { endpoint: MAYA_DEFAULT_ENDPOINT, model: MAYA_DEFAULT_MODEL },
+          buildDefault: false,
+          disableParams: true,
+        });
         if (switchToHistory) {
           setActive(DEFAULT_PANEL);
         }
@@ -62,8 +58,7 @@ const NewChatButton = memo(function NewChatButton({
       newConversation,
       switchToHistory,
       setActive,
-      setDocumentCreatorActive,
-      setMeetingNotesActive,
+      setImageGenEnabled,
     ],
   );
 
@@ -79,7 +74,7 @@ const NewChatButton = memo(function NewChatButton({
           className={layout === 'row' ? rowButtonClass : iconButtonClass}
           onClick={handleClick}
         >
-          <SquarePen className="h-6 w-6 shrink-0" />
+          <SquarePen className="h-[22px] w-[22px] shrink-0" />
           {layout === 'row' && <span>{localize('com_ui_new_chat')}</span>}
         </a>
       }
@@ -135,7 +130,7 @@ const SearchButton = memo(function SearchButton({
           className={layout === 'row' ? rowButtonClass : iconButtonClass}
           onClick={handleClick}
         >
-          <Search className="h-6 w-6 shrink-0" aria-hidden="true" />
+          <Search className="h-[22px] w-[22px] shrink-0" aria-hidden="true" />
           {layout === 'row' && <span>{localize('com_nav_search_placeholder')}</span>}
         </Button>
       }
@@ -162,13 +157,9 @@ const NavIconButton = memo(function NavIconButton({
 }) {
   const localize = useLocalize();
   const label = link.id === DEFAULT_PANEL ? localize('com_ui_chats') : localize(link.title);
-  const setDocumentCreatorActive = useSetRecoilState(store.documentCreatorActive);
-  const setMeetingNotesActive = useSetRecoilState(store.meetingNotesActive);
 
   const handleClick = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
-      setDocumentCreatorActive(false);
-      setMeetingNotesActive(false);
       if (link.onClick) {
         link.onClick(e);
         return;
@@ -184,17 +175,7 @@ const NavIconButton = memo(function NavIconButton({
         onExpand?.();
       }
     },
-    [
-      link,
-      isActive,
-      setActive,
-      expanded,
-      onExpand,
-      onCollapse,
-      layout,
-      setDocumentCreatorActive,
-      setMeetingNotesActive,
-    ],
+    [link, isActive, setActive, expanded, onExpand, onCollapse, layout],
   );
 
   return (
@@ -209,11 +190,11 @@ const NavIconButton = memo(function NavIconButton({
           aria-pressed={isActive}
           className={cn(
             layout === 'row' ? rowButtonClass : iconButtonClass,
-            isActive ? 'bg-surface-active-alt' : '',
+            isActive ? 'aisafe-sidebar-nav-item-active' : '',
           )}
           onClick={handleClick}
         >
-          <link.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+          <link.icon className="h-[22px] w-[22px] shrink-0" aria-hidden="true" />
           {layout === 'row' && <span>{label}</span>}
         </Button>
       }
@@ -221,7 +202,7 @@ const NavIconButton = memo(function NavIconButton({
   );
 });
 
-const SidebarLogoButton = memo(function SidebarLogoButton({
+const _SidebarLogoButton = memo(function SidebarLogoButton({
   expanded,
   toggleLabel,
   toggleClick,
@@ -246,7 +227,7 @@ const SidebarLogoButton = memo(function SidebarLogoButton({
           variant="ghost"
           aria-label={localize(toggleLabel)}
           aria-expanded={expanded}
-          className="h-11 w-11 rounded-xl transition-colors hover:bg-surface-hover"
+          className="aisafe-sidebar-nav-item h-10 w-10 rounded-xl transition-all duration-300 ease-out"
           onClick={toggleClick}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
@@ -257,13 +238,13 @@ const SidebarLogoButton = memo(function SidebarLogoButton({
               alt=""
               aria-hidden="true"
               className={cn(
-                'aisafe-sidebar-logo absolute inset-0 h-9 w-9 rounded-md object-cover transition-opacity duration-200',
+                'aisafe-sidebar-logo absolute inset-0 h-9 w-9 rounded-md object-cover transition-opacity duration-300 ease-out',
                 hovered ? 'opacity-0' : 'opacity-100',
               )}
             />
             <HoverIcon
               className={cn(
-                'absolute inset-0 m-auto h-6 w-6 text-text-primary transition-opacity duration-200',
+                'absolute inset-0 m-auto h-5 w-5 text-text-primary transition-opacity duration-300 ease-out',
                 hovered ? 'opacity-100' : 'opacity-0',
               )}
               aria-hidden="true"
@@ -289,12 +270,6 @@ function ExpandedPanel({
   const localize = useLocalize();
   const { active, setActive } = useActivePanel();
   const effectiveActive = resolveActivePanel(active, links);
-  const [documentCreatorActive, setDocumentCreatorActive] = useRecoilState(
-    store.documentCreatorActive,
-  );
-  const [meetingNotesActive, setMeetingNotesActive] = useRecoilState(store.meetingNotesActive);
-
-  const customWorkspaceActive = documentCreatorActive || meetingNotesActive;
 
   const toggleLabel = expanded ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar';
   const toggleClick = expanded ? onCollapse : onExpand;
@@ -302,18 +277,18 @@ function ExpandedPanel({
 
   if (expanded) {
     return (
-      <div className="flex w-full flex-shrink-0 flex-col gap-1.5 bg-surface-primary-alt px-3 py-4">
-        <div className="mb-5 flex min-h-16 items-center justify-between">
-          <div className="flex min-w-0 items-center gap-3.5">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center">
+      <div className="aisafe-sidebar-expanded flex w-full flex-shrink-0 flex-col gap-1.5 px-3 py-4">
+        <div className="mb-5 flex min-h-14 items-center justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center">
               <img
                 src="assets/logo.png"
                 alt={AISAFE_BRAND_NAME}
-                className="aisafe-sidebar-logo h-12 w-12 rounded-xl object-cover"
+                className="aisafe-sidebar-logo h-9 w-9 rounded-lg object-cover"
               />
             </div>
             <div className="min-w-0">
-              <div className="aisafe-sidebar-wordmark truncate text-[1.55rem] font-extrabold leading-none text-text-primary">
+              <div className="aisafe-sidebar-wordmark truncate text-lg font-bold leading-none tracking-tight text-text-primary">
                 {AISAFE_BRAND_NAME}
               </div>
             </div>
@@ -329,7 +304,7 @@ function ExpandedPanel({
                 variant="ghost"
                 aria-label={localize('com_nav_close_sidebar')}
                 aria-expanded={expanded}
-                className="h-11 w-11 rounded-xl text-text-primary transition-colors hover:bg-surface-hover"
+                className="aisafe-sidebar-nav-item h-10 w-10 rounded-xl text-text-primary transition-all duration-300 ease-out"
                 onClick={onCollapse}
               >
                 <PanelLeftClose className="h-5 w-5" aria-hidden="true" />
@@ -340,60 +315,12 @@ function ExpandedPanel({
         <NewChatButton setActive={setActive} layout="row" />
         <SearchButton expanded={expanded} setActive={setActive} onExpand={onExpand} layout="row" />
 
-        {/* Custom Navigation Tabs - Expanded Mode */}
-        <div className="mt-3 flex flex-col gap-1 border-t border-border-light pt-3">
-          <TooltipAnchor
-            side="right"
-            description={localize('com_ui_doc_creator')}
-            render={
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={localize('com_ui_doc_creator')}
-                className={cn(
-                  rowButtonClass,
-                  documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
-                )}
-                onClick={() => {
-                  setDocumentCreatorActive(true);
-                  setMeetingNotesActive(false);
-                }}
-              >
-                <FileText className="h-6 w-6 shrink-0" />
-                <span>{localize('com_ui_doc_creator')}</span>
-              </Button>
-            }
-          />
-          <TooltipAnchor
-            side="right"
-            description={localize('com_ui_meeting_notes')}
-            render={
-              <Button
-                size="icon"
-                variant="ghost"
-                aria-label={localize('com_ui_meeting_notes')}
-                className={cn(
-                  rowButtonClass,
-                  meetingNotesActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
-                )}
-                onClick={() => {
-                  setDocumentCreatorActive(false);
-                  setMeetingNotesActive(true);
-                }}
-              >
-                <ClipboardList className="h-6 w-6 shrink-0" />
-                <span>{localize('com_ui_meeting_notes')}</span>
-              </Button>
-            }
-          />
-        </div>
-
         <div className="mt-3 flex flex-col gap-1">
           {visibleLinks.map((link) => (
             <NavIconButton
               key={link.id}
               link={link}
-              isActive={!customWorkspaceActive && link.id === effectiveActive}
+              isActive={link.id === effectiveActive}
               expanded={expanded}
               setActive={setActive}
               onExpand={onExpand}
@@ -407,75 +334,44 @@ function ExpandedPanel({
   }
 
   return (
-    <div className="flex h-full w-16 flex-shrink-0 flex-col items-center gap-2 border-r border-border-light bg-surface-primary-alt px-2 py-4">
-      <SidebarLogoButton expanded={expanded} toggleLabel={toggleLabel} toggleClick={toggleClick} />
-      <div className="mb-1" />
-      <NewChatButton setActive={setActive} />
-      <SearchButton expanded={expanded} setActive={setActive} onExpand={onExpand} />
-
-      {/* Custom Navigation Tabs - Collapsed Mode */}
-      <div className="w-8 border-b border-border-light" />
-      <div className="flex flex-col gap-1.5">
+    <div className="aisafe-sidebar-rail flex h-full w-full flex-shrink-0 flex-col items-center justify-between pt-5 pb-4 px-1.5">
+      <div className="flex w-full flex-col items-center gap-3">
         <TooltipAnchor
           side="right"
-          description={localize('com_ui_doc_creator')}
+          description={localize(toggleLabel)}
           render={
             <Button
+              data-testid="open-sidebar-button"
               size="icon"
               variant="ghost"
-              aria-label={localize('com_ui_doc_creator')}
-              className={cn(
-                iconButtonClass,
-                documentCreatorActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
-              )}
-              onClick={() => {
-                setDocumentCreatorActive(true);
-                setMeetingNotesActive(false);
-              }}
+              aria-label={localize(toggleLabel)}
+              aria-expanded={false}
+              className="aisafe-sidebar-nav-item h-10 w-10 rounded-xl transition-all duration-300 ease-out"
+              onClick={toggleClick}
             >
-              <FileText className="h-6 w-6 shrink-0" />
+              <PanelLeftOpen className="h-5 w-5 text-text-primary" aria-hidden="true" />
             </Button>
           }
         />
-        <TooltipAnchor
-          side="right"
-          description={localize('com_ui_meeting_notes')}
-          render={
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label={localize('com_ui_meeting_notes')}
-              className={cn(
-                iconButtonClass,
-                meetingNotesActive ? 'bg-surface-active-alt' : 'opacity-80 hover:opacity-100',
-              )}
-              onClick={() => {
-                setDocumentCreatorActive(false);
-                setMeetingNotesActive(true);
-              }}
-            >
-              <ClipboardList className="h-6 w-6 shrink-0" />
-            </Button>
-          }
-        />
+        <NewChatButton setActive={setActive} />
+        <SearchButton expanded={expanded} setActive={setActive} onExpand={onExpand} />
+
+        <div className="flex w-full flex-col items-center gap-2 mt-1">
+          {visibleLinks.map((link) => (
+            <NavIconButton
+              key={link.id}
+              link={link}
+              isActive={link.id === effectiveActive}
+              expanded={expanded ?? true}
+              setActive={setActive}
+              onExpand={onExpand}
+              onCollapse={onCollapse}
+            />
+          ))}
+        </div>
       </div>
 
-      <div className="w-8 border-b border-border-light" />
-      <div className="flex flex-col gap-1.5 overflow-y-auto">
-        {visibleLinks.map((link) => (
-          <NavIconButton
-            key={link.id}
-            link={link}
-            isActive={!customWorkspaceActive && link.id === effectiveActive}
-            expanded={expanded ?? true}
-            setActive={setActive}
-            onExpand={onExpand}
-            onCollapse={onCollapse}
-          />
-        ))}
-      </div>
-
-      <div className="mt-auto">
+      <div className="flex flex-col items-center pb-2">
         <AccountSettings collapsed />
       </div>
     </div>

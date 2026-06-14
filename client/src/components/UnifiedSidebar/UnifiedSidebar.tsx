@@ -11,10 +11,10 @@ import Sidebar from './Sidebar';
 import { cn } from '~/utils';
 import store from '~/store';
 
-const COLLAPSED_WIDTH = 64;
-const EXPANDED_MIN = 360;
-const TRANSITION_MS = 300;
-const EASING = 'cubic-bezier(0.2, 0, 0, 1)';
+const COLLAPSED_WIDTH = 52;
+const EXPANDED_MIN = 384;
+const TRANSITION_MS = 450;
+const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
 function getInitialWidth(): number {
   const saved = localStorage.getItem('side:width');
@@ -135,7 +135,7 @@ function UnifiedSidebar() {
       <>
         <div
           className={cn(
-            'fixed left-0 top-0 z-[110] flex h-full bg-surface-primary-alt',
+            'aisafe-sidebar-frame fixed left-0 top-0 z-[110] flex h-full',
             expanded ? 'translate-x-0' : '-translate-x-full',
           )}
           style={{
@@ -180,14 +180,25 @@ function UnifiedSidebar() {
     <SidebarChatProvider>
       <ActivePanelProvider>
         <aside
-          className="relative flex h-full flex-shrink-0 overflow-hidden"
+          className="aisafe-sidebar-frame aisafe-sidebar-panel fixed left-0 top-0 z-40 h-screen overflow-hidden"
           style={{
             width: expanded ? sidebarWidth : COLLAPSED_WIDTH,
             minWidth: expanded ? EXPANDED_MIN : COLLAPSED_WIDTH,
             maxWidth: expanded ? '40%' : COLLAPSED_WIDTH,
             transition: isResizing
               ? 'none'
-              : `width ${TRANSITION_MS}ms ${EASING}, min-width ${TRANSITION_MS}ms ${EASING}, max-width ${TRANSITION_MS}ms ${EASING}`,
+              : 'width ' +
+                TRANSITION_MS +
+                'ms ' +
+                EASING +
+                ', min-width ' +
+                TRANSITION_MS +
+                'ms ' +
+                EASING +
+                ', max-width ' +
+                TRANSITION_MS +
+                'ms ' +
+                EASING,
           }}
           aria-label={localize('com_nav_control_panel')}
         >

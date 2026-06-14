@@ -63,6 +63,11 @@ export default function Root() {
     return null;
   }
 
+  let contentPaddingLeft = 0;
+  if (!isSmallScreen) {
+    contentPaddingLeft = sidebarExpanded ? 384 : 52;
+  }
+
   return (
     <SetConvoProvider>
       <FileMapContext.Provider value={fileMap}>
@@ -70,20 +75,20 @@ export default function Root() {
           <AgentsMapContext.Provider value={agentsMap}>
             <PromptGroupsProvider>
               <Banner onHeightChange={setBannerHeight} />
-              <div className="flex" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
-                <div className="relative z-0 flex h-full w-full overflow-hidden">
-                  <UnifiedSidebar />
-                  <div
-                    className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden"
-                    style={{
-                      transform:
-                        isSmallScreen && sidebarExpanded ? 'translateX(min(85vw, 380px))' : 'none',
-                      transition: 'transform 300ms cubic-bezier(0.2, 0, 0, 1)',
-                    }}
-                    inert={isSmallScreen && sidebarExpanded ? '' : undefined}
-                  >
-                    <Outlet />
-                  </div>
+              <div className="relative" style={{ height: `calc(100dvh - ${bannerHeight}px)` }}>
+                <UnifiedSidebar />
+                <div
+                  className="relative z-0 flex h-full flex-col overflow-hidden"
+                  style={{
+                    paddingLeft: contentPaddingLeft,
+                    transform:
+                      isSmallScreen && sidebarExpanded ? 'translateX(min(85vw, 380px))' : 'none',
+                    transition:
+                      'padding-left 450ms cubic-bezier(0.16, 1, 0.3, 1), transform 450ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                  inert={isSmallScreen && sidebarExpanded ? '' : undefined}
+                >
+                  <Outlet />
                 </div>
               </div>
             </PromptGroupsProvider>
