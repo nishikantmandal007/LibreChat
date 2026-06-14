@@ -80,7 +80,7 @@ function MCPToolItem({
               <img
                 src={icon}
                 alt={localize('com_ui_logo', { 0: name })}
-                className="h-full w-full rounded-[5px] bg-white"
+                className="h-full w-full rounded-[5px] bg-[var(--glass-bg)]"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center rounded-[5px] border border-border-medium bg-transparent">

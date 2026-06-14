@@ -109,15 +109,16 @@ export function updateLastSelectedModel({
     (localStorage.getItem(firstLocalConvoKey) ?? '{}') || '{}',
   );
 
+  const safeModel = model === 'image-gen-v1' ? 'gpt-4o' : model;
   if (lastConversationSetup.endpoint === endpoint) {
-    lastConversationSetup.model = model;
+    lastConversationSetup.model = safeModel;
     localStorage.setItem(firstLocalConvoKey, JSON.stringify(lastConversationSetup));
   }
 
   const lastSelectedModels = JSON.parse(
     (localStorage.getItem(LocalStorageKeys.LAST_MODEL) ?? '{}') || '{}',
   );
-  lastSelectedModels[endpoint] = model;
+  lastSelectedModels[endpoint] = safeModel;
   localStorage.setItem(LocalStorageKeys.LAST_MODEL, JSON.stringify(lastSelectedModels));
 }
 

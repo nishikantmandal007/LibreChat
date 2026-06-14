@@ -27,8 +27,8 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
         data-testid="nav-user"
         className={
           collapsed
-            ? 'flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
-            : 'flex h-auto w-full items-center gap-2 rounded-xl p-2 text-[0.9375rem] leading-5 transition-all duration-200 ease-in-out hover:bg-surface-active-alt aria-[expanded=true]:bg-surface-active-alt'
+            ? 'aisafe-sidebar-nav-item flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200 aria-[expanded=true]:bg-white/[0.22]'
+            : 'aisafe-sidebar-nav-item flex h-auto w-full items-center gap-2 rounded-xl p-2 text-[0.9375rem] leading-5 transition-all duration-200 ease-in-out aria-[expanded=true]:bg-white/[0.22]'
         }
       >
         <div

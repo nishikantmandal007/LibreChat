@@ -1,18 +1,24 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import * as Ariakit from '@ariakit/react';
 import { useRecoilState, useSetRecoilState } from 'recoil';
-import { TooltipAnchor, DropdownPopup, PinIcon } from '@librechat/client';
+import {
+  TooltipAnchor,
+  DropdownPopup,
+  PinIcon,
+} from '@librechat/client';
 import { FileText, Globe, ImageIcon, Languages, Settings, Settings2 } from 'lucide-react';
 import type { MenuItemProps } from '~/common';
 import {
   AuthType,
+  EModelEndpoint,
   Permissions,
   PermissionTypes,
   defaultAgentCapabilities,
 } from 'librechat-data-provider';
-import { useLocalize, useHasAccess, useAgentCapabilities } from '~/hooks';
+import { useLocalize, useHasAccess, useAgentCapabilities, useNewConvo } from '~/hooks';
 import { useBadgeRowContext } from '~/Providers';
 import { MDP_SUPPORTED_LANGUAGES, normalizeMdpLanguage } from '~/services/mdp/language';
+import { IMAGE_GEN_MODEL_KEY } from '~/services/mdp/modelConfig';
 import store from '~/store';
 import { cn } from '~/utils';
 
@@ -36,8 +42,8 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   });
 
   const [isPopoverActive, setIsPopoverActive] = useState(false);
+  const { newConversation } = useNewConvo();
   const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
-  const [isImageGenPinned, setIsImageGenPinned] = useRecoilState(store.imageGenPinned);
   const setDocumentExportEnabled = useSetRecoilState(store.documentExportEnabled);
   const [isDocumentExportPinned, setIsDocumentExportPinned] = useRecoilState(
     store.documentExportPinned,
@@ -66,9 +72,13 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
     webSearch?.debouncedChange({ value: newValue });
   }, [webSearch]);
 
-  const handleImageGenToggle = useCallback(() => {
-    setImageGenEnabled((prev) => !prev);
-  }, [setImageGenEnabled]);
+  const handleImageGenClick = useCallback(() => {
+    setImageGenEnabled(true);
+    newConversation({
+      template: { endpoint: EModelEndpoint.openAI, model: IMAGE_GEN_MODEL_KEY },
+      buildDefault: false,
+    });
+  }, [newConversation, setImageGenEnabled]);
 
   const handleDocumentExportToggle = useCallback(() => {
     setDocumentExportEnabled((prev) => !prev);
@@ -180,32 +190,13 @@ const ToolsDropdown = ({ disabled }: ToolsDropdownProps) => {
   });
 
   dropdownItems.push({
-    onClick: handleImageGenToggle,
-    hideOnClick: false,
+    onClick: handleImageGenClick,
+    hideOnClick: true,
     render: (props) => (
       <div {...props}>
         <div className="flex items-center gap-2">
           <ImageIcon className="icon-md" aria-hidden="true" />
-          <span>{localize('com_ui_image_gen')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsImageGenPinned((prev) => !prev);
-            }}
-            className={cn(
-              'rounded p-1 transition-all duration-200',
-              'hover:bg-surface-secondary hover:shadow-sm',
-              !isImageGenPinned && 'text-text-secondary hover:text-text-primary',
-            )}
-            aria-label={isImageGenPinned ? 'Unpin' : 'Pin'}
-          >
-            <div className="h-4 w-4">
-              <PinIcon unpin={isImageGenPinned} />
-            </div>
-          </button>
+          <span>{localize('com_ui_generate_image')}</span>
         </div>
       </div>
     ),

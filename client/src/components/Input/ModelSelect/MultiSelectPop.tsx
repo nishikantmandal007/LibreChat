@@ -79,7 +79,7 @@ function MultiSelectPop({
                           {v.icon ? (
                             <img src={v.icon} alt={`${v} logo`} className="icon-lg rounded-sm" />
                           ) : (
-                            <Wrench className="icon-lg rounded-sm bg-white" />
+                            <Wrench className="icon-lg rounded-sm bg-[var(--glass-bg)]" />
                           )}
                           <div className="absolute inset-0 rounded-sm ring-1 ring-inset ring-black/10" />
                         </div>

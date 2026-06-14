@@ -131,7 +131,7 @@ export function SearchPicker<TOption extends { key: string; value: string }>({
         autoFocusOnShow={false}
         modal={false}
         className={cn(
-          'animate-popover z-[9999] min-w-64 overflow-hidden rounded-2xl border border-border-light bg-surface-secondary shadow-lg',
+          'glass-surface animate-popover z-[9999] min-w-64 overflow-hidden rounded-2xl shadow-lg',
           '[pointer-events:auto]', // Override body's pointer-events:none when in modal
         )}
       >
@@ -163,8 +163,8 @@ export function SearchPicker<TOption extends { key: string; value: string }>({
                 onClick={() => onPickHandler(o)}
                 className={cn(
                   'flex w-full cursor-pointer items-center px-3 text-sm',
-                  'text-text-primary hover:bg-surface-tertiary',
-                  'data-[active-item]:bg-surface-tertiary',
+                  'text-[var(--glass-text)] hover:bg-[var(--glass-bg-hover)]',
+                  'data-[active-item]:bg-[var(--glass-bg-hover)]',
                 )}
                 render={renderOptions(o)}
               ></Ariakit.ComboboxItem>

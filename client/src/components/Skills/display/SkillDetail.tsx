@@ -145,7 +145,10 @@ export default function SkillDetail({ skill, onEdit, onDelete }: SkillDetailProp
   const updatedDate = skill.updatedAt
     ? format(new Date(skill.updatedAt), 'MMM d, yyyy')
     : undefined;
-  const triggerMode = skill.userInvocable === false ? 'Auto only' : 'Slash command + auto';
+  const triggerMode =
+    skill.userInvocable === false
+      ? localize('com_ui_skill_trigger_auto_only')
+      : localize('com_ui_skill_trigger_slash_auto');
 
   const { fields: frontmatterFields, body: cleanBody } = useMemo(
     () => parseFrontmatter(skill.body ?? '', SKIP_KEYS),
@@ -370,24 +373,32 @@ export default function SkillDetail({ skill, onEdit, onDelete }: SkillDetailProp
 
               <div className="mb-3 grid max-w-2xl grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <div className="text-xs text-text-secondary">Added by</div>
+                  <div className="text-xs text-text-secondary">
+                    {localize('com_ui_skill_added_by')}
+                  </div>
                   <div className="mt-1 text-sm font-semibold text-text-primary">{addedBy}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-text-secondary">Last updated</div>
+                  <div className="text-xs text-text-secondary">
+                    {localize('com_ui_skill_last_updated')}
+                  </div>
                   <div className="mt-1 text-sm font-semibold text-text-primary">
                     {updatedDate ?? '-'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-text-secondary">Trigger</div>
+                  <div className="text-xs text-text-secondary">
+                    {localize('com_ui_skill_trigger')}
+                  </div>
                   <div className="mt-1 text-sm font-semibold text-text-primary">{triggerMode}</div>
                 </div>
               </div>
 
               {displayDescription && (
                 <div className="max-w-2xl">
-                  <div className="text-xs text-text-secondary">Description</div>
+                  <div className="text-xs text-text-secondary">
+                    {localize('com_ui_skill_description_label')}
+                  </div>
                   <p className="mt-1 text-sm leading-6 text-text-primary">{displayDescription}</p>
                 </div>
               )}
@@ -396,12 +407,14 @@ export default function SkillDetail({ skill, onEdit, onDelete }: SkillDetailProp
           </div>
         </section>
 
-        <section className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl bg-surface-hover shadow-sm ring-1 ring-black/5 dark:ring-white/10">
+        <section className="glass-surface-subtle mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl">
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-black/5 px-4 py-3 dark:border-white/10">
             <div>
-              <h3 className="text-sm font-semibold text-text-primary">Instructions</h3>
+              <h3 className="text-sm font-semibold text-text-primary">
+                {localize('com_ui_skill_instructions')}
+              </h3>
               <p className="text-xs text-text-secondary">
-                Rendered view for reading, source view for exact SKILL.md content.
+                {localize('com_ui_skill_instructions_desc')}
               </p>
             </div>
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} localize={localize} />

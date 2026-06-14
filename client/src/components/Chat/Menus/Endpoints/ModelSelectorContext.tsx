@@ -1,5 +1,14 @@
 import debounce from 'lodash/debounce';
+import {
+  Button,
+  OGDialog,
+  OGDialogContent,
+  OGDialogTitle,
+  OGDialogDescription,
+  OGDialogFooter,
+} from '@librechat/client';
 import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import { useSetRecoilState } from 'recoil';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 import type { Endpoint, SelectedValues } from '~/common';
@@ -14,7 +23,9 @@ import { useAgentsMapContext, useAssistantsMapContext, useLiveAnnouncer } from '
 import { useGetEndpointsQuery, useListAgentsQuery } from '~/data-provider';
 import { useModelSelectorChatContext } from './ModelSelectorChatContext';
 import useSelectMention from '~/hooks/Input/useSelectMention';
+import { shouldBlockModelSwitch, type ModelSelection } from './modelSwitchGuard';
 import { filterItems } from './utils';
+import store from '~/store';
 
 type ModelSelectorContextType = {
   // State
@@ -62,6 +73,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     useModelSelectorChatContext();
   const localize = useLocalize();
   const { announcePolite } = useLiveAnnouncer();
+  const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
   const modelSpecs = useMemo(() => {
     const specs = startupConfig?.modelSpecs?.list ?? [];
     if (!agentsMap) {
@@ -106,7 +118,7 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
         return endpoint.assistantNames?.[model] ?? model;
       }
 
-      return model;
+      return endpoint.modelLabels?.[model] ?? model;
     },
     [agentsMap],
   );
@@ -180,42 +192,122 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     }));
   }, []);
 
+  const getCurrentConversationId = useCallback(
+    () => getConversation()?.conversationId ?? null,
+    [getConversation],
+  );
+
+  const isModelSwitchBlocked = useCallback(
+    (next: ModelSelection) =>
+      shouldBlockModelSwitch({
+        conversationId: getCurrentConversationId(),
+        current: selectedValues,
+        next,
+      }),
+    [getCurrentConversationId, selectedValues],
+  );
+
+  const [pendingSwitch, setPendingSwitch] = useState<{
+    targetName: string;
+    apply: () => void;
+  } | null>(null);
+
+  const showModelSwitchBlocked = useCallback((targetName: string, applySwitch: () => void) => {
+    setPendingSwitch({ targetName, apply: applySwitch });
+  }, []);
+
+  const confirmModelSwitch = useCallback(() => {
+    if (pendingSwitch) {
+      pendingSwitch.apply();
+      setPendingSwitch(null);
+    }
+  }, [pendingSwitch]);
+
+  const cancelModelSwitch = useCallback(() => {
+    setPendingSwitch(null);
+  }, []);
+
   const handleSelectSpec = useCallback(
     (spec: t.TModelSpec) => {
+      setImageGenEnabled(false);
       let model = spec.preset.model ?? null;
-      onSelectSpec?.(spec);
       if (isAgentsEndpoint(spec.preset.endpoint)) {
         model = spec.preset.agent_id ?? '';
       } else if (isAssistantsEndpoint(spec.preset.endpoint)) {
         model = spec.preset.assistant_id ?? '';
       }
-      setSelectedValues({
+
+      const nextSelection = {
         endpoint: spec.preset.endpoint,
         model,
         modelSpec: spec.name,
-      });
+      };
+      if (isModelSwitchBlocked(nextSelection)) {
+        showModelSwitchBlocked(spec.label ?? spec.name, () => {
+          newConversation({
+            template: {
+              endpoint: spec.preset.endpoint as EModelEndpoint,
+              model: model ?? undefined,
+            },
+          });
+        });
+        return;
+      }
+
+      onSelectSpec?.(spec);
+      setSelectedValues(nextSelection);
     },
-    [onSelectSpec],
+    [
+      isModelSwitchBlocked,
+      newConversation,
+      onSelectSpec,
+      setImageGenEnabled,
+      showModelSwitchBlocked,
+    ],
   );
 
   const handleSelectEndpoint = useCallback(
     (endpoint: Endpoint) => {
       if (!endpoint.hasModels) {
-        if (endpoint.value) {
-          onSelectEndpoint?.(endpoint.value);
-        }
-        setSelectedValues({
+        const nextSelection = {
           endpoint: endpoint.value,
           model: '',
           modelSpec: '',
-        });
+        };
+        if (isModelSwitchBlocked(nextSelection)) {
+          showModelSwitchBlocked(endpoint.label ?? endpoint.value, () => {
+            newConversation({ template: { endpoint: endpoint.value as EModelEndpoint } });
+          });
+          return;
+        }
+        if (endpoint.value) {
+          onSelectEndpoint?.(endpoint.value);
+        }
+        setSelectedValues(nextSelection);
       }
     },
-    [onSelectEndpoint],
+    [isModelSwitchBlocked, newConversation, onSelectEndpoint, showModelSwitchBlocked],
   );
 
   const handleSelectModel = useCallback(
     (endpoint: Endpoint, model: string) => {
+      setImageGenEnabled(false);
+      const modelDisplayName = getModelDisplayName(endpoint, model);
+      const nextSelection = {
+        endpoint: endpoint.value,
+        model,
+        modelSpec: '',
+      };
+      if (isModelSwitchBlocked(nextSelection)) {
+        showModelSwitchBlocked(modelDisplayName, () => {
+          newConversation({
+            template: { endpoint: endpoint.value as EModelEndpoint, model },
+            buildDefault: false,
+          });
+        });
+        return;
+      }
+
       if (isAgentsEndpoint(endpoint.value)) {
         onSelectEndpoint?.(endpoint.value, {
           agent_id: model,
@@ -229,17 +321,23 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
       } else if (endpoint.value) {
         onSelectEndpoint?.(endpoint.value, { model });
       }
-      setSelectedValues({
-        endpoint: endpoint.value,
-        model,
-        modelSpec: '',
-      });
+      setSelectedValues(nextSelection);
 
-      const modelDisplayName = getModelDisplayName(endpoint, model);
       const announcement = localize('com_ui_model_selected', { 0: modelDisplayName });
       announcePolite({ message: announcement, isStatus: true });
     },
-    [agentsMap, announcePolite, assistantsMap, getModelDisplayName, localize, onSelectEndpoint],
+    [
+      agentsMap,
+      announcePolite,
+      assistantsMap,
+      getModelDisplayName,
+      isModelSwitchBlocked,
+      localize,
+      newConversation,
+      onSelectEndpoint,
+      setImageGenEnabled,
+      showModelSwitchBlocked,
+    ],
   );
 
   const value = useMemo(
@@ -283,5 +381,30 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
     ],
   );
 
-  return <ModelSelectorContext.Provider value={value}>{children}</ModelSelectorContext.Provider>;
+  return (
+    <ModelSelectorContext.Provider value={value}>
+      {children}
+      <OGDialog
+        open={pendingSwitch !== null}
+        onOpenChange={(open) => {
+          if (!open) cancelModelSwitch();
+        }}
+      >
+        <OGDialogContent className="aisafe-glass-dialog w-11/12 max-w-md text-foreground">
+          <OGDialogTitle>{localize('com_ui_switch_model')}</OGDialogTitle>
+          <OGDialogDescription>
+            {localize('com_ui_switch_model_start_new', {
+              0: pendingSwitch?.targetName ?? localize('com_ui_this_model'),
+            })}
+          </OGDialogDescription>
+          <OGDialogFooter>
+            <Button variant="outline" onClick={cancelModelSwitch}>
+              {localize('com_ui_no')}
+            </Button>
+            <Button onClick={confirmModelSwitch}>{localize('com_ui_yes_new_chat')}</Button>
+          </OGDialogFooter>
+        </OGDialogContent>
+      </OGDialog>
+    </ModelSelectorContext.Provider>
+  );
 }

@@ -109,6 +109,7 @@ export interface MDPPromptData {
   anonymized_values: string;
   created_at: string;
   model_key?: string;
+  responseType?: string;
   citations?: MDPCitation[] | string;
   sources?: MDPCitation[] | string;
   metadata?:

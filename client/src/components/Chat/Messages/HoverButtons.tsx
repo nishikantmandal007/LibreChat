@@ -1,14 +1,17 @@
-import React, { useState, useMemo, memo } from 'react';
-import { useRecoilState } from 'recoil';
+import React, { useState, useMemo, useCallback, useRef, useEffect, memo } from 'react';
 import type { TConversation, TMessage, TFeedback } from 'librechat-data-provider';
-import { EditIcon, Clipboard, CheckMark, ContinueIcon, RegenerateIcon } from '@librechat/client';
+import {
+  EditIcon,
+  Clipboard,
+  CheckMark,
+  RegenerateIcon,
+  VolumeIcon,
+  VolumeMuteIcon,
+} from '@librechat/client';
 import { useGenerationsByLatest, useLocalize } from '~/hooks';
 import AnonymizedPromptToggle from '~/components/Chat/Messages/Content/AnonymizedPromptToggle';
-import { Fork } from '~/components/Conversations';
-import MessageAudio from './MessageAudio';
 import Feedback from './Feedback';
 import { cn } from '~/utils';
-import store from '~/store';
 
 type THoverButtons = {
   isEditing: boolean;
@@ -132,7 +135,6 @@ const HoverButtons = ({
 }: THoverButtons) => {
   const localize = useLocalize();
   const [isCopied, setIsCopied] = useState(false);
-  const [TextToSpeech] = useRecoilState<boolean>(store.textToSpeech);
 
   const endpoint = useMemo(() => {
     if (!conversation) {
@@ -156,10 +158,89 @@ const HoverButtons = ({
   const {
     hideEditButton,
     regenerateEnabled,
-    continueSupported,
-    forkingSupported,
     isEditableEndpoint,
   } = generationCapabilities;
+
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const resumeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearResumeInterval = useCallback(() => {
+    if (resumeIntervalRef.current) {
+      clearInterval(resumeIntervalRef.current);
+      resumeIntervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
+    if (!synth) {
+      return;
+    }
+    voicesRef.current = synth.getVoices();
+    const onVoicesChanged = () => { voicesRef.current = synth.getVoices(); };
+    synth.addEventListener('voiceschanged', onVoicesChanged);
+    return () => {
+      synth.removeEventListener('voiceschanged', onVoicesChanged);
+      synth.cancel();
+      clearResumeInterval();
+    };
+  }, [clearResumeInterval]);
+
+  const handleSpeak = useCallback(() => {
+    const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
+    if (!synth) {
+      return;
+    }
+    if (isSpeaking) {
+      synth.cancel();
+      clearResumeInterval();
+      setIsSpeaking(false);
+      return;
+    }
+    synth.cancel();
+    clearResumeInterval();
+    const text = extractMessageContent(message);
+    if (!text.trim()) {
+      return;
+    }
+    const voices = voicesRef.current.length > 0 ? voicesRef.current : synth.getVoices();
+    const langPrefix = (navigator.language || 'en').split('-')[0];
+    const voice = voices.length > 0
+      ? (voices.find(v => v.lang.startsWith(langPrefix)) ?? voices[0])
+      : null;
+
+    // Chrome silently kills utterances longer than ~200 chars; chunk at sentence boundaries
+    const chunks = text.match(/[^.!?]*[.!?]+[\s]?|[^.!?]+$/g) ?? [text];
+    const merged: string[] = [];
+    let buf = '';
+    for (const chunk of chunks) {
+      if (buf.length + chunk.length > 200 && buf.length > 0) {
+        merged.push(buf);
+        buf = chunk;
+      } else {
+        buf += chunk;
+      }
+    }
+    if (buf) {
+      merged.push(buf);
+    }
+
+    for (let i = 0; i < merged.length; i++) {
+      const utterance = new SpeechSynthesisUtterance(merged[i]);
+      if (voice) {
+        utterance.voice = voice;
+      }
+      if (i === merged.length - 1) {
+        utterance.onend = () => { clearResumeInterval(); setIsSpeaking(false); };
+      }
+      utterance.onerror = () => { clearResumeInterval(); setIsSpeaking(false); };
+      synth.speak(utterance);
+    }
+    // Chrome pauses speech after ~15s; keep it alive
+    resumeIntervalRef.current = setInterval(() => { synth.resume(); }, 10_000);
+    setIsSpeaking(true);
+  }, [isSpeaking, message, clearResumeInterval]);
 
   if (!conversation) {
     return null;
@@ -191,37 +272,55 @@ const HoverButtons = ({
 
   const handleCopy = () => copyToClipboard(setIsCopied);
 
+  const ttsIcon = isSpeaking
+    ? <VolumeMuteIcon className="icon-md-heavy h-[18px] w-[18px]" />
+    : <VolumeIcon className="icon-md-heavy h-[18px] w-[18px]" />;
+
+  if (isCreatedByUser) {
+    return (
+      <div className="group visible flex justify-center gap-0.5 self-end focus-within:outline-none lg:justify-start">
+        {Boolean(message.text?.trim()) && onToggleAnonymizedPrompt && (
+          <AnonymizedPromptToggle
+            isShowing={showAnonymizedPrompt}
+            onToggle={onToggleAnonymizedPrompt}
+            piiDetected={piiDetected}
+            isLast={isLast}
+          />
+        )}
+        <HoverButton
+          onClick={handleCopy}
+          title={
+            isCopied ? localize('com_ui_copied_to_clipboard') : localize('com_ui_copy_to_clipboard')
+          }
+          icon={isCopied ? <CheckMark className="h-[18px] w-[18px]" /> : <Clipboard size="19" />}
+          isLast={isLast}
+          className="ml-0 flex items-center gap-1.5 text-xs"
+        />
+        {isEditableEndpoint && (
+          <HoverButton
+            id={`edit-${message.messageId}`}
+            onClick={onEdit}
+            title={localize('com_ui_edit')}
+            icon={<EditIcon size="19" />}
+            isActive={isEditing}
+            isVisible={!hideEditButton}
+            isDisabled={hideEditButton}
+            isLast={isLast}
+          />
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="group visible flex justify-center gap-0.5 self-end focus-within:outline-none lg:justify-start">
-      {isCreatedByUser && Boolean(message.text?.trim()) && onToggleAnonymizedPrompt && (
-        <AnonymizedPromptToggle
-          isShowing={showAnonymizedPrompt}
-          onToggle={onToggleAnonymizedPrompt}
-          piiDetected={piiDetected}
-          isLast={isLast}
-        />
-      )}
-
-      {/* Text to Speech */}
-      {TextToSpeech && (
-        <MessageAudio
-          index={index}
-          isLast={isLast}
-          messageId={message.messageId}
-          content={extractMessageContent(message)}
-          renderButton={(props) => (
-            <HoverButton
-              onClick={props.onClick}
-              title={props.title}
-              icon={props.icon}
-              isActive={props.isActive}
-              isLast={isLast}
-            />
-          )}
-        />
-      )}
-
-      {/* Copy Button */}
+      <HoverButton
+        onClick={handleSpeak}
+        title={isSpeaking ? localize('com_nav_voice_select') : localize('com_nav_voice_select')}
+        icon={ttsIcon}
+        isActive={isSpeaking}
+        isLast={isLast}
+      />
       <HoverButton
         onClick={handleCopy}
         title={
@@ -229,58 +328,16 @@ const HoverButtons = ({
         }
         icon={isCopied ? <CheckMark className="h-[18px] w-[18px]" /> : <Clipboard size="19" />}
         isLast={isLast}
-        className={cn(
-          'ml-0 flex items-center gap-1.5 text-xs',
-          isSubmitting && isCreatedByUser ? 'md:opacity-0 md:group-hover:opacity-100' : '',
-        )}
+        className="ml-0 flex items-center gap-1.5 text-xs"
       />
-
-      {/* Edit Button */}
-      {isEditableEndpoint && (
-        <HoverButton
-          id={`edit-${message.messageId}`}
-          onClick={onEdit}
-          title={localize('com_ui_edit')}
-          icon={<EditIcon size="19" />}
-          isActive={isEditing}
-          isVisible={!hideEditButton}
-          isDisabled={hideEditButton}
-          isLast={isLast}
-          className={isCreatedByUser ? '' : 'active'}
-        />
-      )}
-
-      {/* Fork Button */}
-      <Fork
-        messageId={message.messageId}
-        conversationId={conversation.conversationId}
-        forkingSupported={forkingSupported}
-        latestMessageId={latestMessageId}
-        isLast={isLast}
-      />
-
-      {/* Feedback Buttons */}
-      {!isCreatedByUser && handleFeedback != null && (
+      {handleFeedback != null && (
         <Feedback handleFeedback={handleFeedback} feedback={message.feedback} isLast={isLast} />
       )}
-
-      {/* Regenerate Button */}
       {regenerateEnabled && (
         <HoverButton
           onClick={regenerate}
           title={localize('com_ui_regenerate')}
           icon={<RegenerateIcon size="19" />}
-          isLast={isLast}
-          className="active"
-        />
-      )}
-
-      {/* Continue Button */}
-      {continueSupported && (
-        <HoverButton
-          onClick={(e) => e && handleContinue(e)}
-          title={localize('com_ui_continue')}
-          icon={<ContinueIcon className="w-19 h-19 -rotate-180" />}
           isLast={isLast}
           className="active"
         />

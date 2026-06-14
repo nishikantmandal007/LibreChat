@@ -117,7 +117,7 @@ const VersionsPanel = React.memo(
                 <h2 className="text-sm font-medium text-text-secondary">
                   {localize('com_ui_versions')}
                 </h2>
-                <span className="flex size-5 items-center justify-center rounded-full bg-surface-tertiary text-xs font-medium text-text-secondary">
+                <span className="flex size-5 items-center justify-center rounded-full bg-[var(--glass-bg-subtle)] text-xs font-medium text-[var(--glass-text-secondary)]">
                   {prompts.length}
                 </span>
               </div>
@@ -587,7 +587,7 @@ const PromptForm = ({ promptId: promptIdProp }: { promptId?: string }) => {
           <div
             ref={sidePanelRef}
             className={cn(
-              'fixed right-0 top-0 z-[110] flex h-full flex-col border-l border-border-medium bg-surface-primary-alt shadow-xl lg:hidden',
+              'glass-surface fixed right-0 top-0 z-[110] flex h-full flex-col border-l border-[var(--glass-border)] shadow-xl lg:hidden',
               showSidePanel ? 'translate-x-0' : 'translate-x-full',
             )}
             style={{

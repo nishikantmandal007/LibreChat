@@ -108,7 +108,7 @@ export default function FileRow({
             : isFailed
               ? 'text-red-600 dark:text-red-300'
               : isReady
-                ? 'text-emerald-600'
+                ? 'text-sky-600'
                 : 'text-sky-600',
         )}
         title={label}

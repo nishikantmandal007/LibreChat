@@ -223,7 +223,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                     <TableHead
                       key={header.id}
                       style={{ width: index === 0 ? '75%' : '25%' }}
-                      className="bg-surface-secondary py-2 text-sm font-medium text-text-secondary"
+                      className="bg-[var(--glass-bg-subtle)] py-2 text-sm font-medium text-[var(--glass-text-secondary)]"
                     >
                       <div className={index === 0 ? 'px-2' : 'flex justify-end px-1'}>
                         {header.isPlaceholder
@@ -241,7 +241,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
-                    className="border-b border-border-light transition-colors hover:bg-surface-secondary [&:last-child]:border-0"
+                    className="border-b border-[var(--glass-border)] transition-colors hover:bg-[var(--glass-bg-hover)] [&:last-child]:border-0"
                   >
                     {row.getVisibleCells().map((cell) => {
                       const isFilenameCell = cell.column.id === 'filename';

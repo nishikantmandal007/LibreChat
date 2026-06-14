@@ -152,7 +152,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
           <div className={cn('fixed inset-0 flex w-screen items-center justify-center p-4')}>
             <DialogPanel
               className={cn(
-                'max-h-[90vh] overflow-hidden rounded-xl rounded-b-lg bg-background pb-6 shadow-2xl backdrop-blur-2xl animate-in sm:rounded-2xl md:w-[680px]',
+                'aisafe-glass-dialog max-h-[90vh] overflow-hidden rounded-xl rounded-b-lg pb-6 shadow-2xl backdrop-blur-2xl animate-in sm:rounded-2xl md:w-[680px]',
               )}
             >
               <DialogTitle
@@ -197,7 +197,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                     className={cn(
                       'min-w-auto max-w-auto relative -ml-[8px] flex flex-shrink-0 flex-col flex-nowrap overflow-auto sm:max-w-none',
                       isSmallScreen
-                        ? 'flex-row rounded-xl bg-surface-secondary'
+                        ? 'flex-row rounded-xl bg-white/[0.24] dark:bg-white/[0.06]'
                         : 'sticky top-0 h-full',
                     )}
                     onKeyDown={handleKeyDown}
@@ -209,7 +209,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                           'group relative z-10 m-1 flex items-center justify-start gap-2 rounded-xl px-2 py-1.5 transition-all duration-200 ease-in-out',
                           isSmallScreen
                             ? 'flex-1 justify-center text-nowrap p-1 px-3 text-sm text-text-secondary radix-state-active:bg-surface-hover radix-state-active:text-text-primary'
-                            : 'bg-transparent text-text-secondary radix-state-active:bg-surface-tertiary radix-state-active:text-text-primary',
+                            : 'bg-transparent text-text-secondary radix-state-active:bg-white/[0.28] radix-state-active:text-text-primary dark:radix-state-active:bg-white/[0.10]',
                         )}
                         value={value}
                         ref={(el) => (tabRefs.current[value] = el)}

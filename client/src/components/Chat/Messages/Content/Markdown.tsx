@@ -20,6 +20,8 @@ import MarkdownErrorBoundary from './MarkdownErrorBoundary';
 import { langSubset, preprocessLaTeX } from '~/utils';
 import { unicodeCitation } from '~/components/Web';
 import { code, a, p, img } from './MarkdownComponents';
+import { isImageGenModel } from '~/services/mdp/modelConfig';
+import ImageGenCanvas from './ImageGenCanvas';
 import store from '~/store';
 
 type TContentProps = {
@@ -29,6 +31,8 @@ type TContentProps = {
 
 const Markdown = memo(function Markdown({ content = '', isLatestMessage }: TContentProps) {
   const LaTeXParsing = useRecoilValue<boolean>(store.LaTeXParsing);
+  const imageGenPendingUrl = useRecoilValue(store.imageGenPendingUrl);
+  const conversation = useRecoilValue(store.conversationByIndex(0));
   const isInitializing = content === '';
 
   const currentContent = useMemo(() => {
@@ -62,6 +66,15 @@ const Markdown = memo(function Markdown({ content = '', isLatestMessage }: TCont
     unicodeCitation,
     mcpUIResourcePlugin,
   ];
+
+  if (isInitializing && imageGenPendingUrl !== null && isImageGenModel(conversation?.model)) {
+    return (
+      <ImageGenCanvas
+        isLoading={imageGenPendingUrl === 'loading'}
+        imageUrl={imageGenPendingUrl === 'loading' ? null : imageGenPendingUrl}
+      />
+    );
+  }
 
   if (isInitializing) {
     return (

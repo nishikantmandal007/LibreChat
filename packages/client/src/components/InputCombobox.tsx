@@ -54,7 +54,7 @@ export const InputCombobox: React.FC<ComboboxProps> = ({
         <Ariakit.Combobox
           placeholder={placeholder}
           className={cn(
-            'h-10 w-full rounded-md border border-border-light bg-surface-primary px-3 py-2 text-sm',
+            'glass-input h-10 w-full rounded-xl px-3 py-2 text-sm',
             'placeholder-text-secondary hover:bg-surface-hover',
             'focus:outline-none',
             className,
@@ -79,7 +79,7 @@ export const InputCombobox: React.FC<ComboboxProps> = ({
         open={isOpen}
         onClose={() => setIsOpen(false)}
         className={cn(
-          'z-50 max-h-60 w-full overflow-auto rounded-md bg-surface-primary p-1 shadow-lg',
+          'glass-surface z-50 max-h-60 w-full overflow-auto rounded-xl p-1 shadow-lg',
           'animate-in fade-in-0 zoom-in-95',
         )}
       >

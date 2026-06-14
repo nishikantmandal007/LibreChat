@@ -139,7 +139,7 @@ export default function MemoryArtifacts({ attachments }: { attachments?: TAttach
       >
         <div
           className={cn(
-            'overflow-hidden rounded-xl border border-border-light bg-surface-primary-alt shadow-md',
+            'glass-surface overflow-hidden rounded-xl shadow-md',
             showInfo && 'shadow-lg',
           )}
           style={{

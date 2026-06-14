@@ -60,7 +60,7 @@ const TableRowComponent = <TData extends Record<string, unknown>>(
       ref={ref}
       data-state={selected ? 'selected' : undefined}
       data-index={virtualIndex}
-      className="border-none hover:bg-surface-secondary"
+      className="border-none hover:bg-[var(--glass-bg-hover)]"
       style={style}
     >
       {row.getVisibleCells().map((cell) => {

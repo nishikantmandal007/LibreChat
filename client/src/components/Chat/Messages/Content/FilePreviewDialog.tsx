@@ -286,14 +286,14 @@ export default function FilePreviewDialog({
 
         <div className="relative min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4">
           {loading && (
-            <div className="flex h-60 items-center justify-center rounded-lg bg-surface-secondary">
+            <div className="flex h-60 items-center justify-center rounded-xl bg-[var(--glass-bg-subtle)]">
               <span className="shimmer text-sm text-text-secondary">
                 {localize('com_ui_loading')}
               </span>
             </div>
           )}
           {previewError && (
-            <div className="flex h-32 items-center justify-center rounded-lg bg-surface-secondary">
+            <div className="flex h-32 items-center justify-center rounded-xl bg-[var(--glass-bg-subtle)]">
               <span className="text-sm text-text-secondary">
                 {localize('com_ui_preview_unavailable')}
               </span>
@@ -314,10 +314,10 @@ export default function FilePreviewDialog({
                   onClick={handleCopy}
                   iconOnly
                   label={localize('com_ui_copy')}
-                  className="pointer-events-auto rounded-lg bg-surface-secondary"
+                  className="pointer-events-auto rounded-xl bg-[var(--glass-bg-subtle)]"
                 />
               </div>
-              <div className="-mt-8 rounded-lg bg-surface-secondary p-4">
+              <div className="-mt-8 rounded-xl bg-[var(--glass-bg-subtle)] p-4">
                 <pre className="whitespace-pre-wrap break-words pr-8 font-mono text-sm leading-6 text-text-primary">
                   {fileContent}
                 </pre>
@@ -325,7 +325,7 @@ export default function FilePreviewDialog({
             </>
           )}
           {!previewKind && !loading && (
-            <div className="flex h-32 items-center justify-center rounded-lg bg-surface-secondary">
+            <div className="flex h-32 items-center justify-center rounded-xl bg-[var(--glass-bg-subtle)]">
               <span className="text-sm text-text-secondary">
                 {localize('com_ui_preview_unavailable')}
               </span>

@@ -10,16 +10,24 @@ import {
   generateImage,
   invalidateSessionsCache,
 } from '~/services/mdp';
+import { getRandomSpinnerVerb } from '~/services/mdp/spinnerVerbs';
+import { setConversationModel } from '~/services/mdp/history';
 import { getPromptTextOccurrence, rememberMessageFiles } from '~/services/mdp/messageFileCache';
 import { normalizeMdpLanguage } from '~/services/mdp/language';
-import { MAYA_DEFAULT_ENDPOINT, MAYA_DEFAULT_MODEL } from '~/services/mdp/modelConfig';
+import {
+  getModelCatalogItem,
+  isImageGenModel,
+  MAYA_CHAT_MODEL_LABELS,
+  MAYA_DEFAULT_ENDPOINT,
+  MAYA_DEFAULT_MODEL,
+} from '~/services/mdp/modelConfig';
 import { getWorkspaceSkillsByNames } from '~/services/mdp/workspaceStore';
 import {
   getMayaPromptOnlyFileText,
   getMayaSafeDocIds,
   getMayaSafeFileState,
 } from '~/utils/mayaSafeFiles';
-import store from '~/store';
+import store, { ephemeralAgentByConvoId } from '~/store';
 
 import type { TSubmission, TMessage, TConversation } from 'librechat-data-provider';
 
@@ -41,9 +49,17 @@ const DOCUMENT_EXPORT_SKILL = {
   body: 'When this skill is selected, write the response as a polished Markdown document with a clear title, section headings, concise paragraphs, and practical structure. Prefer document-ready wording over casual chat prose. The backend will materialize downloadable safe artifacts from the anonymized response.',
 };
 
+const SPINNER_INTERVAL_MS = 3000;
+
 function getDisplayModelName(model?: string | null, fallback?: string | null): string {
-  const label = fallback || model || MAYA_DEFAULT_MODEL;
-  return label === MAYA_DEFAULT_MODEL ? 'GPT-4o' : label;
+  const label = fallback || (model ? MAYA_CHAT_MODEL_LABELS[model] : undefined);
+  if (label) {
+    return label;
+  }
+  if (model === MAYA_DEFAULT_MODEL || !model) {
+    return MAYA_CHAT_MODEL_LABELS[MAYA_DEFAULT_MODEL] ?? 'GPT-4o';
+  }
+  return model;
 }
 
 function normalizeAnonymizedValues(
@@ -95,8 +111,9 @@ export default function useMDPChat(
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const setLatestMessage = useSetRecoilState(store.latestMessageFamily(index));
-  const isImageGen = useRecoilValue(store.imageGenEnabled);
+  const recoilImageGenEnabled = useRecoilValue(store.imageGenEnabled);
   const isDocumentExport = useRecoilValue(store.documentExportEnabled);
+  const setImageGenPendingUrl = useSetRecoilState(store.imageGenPendingUrl);
   const mdpLanguage = normalizeMdpLanguage(useRecoilValue(store.mdpAnonymizationLanguage));
   const processingRef = useRef(false);
   const lastSubmissionIdRef = useRef<string | null>(null);
@@ -110,6 +127,15 @@ export default function useMDPChat(
           reset(atom);
         }
         return skills;
+      },
+    [],
+  );
+  const getWebSearchEnabled = useRecoilCallback(
+    ({ snapshot }) =>
+      (conversationId: string): boolean => {
+        const loadable = snapshot.getLoadable(ephemeralAgentByConvoId(conversationId));
+        const agent = loadable.state === 'hasValue' ? loadable.contents : null;
+        return Boolean(agent?.web_search);
       },
     [],
   );
@@ -157,16 +183,18 @@ export default function useMDPChat(
         MAYA_DEFAULT_ENDPOINT;
       const selectedModel =
         submission.conversation?.model ?? submission.endpointOption?.model ?? MAYA_DEFAULT_MODEL;
-      const assistantSender = getDisplayModelName(
-        selectedModel,
-        submission.conversation?.modelLabel ?? submission.endpointOption?.modelLabel,
-      );
+      const isImageGen = recoilImageGenEnabled || isImageGenModel(selectedModel);
       const provisionalConversationId = normalizedSessionId || sessionId || Constants.NEW_CONVO;
-      const pendingManualSkills = isImageGen
-        ? []
-        : submission.manualSkills?.length || submission.userMessage?.manualSkills?.length
-          ? []
-          : drainPendingManualSkills(provisionalConversationId);
+      const webSearchEnabled = !isImageGen && getWebSearchEnabled(provisionalConversationId);
+      const pendingActivityText = isImageGen ? '' : `*${getRandomSpinnerVerb()}*`;
+      let pendingManualSkills: string[] = [];
+      if (
+        !isImageGen &&
+        !submission.manualSkills?.length &&
+        !submission.userMessage?.manualSkills?.length
+      ) {
+        pendingManualSkills = drainPendingManualSkills(provisionalConversationId);
+      }
       const manualSkills = isImageGen
         ? []
         : Array.from(
@@ -191,14 +219,27 @@ export default function useMDPChat(
         ...workspaceSkillInstructions,
         ...(manualSkills.includes(DOCUMENT_EXPORT_SKILL.name) ? [DOCUMENT_EXPORT_SKILL] : []),
       ];
+      const chatEndpoint = isImageGen ? MAYA_DEFAULT_ENDPOINT : selectedEndpoint;
+      const chatModel = isImageGen ? MAYA_DEFAULT_MODEL : selectedModel;
+      const chatModelLabel = isImageGen
+        ? undefined
+        : (submission.conversation?.modelLabel ?? submission.endpointOption?.modelLabel);
+      const assistantSender = getDisplayModelName(chatModel, chatModelLabel);
       const blockedSafeFile = submittedFiles?.find((file) => {
         const safeFile = getMayaSafeFileState(file);
         return safeFile && safeFile.status !== 'ready';
       });
 
+      let spinnerInterval: ReturnType<typeof setInterval> | undefined;
       try {
         const pendingNow = new Date().toISOString();
-        const pendingUserMessage: TMessage = {
+        const assistantParentId = submission.isRegenerate
+          ? (submission.initialResponse?.parentMessageId ?? userMessageId)
+          : userMessageId;
+        const regenSourceMsg = submission.isRegenerate
+          ? (getMessages() ?? []).find(m => m.messageId === assistantParentId)
+          : undefined;
+        const pendingUserMessage: TMessage = regenSourceMsg ?? {
           ...submission.userMessage,
           messageId: userMessageId,
           conversationId: provisionalConversationId,
@@ -217,17 +258,17 @@ export default function useMDPChat(
           ...submission.initialResponse,
           messageId: assistantMessageId,
           conversationId: provisionalConversationId,
-          parentMessageId: userMessageId,
-          sender: assistantSender,
-          text: '',
+          parentMessageId: assistantParentId,
+          sender: '',
+          text: pendingActivityText,
           isCreatedByUser: false,
           createdAt: pendingNow,
           updatedAt: pendingNow,
           content: undefined,
           unfinished: false,
-          endpoint: selectedEndpoint,
-          iconURL: selectedEndpoint,
-          model: selectedModel,
+          endpoint: chatEndpoint,
+          iconURL: chatEndpoint,
+          model: chatModel,
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
           savedPrompt,
         };
@@ -247,7 +288,25 @@ export default function useMDPChat(
           throw new Error('Wait for the anonymized safe copy before sending this file to chat.');
         }
 
+        if (!isImageGen) {
+          spinnerInterval = setInterval(() => {
+            const verb = getRandomSpinnerVerb();
+            const updatedMsg: TMessage = { ...pendingAssistantMessage, text: `*${verb}*` };
+            const msgs = getMessages() ?? [];
+            const updated = msgs.map((m) =>
+              m.messageId === assistantMessageId ? updatedMsg : m,
+            );
+            setMessages(updated);
+            queryClient.setQueryData<TMessage[]>(
+              [QueryKeys.messages, provisionalConversationId],
+              updated,
+            );
+            setLatestMessage(updatedMsg);
+          }, SPINNER_INTERVAL_MS);
+        }
+
         if (isImageGen) {
+          setImageGenPendingUrl('loading');
           const imgResult = await generateImage(effectiveText, normalizedSessionId);
           const conversationId = imgResult.sessionId || normalizedSessionId || crypto.randomUUID();
           const now = new Date().toISOString();
@@ -273,19 +332,21 @@ export default function useMDPChat(
             messageId: assistantMessageId,
             conversationId,
             parentMessageId: userMessageId,
-            sender: assistantSender,
+            sender: '',
             text: `![Generated Image](${imgResult.imagePath})`,
             isCreatedByUser: false,
             createdAt: now,
             updatedAt: now,
             content: undefined,
             unfinished: false,
-            endpoint: selectedEndpoint,
-            iconURL: selectedEndpoint,
-            model: selectedModel,
+            endpoint: chatEndpoint,
+            iconURL: chatEndpoint,
+            model: chatModel,
             manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
             savedPrompt,
           };
+
+          setImageGenPendingUrl(imgResult.imagePath);
 
           const existingMessages = getMessages() ?? [];
           const finalMessages = upsertMessages(existingMessages, userMessage, assistantMessage);
@@ -293,11 +354,13 @@ export default function useMDPChat(
           queryClient.setQueryData<TMessage[]>([QueryKeys.messages, conversationId], finalMessages);
           setLatestMessage(assistantMessage);
 
+          setTimeout(() => setImageGenPendingUrl(null), 600);
+
           const convo: TConversation = {
             conversationId,
             title: trimmedText.slice(0, 50) || 'Image Generation',
-            endpoint: selectedEndpoint as EModelEndpoint,
-            model: selectedModel,
+            endpoint: chatEndpoint as EModelEndpoint,
+            model: chatModel,
             createdAt: now,
             updatedAt: now,
             ...(isTemporaryChat ? { expiredAt: now } : {}),
@@ -341,11 +404,17 @@ export default function useMDPChat(
           skillInstructions: skillInstructions.length > 0 ? skillInstructions : undefined,
           savedPrompt: savedPrompt ? { ...savedPrompt, prompt: effectiveText } : undefined,
           files: submittedFiles,
-          endpoint: selectedEndpoint,
-          model: selectedModel,
+          endpoint: chatEndpoint,
+          model: chatModel,
+          webSearchEnabled,
         });
 
-        const userMessage: TMessage = {
+        if (spinnerInterval) {
+          clearInterval(spinnerInterval);
+          spinnerInterval = undefined;
+        }
+
+        const userMessage: TMessage = regenSourceMsg ?? {
           ...submission.userMessage,
           ...result.userMessage,
           files: submittedFiles,
@@ -354,7 +423,7 @@ export default function useMDPChat(
           manualSkills: manualSkills.length > 0 ? manualSkills : undefined,
           savedPrompt,
         };
-        if (submittedFiles?.length) {
+        if (submittedFiles?.length && !submission.isRegenerate) {
           const cacheTextKeys = Array.from(
             new Set(
               [trimmedText, effectiveText, anonymized.anonymized_prompt]
@@ -378,7 +447,7 @@ export default function useMDPChat(
           ...submission.initialResponse,
           ...result.assistantMessage,
           messageId: assistantMessageId,
-          parentMessageId: userMessageId,
+          parentMessageId: assistantParentId,
           conversationId: result.sessionId,
           content: undefined,
           unfinished: false,
@@ -398,6 +467,7 @@ export default function useMDPChat(
         };
 
         syncMessages(baseMessages);
+        setIsSubmitting(false);
 
         const fullText = assistantMessage.text ?? '';
         let charIndex = 0;
@@ -418,12 +488,17 @@ export default function useMDPChat(
           animate();
         });
 
+        const resolvedModel = result.rawResponse.model_key || chatModel;
+        const resolvedCatalog = getModelCatalogItem(resolvedModel);
+        const resolvedEndpoint = (resolvedCatalog?.endpoint ?? chatEndpoint) as EModelEndpoint;
+        const resolvedLabel = resolvedCatalog?.label ?? chatModelLabel;
+
         const convo: TConversation = {
           conversationId: result.sessionId,
           title: trimmedText.slice(0, 50) || 'New Chat',
-          endpoint: selectedEndpoint as EModelEndpoint,
-          model: selectedModel,
-          modelLabel: submission.conversation?.modelLabel ?? submission.endpointOption?.modelLabel,
+          endpoint: resolvedEndpoint,
+          model: resolvedModel,
+          modelLabel: resolvedLabel,
           spec: submission.conversation?.spec ?? submission.endpointOption?.spec,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -431,6 +506,12 @@ export default function useMDPChat(
         };
         setConversation(convo);
         queryClient.setQueryData([QueryKeys.conversation, result.sessionId], convo);
+        setConversationModel(
+          result.sessionId,
+          resolvedModel,
+          resolvedEndpoint,
+          resolvedLabel ?? resolvedModel,
+        );
 
         if (!isTemporaryChat) {
           invalidateSessionsCache();
@@ -463,6 +544,10 @@ export default function useMDPChat(
         setMessages(nextMessages);
         setLatestMessage(errorMsg);
       } finally {
+        if (spinnerInterval) {
+          clearInterval(spinnerInterval);
+        }
+        setImageGenPendingUrl(null);
         setIsSubmitting(false);
         processingRef.current = false;
       }
@@ -475,9 +560,10 @@ export default function useMDPChat(
     queryClient,
     setLatestMessage,
     navigate,
-    isImageGen,
+    recoilImageGenEnabled,
     isDocumentExport,
     mdpLanguage,
     drainPendingManualSkills,
+    getWebSearchEnabled,
   ]);
 }

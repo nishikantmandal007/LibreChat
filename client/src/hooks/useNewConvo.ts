@@ -233,7 +233,7 @@ const useNewConvo = (index = 0) => {
           return;
         }
 
-        const searchParamsString = searchParams?.toString();
+        const searchParamsString = disableParams === true ? '' : searchParams?.toString();
         const getParams = () => (searchParamsString ? `?${searchParamsString}` : '');
 
         if (conversation.conversationId === Constants.NEW_CONVO && !modelsData) {

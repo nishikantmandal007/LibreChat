@@ -58,7 +58,7 @@ export default function FormInput<
         onChange={handleChange}
         placeholder={placeholder}
         className={cn(
-          'flex h-10 max-h-10 w-full resize-none border-none bg-surface-secondary px-3 py-2',
+          'flex h-10 max-h-10 w-full resize-none border-none bg-transparent px-3 py-2',
           inputClass,
         )}
       />

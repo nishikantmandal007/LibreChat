@@ -17,6 +17,7 @@ export function filterItems<
     name?: string;
     value?: string;
     models?: Array<{ name: string; isGlobal?: boolean }>;
+    modelLabels?: Record<string, string>;
   },
 >(
   items: T[],
@@ -42,6 +43,11 @@ export function filterItems<
     if (item.models && item.models.length > 0) {
       return item.models.some((modelId) => {
         if (modelId.name.toLowerCase().includes(searchTermLower)) {
+          return true;
+        }
+
+        const modelLabel = item.modelLabels?.[modelId.name];
+        if (modelLabel?.toLowerCase().includes(searchTermLower)) {
           return true;
         }
 
@@ -93,6 +99,8 @@ export function filterModels(
       modelName =
         typeof assistant.name === 'string' && assistant.name ? (assistant.name as string) : modelId;
     }
+
+    modelName = endpoint.modelLabels?.[modelId] ?? modelName;
 
     return modelName.toLowerCase().includes(searchTermLower);
   });
@@ -205,7 +213,7 @@ export const getDisplayValue = ({
       return endpoint.assistantNames[selectedValues.model];
     }
 
-    return selectedValues.model;
+    return endpoint.modelLabels?.[selectedValues.model] ?? selectedValues.model;
   }
 
   if (selectedValues.endpoint) {

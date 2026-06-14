@@ -1,20 +1,29 @@
 import { useState, memo } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useRecoilValue } from 'recoil';
 import { useDefaultLayout } from 'react-resizable-panels';
-import { ResizablePanel, ResizablePanelGroup, ResizableHandleAlt, useMediaQuery } from '@librechat/client';
+import {
+  ResizablePanel,
+  ResizablePanelGroup,
+  ResizableHandleAlt,
+  useMediaQuery,
+} from '@librechat/client';
 import { activeSourceState } from '~/store/sources';
 import ArtifactsPanel from './ArtifactsPanel';
 import SourcePanel from './SourcePanel';
+import { cn } from '~/utils';
 
 const PANEL_IDS_SINGLE = ['messages-view'];
 const PANEL_IDS_SPLIT = ['messages-view', 'artifacts-panel'];
 
 interface SidePanelProps {
-  artifacts?: React.ReactNode;
-  children: React.ReactNode;
+  artifacts?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }
 
-const SidePanelGroup = memo(({ artifacts, children }: SidePanelProps) => {
+const SidePanelGroup = memo(({ artifacts, children, className, style }: SidePanelProps) => {
   const [shouldRenderArtifacts, setShouldRenderArtifacts] = useState(artifacts != null);
   const isSmallScreen = useMediaQuery('(max-width: 767px)');
   const activeSource = useRecoilValue(activeSourceState);
@@ -35,7 +44,8 @@ const SidePanelGroup = memo(({ artifacts, children }: SidePanelProps) => {
         orientation="horizontal"
         defaultLayout={defaultLayout}
         onLayoutChanged={onLayoutChanged}
-        className="relative flex-1 bg-presentation"
+        className={cn('relative flex-1 bg-presentation', className)}
+        style={style}
       >
         <ResizablePanel defaultSize="50" minSize={minSizeMain} id="messages-view">
           {children}

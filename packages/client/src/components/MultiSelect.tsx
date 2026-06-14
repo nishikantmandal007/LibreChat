@@ -139,8 +139,8 @@ export default function MultiSelect<T extends string>({
           className={cn(
             'animate-popover z-40 flex max-h-[300px]',
             'flex-col overflow-auto overscroll-contain rounded-xl',
-            'bg-surface-secondary px-1.5 py-1 text-text-primary shadow-lg',
-            'border border-border-light',
+            'glass-surface px-1.5 py-1 text-[var(--glass-text)] shadow-lg',
+            '',
             'outline-none',
             popoverClassName,
           )}
@@ -162,8 +162,8 @@ export default function MultiSelect<T extends string>({
                 className={cn(
                   'flex items-center gap-2 rounded-lg px-2 py-1.5 hover:cursor-pointer',
                   'scroll-m-1 outline-none transition-colors',
-                  'hover:bg-black/[0.075] dark:hover:bg-white/10',
-                  'data-[active-item]:bg-black/[0.075] dark:data-[active-item]:bg-white/10',
+                  'hover:bg-[var(--glass-bg-hover)]',
+                  'data-[active-item]:bg-[var(--glass-bg-hover)]',
                   'w-full min-w-0 text-sm',
                   itemClassName,
                 )}

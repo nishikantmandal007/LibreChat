@@ -22,6 +22,7 @@ import {
   useFocusChatEffect,
 } from '~/hooks';
 import { hasMayaSafeFileBlocker } from '~/utils/mayaSafeFiles';
+import { isImageGenModel } from '~/services/mdp/modelConfig';
 import PendingManualSkillsChips from './PendingManualSkillsChips';
 import { cn, removeFocusRings } from '~/utils';
 import { mainTextareaId } from '~/common';
@@ -57,7 +58,7 @@ const ChatForm = memo(function ChatForm({
   isSubmitting,
   filesLoading,
   setFilesLoading,
-  newConversation,
+  newConversation: _newConversation,
   handleStopGenerating,
 }: ChatFormProps) {
   const submitButtonRef = useRef<HTMLButtonElement>(null);
@@ -92,6 +93,8 @@ const ChatForm = memo(function ChatForm({
     () => conversation?.conversationId ?? Constants.NEW_CONVO,
     [conversation?.conversationId],
   );
+
+  const isImageGen = isImageGenModel(conversation?.model);
 
   const isRTL = useMemo(
     () => (chatDirection != null ? chatDirection?.toLowerCase() === 'rtl' : false),
@@ -207,7 +210,7 @@ const ChatForm = memo(function ChatForm({
       onSubmit={methods.handleSubmit(handleSafeSubmit)}
       className={cn(
         'mx-auto flex w-full flex-row gap-3 transition-[max-width] duration-300 sm:px-2',
-        maximizeChatSpace ? 'max-w-full' : 'md:max-w-3xl xl:max-w-4xl',
+        maximizeChatSpace ? 'max-w-full' : 'md:max-w-2xl xl:max-w-3xl',
         centerFormOnLanding &&
           (conversationId == null || conversationId === Constants.NEW_CONVO) &&
           !isSubmitting &&
@@ -238,7 +241,7 @@ const ChatForm = memo(function ChatForm({
               isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
               isTemporary
                 ? 'border-violet-800/60 bg-violet-950/10'
-                : 'border-border-light bg-surface-chat',
+                : 'border-black/[0.14] bg-white/[0.34] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/[0.16] dark:bg-gray-900/[0.48]',
             )}
           >
             <PendingManualSkillsChips conversationId={conversationId} />
@@ -305,16 +308,18 @@ const ChatForm = memo(function ChatForm({
                 isRTL ? 'flex-row-reverse' : 'flex-row',
               )}
             >
-              <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
-                <AttachFileChat
-                  conversation={conversation}
-                  disableInputs={disableInputs}
-                  files={files}
-                  setFiles={setFiles}
-                  setFilesLoading={setFilesLoading}
-                />
-              </div>
-              <ToolsDropdown disabled={disableInputs} />
+              {!isImageGen && (
+                <div className={`${isRTL ? 'mr-2' : 'ml-2'}`}>
+                  <AttachFileChat
+                    conversation={conversation}
+                    disableInputs={disableInputs}
+                    files={files}
+                    setFiles={setFiles}
+                    setFilesLoading={setFilesLoading}
+                  />
+                </div>
+              )}
+              {!isImageGen && <ToolsDropdown disabled={disableInputs} />}
               <div className="mx-auto flex" />
               {SpeechToText && (
                 <AudioRecorder

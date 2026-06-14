@@ -121,6 +121,7 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                   ) {
                     modelName = endpoint.assistantNames[model.name];
                   }
+                  modelName = endpoint.modelLabels?.[model.name] ?? modelName;
                   return modelName.toLowerCase().includes(lowerQuery);
                 });
 
@@ -157,6 +158,8 @@ export function SearchResults({ results, localize, searchValue }: SearchResultsP
                     endpoint.assistantNames[modelId]
                   ) {
                     modelName = endpoint.assistantNames[modelId];
+                  } else if (endpoint.modelLabels?.[modelId]) {
+                    modelName = endpoint.modelLabels[modelId];
                   }
 
                   const isModelSelected =

@@ -84,7 +84,7 @@ const OGDialogTemplate = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDi
   const { selectHandler, selectClasses, selectText, isLoading } = legacySelection ?? {};
 
   const defaultSelect =
-    'bg-gray-800 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-gray-200';
+    'glass-surface text-[var(--glass-text)] transition-all disabled:cursor-not-allowed disabled:opacity-50';
 
   let selectionContent = null;
   if (isLegacySelection) {
@@ -112,7 +112,7 @@ const OGDialogTemplate = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDi
       overlayClassName={overlayClassName}
       showCloseButton={showCloseButton}
       ref={ref}
-      className={cn('w-11/12 border-none bg-background text-foreground', className ?? '')}
+      className={cn('w-11/12 border-none text-foreground', className ?? '')}
       onClick={(e) => e.stopPropagation()}
     >
       <OGDialogHeader className={cn(headerClassName ?? '')}>

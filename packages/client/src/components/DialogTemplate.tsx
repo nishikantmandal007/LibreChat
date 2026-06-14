@@ -47,20 +47,20 @@ const DialogTemplate = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDivE
   const Cancel = 'cancel';
 
   const defaultSelect =
-    'bg-gray-800 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-gray-200 dark:text-gray-800 dark:hover:bg-gray-200';
+    'glass-surface text-[var(--glass-text)] transition-all disabled:cursor-not-allowed disabled:opacity-50';
   return (
     <DialogContent
       showCloseButton={showCloseButton}
       ref={ref}
-      className={cn('shadow-2xl dark:bg-gray-700', className || '')}
+      className={cn('shadow-2xl', className || '')}
       onClick={(e) => e.stopPropagation()}
     >
       <DialogHeader className={cn(headerClassName ?? '')}>
-        <DialogTitle className="text-lg font-medium leading-6 text-gray-800 dark:text-gray-200">
+        <DialogTitle className="text-lg font-medium leading-6 text-[var(--glass-text)]">
           {title}
         </DialogTitle>
         {description && (
-          <DialogDescription className="text-gray-600 dark:text-gray-300">
+          <DialogDescription className="text-[var(--glass-text-secondary)]">
             {description}
           </DialogDescription>
         )}
@@ -70,7 +70,7 @@ const DialogTemplate = forwardRef((props: DialogTemplateProps, ref: Ref<HTMLDivE
         <div>{leftButtons ? leftButtons : null}</div>
         <div className="flex h-auto gap-3">
           {showCancelButton && (
-            <DialogClose className="border-gray-100 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-600">
+            <DialogClose className="border-[var(--glass-border-outer)] hover:bg-[var(--glass-bg-hover)]">
               {Cancel}
             </DialogClose>
           )}

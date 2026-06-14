@@ -1,11 +1,11 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { VisuallyHidden } from '@ariakit/react';
 import { Spinner, TooltipAnchor } from '@librechat/client';
 import { CheckCircle2, MousePointerClick, SettingsIcon } from 'lucide-react';
 import { EModelEndpoint, isAgentsEndpoint, isAssistantsEndpoint } from 'librechat-data-provider';
 import type { TModelSpec } from 'librechat-data-provider';
 import type { Endpoint } from '~/common';
-import { CustomMenu as Menu, CustomMenuItem as MenuItem } from '../CustomMenu';
+import { CustomMenu as Menu, CustomMenuItem as MenuItem, CustomMenuSeparator } from '../CustomMenu';
 import { useModelSelectorContext } from '../ModelSelectorContext';
 import { renderEndpointModels } from './EndpointModelItem';
 import { ModelSpecItem } from './ModelSpecItem';
@@ -248,10 +248,9 @@ export function EndpointItem({ endpoint, endpointIndex }: EndpointItemProps) {
 
 export function renderEndpoints(mappedEndpoints: Endpoint[]) {
   return mappedEndpoints.map((endpoint, index) => (
-    <EndpointItem
-      endpoint={endpoint}
-      endpointIndex={index}
-      key={`endpoint-${endpoint.value}-${index}`}
-    />
+    <React.Fragment key={`endpoint-${endpoint.value}-${index}`}>
+      {index > 0 && <CustomMenuSeparator />}
+      <EndpointItem endpoint={endpoint} endpointIndex={index} />
+    </React.Fragment>
   ));
 }

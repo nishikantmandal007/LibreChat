@@ -40,6 +40,9 @@ const localStorageAtoms = {
   rememberDefaultFork: atomWithLocalStorage(LocalStorageKeys.REMEMBER_FORK_OPTION, false),
   saveBadgesState: atomWithLocalStorage('saveBadgesState', false),
 
+  // Appearance
+  ambientGradient: atomWithLocalStorage('aisafeAmbientGradient', false),
+
   // Beta features settings
   modularChat: atomWithLocalStorage('modularChat', true),
   LaTeXParsing: atomWithLocalStorage('LaTeXParsing', true),

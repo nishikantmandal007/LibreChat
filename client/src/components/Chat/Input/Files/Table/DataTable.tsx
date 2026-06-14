@@ -143,7 +143,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                   return (
                     <TableHead
                       key={header.id}
-                      className="whitespace-nowrap bg-surface-secondary px-2 py-2 text-left text-sm font-medium text-text-secondary sm:px-4"
+                      className="whitespace-nowrap bg-[var(--glass-bg-subtle)] px-2 py-2 text-left text-sm font-medium text-[var(--glass-text-secondary)] sm:px-4"
                       style={{ ...style }}
                     >
                       {header.isPlaceholder
@@ -161,7 +161,7 @@ export default function DataTable<TData, TValue>({ columns, data }: DataTablePro
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="border-b border-border-light transition-colors hover:bg-surface-secondary [tr:last-child_&]:border-b-0"
+                  className="border-b border-[var(--glass-border)] transition-colors hover:bg-[var(--glass-bg-hover)] [tr:last-child_&]:border-b-0"
                 >
                   {row.getVisibleCells().map((cell, _index) => {
                     const size = cell.column.getSize();

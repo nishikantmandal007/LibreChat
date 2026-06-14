@@ -120,10 +120,10 @@ function MultiSelectDropDown({
                               <img
                                 src={v.icon}
                                 alt={`${v} logo`}
-                                className="h-full w-full rounded-sm bg-white"
+                                className="h-full w-full rounded-sm bg-[var(--glass-bg)]"
                               />
                             ) : (
-                              <Wrench className="h-full w-full rounded-sm bg-white" />
+                              <Wrench className="h-full w-full rounded-sm bg-[var(--glass-bg)]" />
                             )}
                             <div className="absolute inset-0 rounded-sm ring-1 ring-inset ring-black/10" />
                           </div>
@@ -185,10 +185,10 @@ function MultiSelectDropDown({
                                   <img
                                     src={option.icon}
                                     alt={`${option.name} logo`}
-                                    className="h-full w-full rounded-sm bg-white"
+                                    className="h-full w-full rounded-sm bg-[var(--glass-bg)]"
                                   />
                                 ) : (
-                                  <Wrench className="h-full w-full rounded-sm bg-white" />
+                                  <Wrench className="h-full w-full rounded-sm bg-[var(--glass-bg)]" />
                                 )}
                                 <div className="absolute inset-0 rounded-sm ring-1 ring-inset ring-black/10"></div>
                               </div>

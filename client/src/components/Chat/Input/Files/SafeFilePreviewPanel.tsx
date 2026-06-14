@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { Button, Spinner } from '@librechat/client';
-import { Download, FileText, ShieldCheck, X } from 'lucide-react';
+import { Download, FileText, X } from 'lucide-react';
 import { fetchSafeFileBlob } from '~/services/mdp/safeFiles';
 import { cn, logger, triggerDownload } from '~/utils';
 import store from '~/store';
@@ -268,7 +268,7 @@ export default function SafeFilePreviewPanel() {
             {preview.previewOnly ? (
               <FileText className="h-5 w-5 text-sky-600" aria-hidden="true" />
             ) : (
-              <ShieldCheck className="h-5 w-5 text-emerald-600" aria-hidden="true" />
+              <FileText className="h-5 w-5 text-sky-600" aria-hidden="true" />
             )}
           </div>
           <div className="min-w-0">

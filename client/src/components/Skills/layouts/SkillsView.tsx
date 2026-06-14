@@ -32,7 +32,7 @@ export default function SkillsView() {
   const rolesLoaded = user?.role != null && roles?.[user.role] != null;
   if (!rolesLoaded) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-presentation">
+      <div className="flex h-full w-full items-center justify-center bg-transparent">
         <Spinner className="text-text-secondary" aria-label={localize('com_ui_loading')} />
       </div>
     );
@@ -45,7 +45,7 @@ export default function SkillsView() {
   // No skill selected — empty state
   if (!skillId) {
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center bg-presentation">
+      <div className="flex h-full w-full flex-col items-center justify-center bg-transparent">
         <SkillState
           title={localize('com_ui_skill_no_selection')}
           description={localize('com_ui_skill_no_selection_desc')}
@@ -68,7 +68,7 @@ function DetailView({ skillId }: { skillId: string }) {
   // Show file content when a file is selected from the sidebar tree
   if (activeFile) {
     return (
-      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
+      <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-transparent">
         <SkillFileViewer skillId={skillId} relativePath={activeFile} />
       </div>
     );
@@ -76,7 +76,7 @@ function DetailView({ skillId }: { skillId: string }) {
 
   if (skillQuery.isLoading) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-presentation">
+      <div className="flex h-full w-full items-center justify-center bg-transparent">
         <Spinner className="text-text-secondary" aria-label={localize('com_ui_loading')} />
       </div>
     );
@@ -84,7 +84,7 @@ function DetailView({ skillId }: { skillId: string }) {
 
   if (skillQuery.isError || !skillQuery.data) {
     return (
-      <div className="flex h-full w-full flex-col bg-presentation">
+      <div className="flex h-full w-full flex-col bg-transparent">
         <SkillState
           variant="error"
           title={localize('com_ui_skill_not_found')}
@@ -95,7 +95,7 @@ function DetailView({ skillId }: { skillId: string }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-transparent">
       <SkillDetail
         skill={skillQuery.data}
         onEdit={() => navigate(`/skills/${skillId}/edit`)}
@@ -108,7 +108,7 @@ function DetailView({ skillId }: { skillId: string }) {
 /** Edit form — reached via the Edit button or `/skills/:id/edit` URL. */
 function EditView({ skillId }: { skillId: string }) {
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-presentation">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-transparent">
       <SkillForm skillId={skillId} />
     </div>
   );

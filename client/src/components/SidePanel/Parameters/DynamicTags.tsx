@@ -125,7 +125,7 @@ function DynamicTags({
             </Label>
           </div>
           <div>
-            <div className="mb-2 flex flex-wrap break-all rounded-lg border border-border-light bg-surface-secondary">
+            <div className="glass-surface-subtle mb-2 flex flex-wrap break-all rounded-xl">
               {currentTags && currentTags.length > 0 && (
                 <div className="flex w-full gap-1 p-1">
                   {currentTags.map((tag: string, index: number) => (
@@ -165,7 +165,7 @@ function DynamicTags({
                     ? (localize(placeholder as TranslationKeys) ?? placeholder)
                     : placeholder
                 }
-                className={cn('flex h-9 max-h-9 border-none bg-surface-secondary px-3 py-2')}
+                className={cn('flex h-9 max-h-9 border-none bg-transparent px-3 py-2')}
               />
             </div>
           </div>

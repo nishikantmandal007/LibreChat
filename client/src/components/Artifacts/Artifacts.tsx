@@ -230,7 +230,7 @@ export default function Artifacts() {
         )}
         <div
           className={cn(
-            'flex w-full flex-col bg-surface-primary text-xl text-text-primary',
+            'glass-surface flex w-full flex-col text-xl text-[var(--glass-text)]',
             isMobile
               ? cn(
                   'fixed inset-x-0 bottom-0 z-[100] rounded-t-[20px] shadow-[0_-10px_60px_rgba(0,0,0,0.35)]',
@@ -250,7 +250,7 @@ export default function Artifacts() {
         >
           {isMobile && (
             <div
-              className="flex flex-shrink-0 cursor-grab items-center justify-center bg-surface-primary-alt pb-1.5 pt-2.5 active:cursor-grabbing"
+              className="flex flex-shrink-0 cursor-grab items-center justify-center bg-[var(--glass-bg-subtle)] pb-1.5 pt-2.5 active:cursor-grabbing"
               onPointerDown={handleDragStart}
               onPointerMove={handleDragMove}
               onPointerUp={handleDragEnd}
@@ -263,7 +263,7 @@ export default function Artifacts() {
           {/* Header */}
           <div
             className={cn(
-              'flex h-[52px] flex-shrink-0 items-center justify-between gap-2 border-b border-border-light bg-surface-primary-alt p-2 transition-all duration-300',
+              'flex h-[52px] flex-shrink-0 items-center justify-between gap-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-2 transition-all duration-300',
               isMobile ? 'justify-center' : 'overflow-hidden',
             )}
           >
@@ -342,7 +342,7 @@ export default function Artifacts() {
             </div>
           </div>
 
-          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-surface-primary">
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden bg-transparent">
             <div className="absolute inset-0 flex flex-col">
               <ArtifactTabs
                 artifact={currentArtifact}
@@ -371,7 +371,7 @@ export default function Artifacts() {
           </div>
 
           {isMobile && (
-            <div className="flex-shrink-0 border-t border-border-light bg-surface-primary-alt p-2">
+            <div className="flex-shrink-0 border-t border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-2">
               <Radio
                 fullWidth
                 options={tabOptions}

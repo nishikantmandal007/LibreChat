@@ -1,81 +1,36 @@
-import { useCallback, useState } from 'react';
-import { easings } from '@react-spring/web';
-import { SplitText } from '@librechat/client';
+import { useCallback } from 'react';
 import { useGetStartupConfig } from '~/data-provider';
 import { useLocalize, useAuthContext } from '~/hooks';
 
-function getTextSizeClass(text: string | undefined | null) {
-  if (!text) {
-    return 'text-2xl sm:text-3xl';
-  }
-  if (text.length < 40) {
-    return 'text-3xl sm:text-5xl';
-  }
-  if (text.length < 70) {
-    return 'text-2xl sm:text-3xl';
-  }
-  return 'text-xl sm:text-2xl';
-}
-
-export default function Landing({ centerFormOnLanding }: { centerFormOnLanding: boolean }) {
+export default function Landing({
+  centerFormOnLanding: _centerFormOnLanding,
+}: {
+  centerFormOnLanding: boolean;
+}) {
   const { data: startupConfig } = useGetStartupConfig();
   const { user } = useAuthContext();
   const localize = useLocalize();
 
-  const [textHasMultipleLines, setTextHasMultipleLines] = useState(false);
-
-  const getGreeting = useCallback(() => {
-    if (typeof startupConfig?.interface?.customWelcome === 'string') {
-      const customWelcome = startupConfig.interface.customWelcome;
-      if (user?.name && customWelcome.includes('{{user.name}}')) {
-        return customWelcome.replace(/{{user.name}}/g, user.name);
-      }
-      return customWelcome;
+  const getCustomWelcome = useCallback(() => {
+    if (typeof startupConfig?.interface?.customWelcome !== 'string') {
+      return null;
     }
-
-    const hours = new Date().getHours();
-    if (hours >= 0 && hours < 5) {
-      return localize('com_ui_late_night');
-    } else if (hours < 12) {
-      return localize('com_ui_good_morning');
-    } else if (hours < 17) {
-      return localize('com_ui_good_afternoon');
+    const customWelcome = startupConfig.interface.customWelcome;
+    if (user?.name && customWelcome.includes('{{user.name}}')) {
+      return customWelcome.replace(/{{user.name}}/g, user.name);
     }
-    return localize('com_ui_good_evening');
-  }, [localize, startupConfig?.interface?.customWelcome, user?.name]);
+    return customWelcome;
+  }, [startupConfig?.interface?.customWelcome, user?.name]);
 
-  const handleLineCountChange = useCallback((count: number) => {
-    setTextHasMultipleLines(count > 1);
-  }, []);
-
-  const greetingText =
-    typeof startupConfig?.interface?.customWelcome === 'string'
-      ? getGreeting()
-      : getGreeting() + (user?.name ? ', ' + user.name : '');
+  const greetingText = getCustomWelcome() ?? localize('com_ui_privacy_hero_quote');
 
   return (
-    <div
-      className={`flex h-full transform-gpu flex-col items-center justify-center pb-16 transition-all duration-200 ${centerFormOnLanding ? 'max-h-full sm:max-h-0' : 'max-h-full'} mb-0`}
-    >
-      <div className="flex flex-col items-center gap-0 p-2">
-        <div
-          className={`flex ${textHasMultipleLines ? 'flex-col' : 'flex-col md:flex-row'} items-center justify-center gap-2`}
-        >
-          <SplitText
-            key={`split-text-${greetingText}${user?.name ? '-user' : ''}`}
-            text={greetingText}
-            className={`${getTextSizeClass(greetingText)} font-medium text-text-primary`}
-            delay={50}
-            textAlign="center"
-            animationFrom={{ opacity: 0, transform: 'translate3d(0,50px,0)' }}
-            animationTo={{ opacity: 1, transform: 'translate3d(0,0,0)' }}
-            easing={easings.easeOutCubic}
-            threshold={0}
-            rootMargin="0px"
-            onLineCountChange={handleLineCountChange}
-          />
-        </div>
-        <div className="animate-fadeIn mt-4 max-w-md text-center text-base font-normal text-text-secondary">
+    <div className="relative mb-0 flex max-h-full w-full flex-col items-center justify-center overflow-visible pb-6 transition-all duration-200">
+      <div className="relative z-10 flex flex-col items-center gap-3 p-2 text-center">
+        <h1 className="aisafe-hero-quote animate-fadeIn max-w-4xl px-4 text-3xl font-medium italic leading-tight text-text-primary sm:text-5xl">
+          {greetingText}
+        </h1>
+        <div className="animate-fadeIn text-text-secondary/90 max-w-md text-center text-sm font-medium">
           {localize('com_ui_privacy_assistant_tagline')}
         </div>
       </div>

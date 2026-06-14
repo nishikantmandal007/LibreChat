@@ -3,6 +3,48 @@ import type { TEndpointsConfig, TModelsConfig, TStartupConfig } from 'librechat-
 
 export const MAYA_DEFAULT_ENDPOINT = EModelEndpoint.openAI;
 export const MAYA_DEFAULT_MODEL = 'gpt-4o';
+export const IMAGE_GEN_MODEL_KEY = 'image-gen-v1';
+
+export function isImageGenModel(modelKey?: string | null): boolean {
+  return modelKey === IMAGE_GEN_MODEL_KEY;
+}
+
+export type MayaChatModelCatalogItem = {
+  key: string;
+  label: string;
+  provider: 'openai' | 'anthropic_foundry';
+  company: 'OpenAI' | 'Anthropic';
+  endpoint: EModelEndpoint;
+};
+
+export const MAYA_CHAT_MODEL_CATALOG: MayaChatModelCatalogItem[] = [
+  {
+    key: 'gpt-4o',
+    label: 'GPT-4o',
+    provider: 'openai',
+    company: 'OpenAI',
+    endpoint: EModelEndpoint.openAI,
+  },
+  {
+    key: 'claude-opus-4-8',
+    label: 'Claude Opus 4.8',
+    provider: 'anthropic_foundry',
+    company: 'Anthropic',
+    endpoint: EModelEndpoint.anthropic,
+  },
+  {
+    key: IMAGE_GEN_MODEL_KEY,
+    label: 'Image Generation',
+    provider: 'openai',
+    company: 'OpenAI',
+    endpoint: EModelEndpoint.openAI,
+  },
+];
+
+export const MAYA_CHAT_MODELS = MAYA_CHAT_MODEL_CATALOG.map((model) => model.key);
+export const MAYA_CHAT_MODEL_LABELS = Object.fromEntries(
+  MAYA_CHAT_MODEL_CATALOG.map((model) => [model.key, model.label]),
+);
 
 export const MAYA_ENDPOINTS: TEndpointsConfig = {
   [EModelEndpoint.openAI]: {
@@ -17,18 +59,15 @@ export const MAYA_ENDPOINTS: TEndpointsConfig = {
     modelDisplayLabel: 'Anthropic',
     iconURL: EModelEndpoint.anthropic,
   },
-  [EModelEndpoint.google]: {
-    type: EModelEndpoint.google,
-    order: 2,
-    modelDisplayLabel: 'Google',
-    iconURL: EModelEndpoint.google,
-  },
 };
 
 export const MAYA_MODELS: TModelsConfig = {
-  [EModelEndpoint.openAI]: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini'],
-  [EModelEndpoint.anthropic]: ['claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-3-5-sonnet-latest'],
-  [EModelEndpoint.google]: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  [EModelEndpoint.openAI]: MAYA_CHAT_MODEL_CATALOG.filter(
+    (model) => model.endpoint === EModelEndpoint.openAI,
+  ).map((model) => model.key),
+  [EModelEndpoint.anthropic]: MAYA_CHAT_MODEL_CATALOG.filter(
+    (model) => model.endpoint === EModelEndpoint.anthropic,
+  ).map((model) => model.key),
 };
 
 export const MAYA_INTERFACE_CONFIG = {
@@ -72,7 +111,7 @@ export const MAYA_STARTUP_CONFIG: TStartupConfig = {
     enforce: false,
     prioritize: false,
     list: [],
-    addedEndpoints: [EModelEndpoint.openAI, EModelEndpoint.anthropic, EModelEndpoint.google],
+    addedEndpoints: [EModelEndpoint.openAI, EModelEndpoint.anthropic],
   },
   interface: MAYA_INTERFACE_CONFIG,
   balance: undefined,
@@ -81,14 +120,15 @@ export const MAYA_STARTUP_CONFIG: TStartupConfig = {
   allowAccountDeletion: false,
 };
 
-export function endpointToMayaLLM(endpoint?: string | null): string {
-  switch (endpoint) {
-    case EModelEndpoint.anthropic:
-      return 'anthropic';
-    case EModelEndpoint.google:
-      return 'google';
-    case EModelEndpoint.openAI:
-    default:
-      return 'openai';
+export function getModelCatalogItem(
+  modelKey?: string | null,
+): MayaChatModelCatalogItem | undefined {
+  if (!modelKey) {
+    return undefined;
   }
+  return MAYA_CHAT_MODEL_CATALOG.find((item) => item.key === modelKey);
+}
+
+export function endpointToMayaLLM(_endpoint?: string | null): string {
+  return 'openai';
 }

@@ -34,7 +34,9 @@ const buildDefaultConvo = ({
   }
 
   const availableModels = models;
-  const model = lastConversationSetup?.model ?? lastSelectedModel?.[endpoint] ?? '';
+  const rawModel =
+    conversation.model ?? lastConversationSetup?.model ?? lastSelectedModel?.[endpoint] ?? '';
+  const model = rawModel === 'image-gen-v1' ? 'gpt-4o' : rawModel;
 
   let possibleModels: string[];
 

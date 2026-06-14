@@ -66,7 +66,7 @@ export default function SharePointPickerDialog({
       <OGDialogPortal>
         <OGDialogOverlay className="bg-black/50" />
         <OGDialogContent
-          className="sharepoint-picker-bg fixed left-1/2 top-1/2 z-50 h-[680px] max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-surface-primary p-2 shadow-lg focus:outline-none"
+          className="sharepoint-picker-bg glass-surface fixed left-1/2 top-1/2 z-50 h-[680px] max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 rounded-2xl p-2 shadow-lg focus:outline-none"
           showCloseButton={true}
         >
           <OGDialogTitle className="sr-only">
@@ -77,7 +77,7 @@ export default function SharePointPickerDialog({
 
             {isDownloading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-black/30 backdrop-blur-sm">
-                <div className="mx-4 w-full max-w-sm rounded-lg bg-surface-primary p-6 shadow-lg">
+                <div className="glass-surface mx-4 w-full max-w-sm rounded-2xl p-6 shadow-lg">
                   <div className="text-center">
                     <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600"></div>
                     <h3 className="mb-2 text-lg font-semibold text-text-primary">
@@ -96,7 +96,7 @@ export default function SharePointPickerDialog({
                             {downloadProgress.currentFile}
                           </p>
                         )}
-                        <div className="h-2 w-full rounded-full bg-surface-tertiary">
+                        <div className="h-2 w-full rounded-full bg-[var(--glass-bg-subtle)]">
                           <div
                             className="h-2 rounded-full bg-blue-600 transition-all duration-300"
                             style={{

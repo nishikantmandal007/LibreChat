@@ -12,7 +12,7 @@ module.exports = {
   theme: {
     fontFamily: {
       sans: [
-        'Inter',
+        'Plus Jakarta Sans',
         'ui-sans-serif',
         'system-ui',
         '-apple-system',
@@ -128,6 +128,17 @@ module.exports = {
         'border-heavy': 'var(--border-heavy)',
         'border-xheavy': 'var(--border-xheavy)',
         'border-destructive': 'var(--border-destructive)',
+        glass: {
+          bg: 'var(--glass-bg)',
+          'bg-hover': 'var(--glass-bg-hover)',
+          'bg-active': 'var(--glass-bg-active)',
+          'bg-subtle': 'var(--glass-bg-subtle)',
+          border: 'var(--glass-border)',
+          'border-hover': 'var(--glass-border-hover)',
+          'border-outer': 'var(--glass-border-outer)',
+          text: 'var(--glass-text)',
+          'text-secondary': 'var(--glass-text-secondary)',
+        },
         /* These are test styles */
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
@@ -159,6 +170,11 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+      },
+      boxShadow: {
+        glass: 'var(--glass-shadow-inset), var(--glass-shadow-outer)',
+        'glass-hover': 'var(--glass-shadow-inset), var(--glass-shadow-hover)',
+        'glass-focus': 'var(--glass-shadow-inset), var(--glass-focus-ring)',
       },
       borderRadius: {
         lg: 'var(--radius)',

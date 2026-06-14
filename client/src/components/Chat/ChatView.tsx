@@ -13,13 +13,13 @@ import { useGetMessagesByConvoId } from '~/data-provider';
 import MessagesView from './Messages/MessagesView';
 import Presentation from './Presentation';
 import ChatForm from './Input/ChatForm';
+import { isImageGenModel } from '~/services/mdp/modelConfig';
+import ImageGenLanding from './ImageGenLanding';
 import Landing from './Landing';
 import Header from './Header';
 import Footer from './Footer';
 import { cn } from '~/utils';
 import store from '~/store';
-import DocumentCreator from './DocumentCreator';
-import MeetingNotes from './MeetingNotes';
 
 function LoadingSpinner() {
   return (
@@ -35,8 +35,7 @@ function ChatView({ index = 0 }: { index?: number }) {
   const { conversationId } = useParams();
   const rootSubmission = useRecoilValue(store.submissionByIndex(index));
   const centerFormOnLanding = useRecoilValue(store.centerFormOnLanding);
-  const documentCreatorActive = useRecoilValue(store.documentCreatorActive);
-  const meetingNotesActive = useRecoilValue(store.meetingNotesActive);
+  const conversation = useRecoilValue(store.conversationByIndex(index));
 
   const methods = useForm<ChatFormValues>({
     defaultValues: { text: '' },
@@ -72,6 +71,8 @@ function ChatView({ index = 0 }: { index?: number }) {
     content = <LoadingSpinner />;
   } else if (!isLandingPage) {
     content = <MessagesView messagesTree={messagesTree} />;
+  } else if (isImageGenModel(conversation?.model)) {
+    content = <ImageGenLanding />;
   } else {
     content = <Landing centerFormOnLanding={centerFormOnLanding} />;
   }
@@ -81,37 +82,31 @@ function ChatView({ index = 0 }: { index?: number }) {
       <ChatContext.Provider value={chatHelpers}>
         <AddedChatContext.Provider value={addedChatHelpers}>
           <Presentation>
-            {meetingNotesActive ? (
-              <MeetingNotes />
-            ) : documentCreatorActive ? (
-              <DocumentCreator />
-            ) : (
-              <div className="relative flex h-full w-full flex-col">
-                <Header />
-                <>
+            <div className="relative flex h-full w-full flex-col">
+              <Header />
+              <>
+                <div
+                  className={cn(
+                    'flex flex-col',
+                    isLandingPage
+                      ? 'flex-1 items-center justify-end sm:justify-center'
+                      : 'h-full overflow-y-auto',
+                  )}
+                >
+                  {content}
                   <div
                     className={cn(
-                      'flex flex-col',
-                      isLandingPage
-                        ? 'flex-1 items-center justify-end sm:justify-center'
-                        : 'h-full overflow-y-auto',
+                      'w-full',
+                      isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
                     )}
                   >
-                    {content}
-                    <div
-                      className={cn(
-                        'w-full',
-                        isLandingPage && 'max-w-3xl transition-all duration-200 xl:max-w-4xl',
-                      )}
-                    >
-                      <ChatForm index={index} />
-                      {isLandingPage ? <ConversationStarters /> : <Footer />}
-                    </div>
+                    <ChatForm index={index} />
+                    {isLandingPage ? <ConversationStarters /> : <Footer />}
                   </div>
-                  {isLandingPage && <Footer />}
-                </>
-              </div>
-            )}
+                </div>
+                {isLandingPage && <Footer />}
+              </>
+            </div>
           </Presentation>
         </AddedChatContext.Provider>
       </ChatContext.Provider>

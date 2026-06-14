@@ -37,10 +37,8 @@ export function TemporaryChat() {
             aria-label={localize('com_ui_temporary')}
             aria-pressed={isTemporary}
             className={cn(
-              'inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl border border-border-light text-text-primary transition-all ease-in-out',
-              isTemporary
-                ? 'bg-surface-active'
-                : 'bg-presentation shadow-sm hover:bg-surface-active-alt',
+              'inline-flex size-10 flex-shrink-0 items-center justify-center rounded-xl text-text-primary transition-all ease-in-out',
+              isTemporary ? 'glass-surface' : 'glass-surface-subtle hover:bg-white/40',
             )}
           >
             <MessageCircleDashed className="h-5 w-5" aria-hidden="true" />

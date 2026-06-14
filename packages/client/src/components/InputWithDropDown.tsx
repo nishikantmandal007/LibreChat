@@ -87,7 +87,7 @@ const InputWithDropdown = React.forwardRef<HTMLInputElement, InputWithDropdownPr
             onKeyDown={handleKeyDown}
             aria-haspopup="listbox"
             aria-controls="dropdown-list"
-            className={cn('bg-surface-secondary', className ?? '')}
+            className={cn('', className ?? '')}
             ref={ref}
           />
           <button
@@ -116,7 +116,7 @@ const InputWithDropdown = React.forwardRef<HTMLInputElement, InputWithDropdownPr
           <ul
             id="dropdown-list"
             role="listbox"
-            className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border-medium bg-surface-secondary shadow-lg focus:ring-1 focus:ring-inset focus:ring-ring-primary"
+            className="glass-surface absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-xl shadow-lg focus:ring-1 focus:ring-inset focus:ring-ring-primary"
           >
             {options.map((option, index) => (
               <li

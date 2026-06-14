@@ -2,6 +2,7 @@ const BASE = '/mdp/ai-safe';
 
 export const MDP_ENDPOINTS = {
   chat: `${BASE}/chat`,
+  chatModels: `${BASE}/chat-models`,
   detect: `${BASE}/detect`,
   anonymize: `${BASE}/anonymize`,
   deidentify: `${BASE}/deidentify`,

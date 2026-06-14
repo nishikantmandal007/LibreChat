@@ -1,6 +1,7 @@
-import { useEffect, useMemo } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { FileSources, LocalStorageKeys } from 'librechat-data-provider';
+import { FileSources, LocalStorageKeys, Constants } from 'librechat-data-provider';
+import { ThemeContext, isDark as checkIsDark } from '@librechat/client';
 import type { ExtendedFile } from '~/common';
 import useResetArtifactsOnConversationChange from '~/hooks/Artifacts/useResetArtifactsOnConversationChange';
 import DragDropWrapper from '~/components/Chat/Input/Files/DragDropWrapper';
@@ -9,10 +10,15 @@ import { useDeleteFilesMutation } from '~/data-provider';
 import Artifacts from '~/components/Artifacts/Artifacts';
 import SafeFilePreviewPanel from '~/components/Chat/Input/Files/SafeFilePreviewPanel';
 import { SidePanelGroup } from '~/components/SidePanel';
+import { isImageGenModel } from '~/services/mdp/modelConfig';
+import { getConversationGradient } from '~/utils/conversationGradient';
 import { useSetFilesToDelete } from '~/hooks';
 import store from '~/store';
 
 export default function Presentation({ children }: { children: React.ReactNode }) {
+  const conversation = useRecoilValue(store.conversationByIndex(0));
+  const ambientGradient = useRecoilValue(store.ambientGradient);
+  const { theme } = useContext(ThemeContext);
   const artifacts = useRecoilValue(store.artifactsState);
   const artifactsVisibility = useRecoilValue(store.artifactsVisibility);
   const safeFilePreview = useRecoilValue(store.safeFilePreview);
@@ -79,9 +85,26 @@ export default function Presentation({ children }: { children: React.ReactNode }
 
   const sidePanelElement = safeFilePreview ? <SafeFilePreviewPanel /> : artifactsElement;
 
+  const isImageGen = isImageGenModel(conversation?.model);
+  const convoId = conversation?.conversationId;
+  const hasConvo = convoId && convoId !== Constants.NEW_CONVO;
+
+  const gradientStyle = useMemo(() => {
+    if (isImageGen || !ambientGradient || !hasConvo) {
+      return undefined;
+    }
+    const bg = getConversationGradient(convoId, checkIsDark(theme));
+    return bg ? { background: bg } : undefined;
+  }, [isImageGen, ambientGradient, hasConvo, convoId, theme]);
+
+  let bgClass = 'bg-presentation';
+  if (!isImageGen && ambientGradient && !gradientStyle) {
+    bgClass = 'aisafe-chat-bg';
+  }
+
   return (
-    <DragDropWrapper className="relative flex w-full grow overflow-hidden bg-presentation">
-      <SidePanelGroup artifacts={sidePanelElement}>
+    <DragDropWrapper className="relative flex w-full grow overflow-hidden">
+      <SidePanelGroup artifacts={sidePanelElement} className={bgClass} style={gradientStyle}>
         <main className="flex h-full flex-col overflow-y-auto" role="main">
           {children}
         </main>

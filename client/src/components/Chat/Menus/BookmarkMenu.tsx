@@ -181,7 +181,7 @@ const BookmarkMenu: FC = () => {
                 aria-label={buttonAriaLabel}
                 aria-pressed={hasBookmarks}
                 className={cn(
-                  'mt-text-sm flex size-10 flex-shrink-0 items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation text-sm transition-colors duration-200 hover:bg-surface-hover',
+                  'mt-text-sm glass-surface-subtle flex size-10 flex-shrink-0 items-center justify-center gap-2 rounded-xl text-sm transition-colors duration-200 hover:bg-white/40',
                   isMenuOpen ? 'bg-surface-hover' : '',
                 )}
                 data-testid="bookmark-menu"

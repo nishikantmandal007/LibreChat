@@ -44,7 +44,7 @@ export default function FilePreview() {
   const params = useParams();
 
   return (
-    <div className="m-3 bg-white p-2 sm:p-4 md:p-6 lg:p-10">
+    <div className="glass-surface m-3 rounded-2xl p-2 sm:p-4 md:p-6 lg:p-10">
       <div className="flex flex-col justify-between md:flex-row">
         <div className="flex flex-col">
           <b className="hidden text-sm md:text-base lg:block lg:text-lg">FILE</b>

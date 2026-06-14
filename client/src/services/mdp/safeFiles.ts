@@ -1,6 +1,7 @@
 import { mdpClient } from './client';
 import { MDP_ENDPOINTS } from './endpoints';
 import { normalizeMdpLanguage } from './language';
+import { loadSafeFileBlob, persistSafeFileBlob } from './browserFileStore';
 
 import type { MayaSafeFilePiiSummary, MayaSafeFileState, MayaSafeFileStatus } from '~/common';
 
@@ -416,8 +417,14 @@ export async function createSafeFile({
 }
 
 export async function fetchSafeFileBlob(url: string): Promise<Blob> {
+  const cached = await loadSafeFileBlob(url);
+  if (cached) {
+    return cached;
+  }
   const response = await mdpClient.get<Blob>(url, {
     responseType: 'blob',
   });
-  return response.data;
+  const blob = response.data;
+  await persistSafeFileBlob({ url, blob, mimeType: blob.type });
+  return blob;
 }

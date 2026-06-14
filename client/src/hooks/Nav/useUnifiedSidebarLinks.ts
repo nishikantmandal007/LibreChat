@@ -1,13 +1,15 @@
-import { useMemo } from 'react';
-import { useRecoilValue } from 'recoil';
-import { MessageCircle } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { MessageCircle, Palette } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
-import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
+import { EModelEndpoint, getConfigDefaults, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
+import { IMAGE_GEN_MODEL_KEY } from '~/services/mdp/modelConfig';
+import useNewConvo from '~/hooks/useNewConvo';
 import store from '~/store';
 
 const defaultInterface = getConfigDefaults().interface;
@@ -40,6 +42,17 @@ export default function useUnifiedSidebarLinks() {
     [keyExpiry.expiresAt, userProvidesKey],
   );
 
+  const { newConversation } = useNewConvo(0);
+  const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
+
+  const onImageGenClick = useCallback(() => {
+    setImageGenEnabled(true);
+    newConversation({
+      template: { endpoint: EModelEndpoint.openAI, model: IMAGE_GEN_MODEL_KEY },
+      buildDefault: false,
+    });
+  }, [newConversation, setImageGenEnabled]);
+
   const sideNavLinks = useSideNavLinks({
     keyProvided,
     endpoint,
@@ -58,8 +71,17 @@ export default function useUnifiedSidebarLinks() {
       Component: ConversationsSection,
     };
 
-    return [conversationLink, ...sideNavLinks];
-  }, [sideNavLinks]);
+    const imageGenLink: NavLink = {
+      title: 'com_ui_generate_image' as NavLink['title'],
+      label: '',
+      icon: Palette,
+      id: 'image-gen',
+      onClick: onImageGenClick,
+    };
+
+    const kept = new Set(['prompts', 'bookmarks', 'skills']);
+    return [conversationLink, imageGenLink, ...sideNavLinks.filter(l => kept.has(l.id))];
+  }, [sideNavLinks, onImageGenClick]);
 
   return links;
 }

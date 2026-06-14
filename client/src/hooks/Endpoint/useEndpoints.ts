@@ -19,6 +19,7 @@ import type { Endpoint } from '~/common';
 import { useGetEndpointsQuery } from '~/data-provider';
 import { mapEndpoints, getIconKey } from '~/utils';
 import { useHasAccess } from '~/hooks';
+import { MAYA_CHAT_MODEL_LABELS } from '~/services/mdp/modelConfig';
 import { icons } from './Icons';
 
 const defaultInterface = getConfigDefaults().interface;
@@ -109,6 +110,10 @@ export const useEndpoints = ({
             })
           : null,
       };
+
+      if (ep === EModelEndpoint.openAI || ep === EModelEndpoint.anthropic) {
+        result.modelLabels = MAYA_CHAT_MODEL_LABELS;
+      }
 
       // Handle agents case
       if (ep === EModelEndpoint.agents && (agents?.length ?? 0) > 0) {

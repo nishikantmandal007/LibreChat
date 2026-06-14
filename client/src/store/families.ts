@@ -114,6 +114,9 @@ const conversationByIndex = atomFamily<TConversation | null, string | number>({
 
         const convoToStore = { ...newValue };
         clearModelForNonEphemeralAgent(convoToStore);
+        if (convoToStore.model === 'image-gen-v1') {
+          convoToStore.model = 'gpt-4o';
+        }
         localStorage.setItem(
           `${LocalStorageKeys.LAST_CONVO_SETUP}_${index}`,
           JSON.stringify(convoToStore),

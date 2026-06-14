@@ -291,11 +291,11 @@ function SkillsCommandContent({
 
   return (
     <div className="absolute bottom-28 z-10 w-full space-y-2">
-      <div className="popover border-token-border-light rounded-2xl border bg-surface-tertiary-alt p-2 shadow-lg">
+      <div className="popover glass-surface rounded-2xl p-2 shadow-lg">
         <input
           ref={initInputRef}
           placeholder={localize('com_ui_skills_command_placeholder')}
-          className="mb-1 w-full border-0 bg-surface-tertiary-alt p-2 text-sm focus:outline-none dark:text-gray-200"
+          className="mb-1 w-full border-0 bg-transparent p-2 text-sm text-[var(--glass-text)] focus:outline-none"
           autoComplete="off"
           value={searchValue}
           onKeyDown={(e) => {

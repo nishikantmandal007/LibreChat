@@ -80,14 +80,9 @@ const documentExportPinned = atomWithLocalStorage<boolean>('documentExportPinned
 
 const mdpAnonymizationLanguage = atomWithLocalStorage<string>('mdpAnonymizationLanguage', 'de');
 
-const documentCreatorActive = atom<boolean>({
-  key: 'documentCreatorActive',
-  default: false,
-});
-
-const meetingNotesActive = atom<boolean>({
-  key: 'meetingNotesActive',
-  default: false,
+const imageGenPendingUrl = atom<string | null>({
+  key: 'imageGenPendingUrl',
+  default: null,
 });
 
 export default {
@@ -102,6 +97,5 @@ export default {
   documentExportEnabled,
   documentExportPinned,
   mdpAnonymizationLanguage,
-  documentCreatorActive,
-  meetingNotesActive,
+  imageGenPendingUrl,
 };

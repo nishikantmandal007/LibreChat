@@ -36,6 +36,13 @@ const toggleSwitchConfigs = [
     hoverCardText: undefined,
     key: 'newChatSwitchToHistory',
   },
+  {
+    stateAtom: store.ambientGradient,
+    localizationKey: 'com_nav_ambient_gradient' as const,
+    switchId: 'ambientGradient',
+    hoverCardText: undefined,
+    key: 'ambientGradient',
+  },
 ];
 
 export const ThemeSelector = ({

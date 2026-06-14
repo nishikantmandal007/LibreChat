@@ -36,7 +36,6 @@ jest.mock('../Menus', () => ({
   OpenSidebar: ({ className }: { className?: string }) => (
     <button className={className} data-testid="open-sidebar" type="button" />
   ),
-  PresetsMenu: () => <div data-testid="presets-menu" />,
 }));
 
 jest.mock('../Menus/BookmarkMenu', () => ({
@@ -46,11 +45,6 @@ jest.mock('../Menus/BookmarkMenu', () => ({
 
 jest.mock('../TemporaryChat', () => ({
   TemporaryChat: () => <div data-testid="temporary-chat" />,
-}));
-
-jest.mock('../AddMultiConvo', () => ({
-  __esModule: true,
-  default: () => <div data-testid="add-multi-convo" />,
 }));
 
 function renderHeader(sidebarExpanded = false) {
@@ -86,9 +80,7 @@ describe('Header', () => {
     renderHeader(false);
 
     expect(screen.getByTestId('model-selector')).toBeInTheDocument();
-    expect(screen.getByTestId('presets-menu')).toBeInTheDocument();
     expect(screen.getByTestId('bookmark-menu')).toBeInTheDocument();
-    expect(screen.getByTestId('add-multi-convo')).toBeInTheDocument();
     expect(screen.getByTestId('export-menu')).toHaveAttribute('data-shared', 'true');
     expect(screen.getByTestId('temporary-chat')).toBeInTheDocument();
   });
@@ -100,7 +92,6 @@ describe('Header', () => {
 
     expect(screen.getByTestId('open-sidebar')).toBeInTheDocument();
     expect(screen.queryByTestId('model-selector')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('presets-menu')).not.toBeInTheDocument();
     expect(screen.queryByTestId('export-menu')).not.toBeInTheDocument();
     expect(screen.queryByTestId('temporary-chat')).not.toBeInTheDocument();
   });

@@ -45,6 +45,8 @@ export function EndpointModelItem({ modelId, endpoint }: EndpointModelItemProps)
     endpoint.assistantNames?.[modelId]
   ) {
     modelName = endpoint.assistantNames[modelId];
+  } else if (endpoint && modelId && endpoint.modelLabels?.[modelId]) {
+    modelName = endpoint.modelLabels[modelId];
   }
 
   const isAgent = isAgentsEndpoint(endpoint.value);

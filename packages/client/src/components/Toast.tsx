@@ -11,10 +11,14 @@ export function Toast() {
      * until the 4.5:1 contrast ratio threshold was met against white text while maintaining
      * a relatively recognizable color scheme for toasts without compromising accessibility.
      * */
-    [NotificationSeverity.INFO]: 'border-gray-500 bg-gray-500',
-    [NotificationSeverity.SUCCESS]: 'border-[#02855E] bg-[#02855E]',
-    [NotificationSeverity.WARNING]: 'border-[#C75209] bg-[#C75209]',
-    [NotificationSeverity.ERROR]: 'border-[#E02F1F] bg-[#E02F1F]',
+    [NotificationSeverity.INFO]:
+      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-xl',
+    [NotificationSeverity.SUCCESS]:
+      'border-sky-400/30 bg-sky-500/10 text-text-primary backdrop-blur-xl',
+    [NotificationSeverity.WARNING]:
+      'border-amber-400/35 bg-amber-500/10 text-text-primary backdrop-blur-xl',
+    [NotificationSeverity.ERROR]:
+      'border-red-400/35 bg-red-500/10 text-text-primary backdrop-blur-xl',
   };
 
   return (
@@ -29,7 +33,7 @@ export function Toast() {
     >
       <div className="w-full p-1 text-center md:w-auto md:text-justify">
         <div
-          className={`alert-root pointer-events-auto inline-flex flex-row gap-2 rounded-md border px-3 py-2 font-bold text-white ${
+          className={`alert-root pointer-events-auto inline-flex flex-row gap-2 rounded-xl border px-3 py-2 text-sm font-semibold shadow-lg ${
             severityClassName[toast.severity]
           }`}
         >

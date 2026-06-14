@@ -17,6 +17,10 @@ jest.mock('~/store', () => {
     key: 'mock-newChatSwitchToHistory',
     default: true,
   });
+  const imageGenEnabledAtom = atom({
+    key: 'mock-imageGenEnabled',
+    default: false,
+  });
   const searchAtom = atom({
     key: 'mock-search',
     default: {
@@ -27,14 +31,6 @@ jest.mock('~/store', () => {
       isTyping: false,
     },
   });
-  const documentCreatorActiveAtom = atom({
-    key: 'mock-documentCreatorActive',
-    default: false,
-  });
-  const meetingNotesActiveAtom = atom({
-    key: 'mock-meetingNotesActive',
-    default: false,
-  });
   return {
     __esModule: true,
     default: {
@@ -42,8 +38,7 @@ jest.mock('~/store', () => {
         atom({ key: `mock-conversationByIndex-${counter++}`, default: null }),
       newChatSwitchToHistory: switchAtom,
       search: searchAtom,
-      documentCreatorActive: documentCreatorActiveAtom,
-      meetingNotesActive: meetingNotesActiveAtom,
+      imageGenEnabled: imageGenEnabledAtom,
     },
   };
 });
@@ -164,7 +159,11 @@ describe('ExpandedPanel', () => {
       const newChatLink = screen.getByTestId('new-chat-button');
       fireEvent.click(newChatLink);
 
-      expect(mockNewConversation).toHaveBeenCalledTimes(1);
+      expect(mockNewConversation).toHaveBeenCalledWith({
+        template: { endpoint: 'openAI', model: 'gpt-4o' },
+        buildDefault: false,
+        disableParams: true,
+      });
       expect(localStorage.getItem('side:active-panel')).toBe(DEFAULT_PANEL);
     });
 
@@ -180,25 +179,12 @@ describe('ExpandedPanel', () => {
       const newChatLink = screen.getByTestId('new-chat-button');
       fireEvent.click(newChatLink);
 
-      expect(mockNewConversation).toHaveBeenCalledTimes(1);
+      expect(mockNewConversation).toHaveBeenCalledWith({
+        template: { endpoint: 'openAI', model: 'gpt-4o' },
+        buildDefault: false,
+        disableParams: true,
+      });
       expect(localStorage.getItem('side:active-panel')).toBe('prompts');
-    });
-  });
-
-  describe('Custom workspace pages', () => {
-    it('switches between document creator and meeting notes', () => {
-      renderPanel({ expanded: true });
-
-      const documentButton = screen.getByRole('button', { name: 'com_ui_doc_creator' });
-      const meetingButton = screen.getByRole('button', { name: 'com_ui_meeting_notes' });
-
-      fireEvent.click(meetingButton);
-      expect(meetingButton).toHaveClass('bg-surface-active-alt');
-      expect(documentButton).not.toHaveClass('bg-surface-active-alt');
-
-      fireEvent.click(documentButton);
-      expect(documentButton).toHaveClass('bg-surface-active-alt');
-      expect(meetingButton).not.toHaveClass('bg-surface-active-alt');
     });
   });
 
@@ -208,13 +194,13 @@ describe('ExpandedPanel', () => {
       const expandedNewChat = screen.getByTestId('new-chat-button');
       expect(expandedNewChat).toHaveClass('text-base');
       expect(expandedNewChat).toHaveClass('font-semibold');
-      expect(expandedNewChat.querySelector('svg')).toHaveClass('h-6', 'w-6');
+      expect(expandedNewChat.querySelector('svg')).toHaveClass('h-[22px]', 'w-[22px]');
 
       unmount();
 
       renderPanel({ expanded: false });
       const collapsedNewChat = screen.getByTestId('new-chat-button');
-      expect(collapsedNewChat.querySelector('svg')).toHaveClass('h-6', 'w-6');
+      expect(collapsedNewChat.querySelector('svg')).toHaveClass('h-[22px]', 'w-[22px]');
     });
   });
 });

@@ -11,7 +11,7 @@ export default function ActionButton({ onClick }: ActionButtonProps) {
   return (
     <div className="w-32">
       <Button
-        className="w-full rounded-md border border-black bg-white p-0 text-black hover:bg-black hover:text-white"
+        className="glass-surface w-full rounded-xl p-0 text-[var(--glass-text)]"
         onClick={onClick}
       >
         {/* Action Button */}

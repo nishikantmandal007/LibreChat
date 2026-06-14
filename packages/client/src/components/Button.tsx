@@ -8,16 +8,18 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+        default: 'glass-surface rounded-xl text-[var(--glass-text)] font-medium',
         destructive:
           'bg-surface-destructive text-destructive-foreground hover:bg-surface-destructive-hover',
         outline:
-          'text-text-primary border border-border-light bg-transparent hover:bg-accent hover:text-accent-foreground',
-        secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        ghost: 'hover:bg-surface-hover hover:text-accent-foreground',
+          'glass-surface-subtle rounded-xl text-[var(--glass-text)] border-[var(--glass-border-outer)] hover:bg-[var(--glass-bg-hover)]',
+        secondary: 'glass-surface-subtle rounded-xl text-[var(--glass-text-secondary)] hover:bg-[var(--glass-bg-hover)]',
+        ghost: 'hover:bg-[var(--glass-bg-subtle)] hover:text-accent-foreground rounded-xl',
         link: 'text-primary underline-offset-4 hover:underline',
         // hardcoded text color because of WCAG contrast issues (text-white)
         submit: 'bg-surface-submit text-white hover:bg-surface-submit-hover',
+        glass:
+          'glass-surface rounded-xl text-[var(--glass-text)] font-medium',
       },
       size: {
         default: 'h-10 px-4 py-2',

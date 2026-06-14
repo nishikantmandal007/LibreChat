@@ -118,7 +118,7 @@ const Mermaid: React.FC<MermaidProps> = memo(({ children, id, theme }) => {
             style={{ height: `${calculatedHeight}px` }}
             onMouseDown={handleMouseDown}
           >
-            <div className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded border border-border-light bg-surface-secondary px-2 py-1 text-xs text-text-secondary">
+            <div className="absolute left-2 top-2 z-10 flex items-center gap-1 rounded-xl border border-[var(--glass-border-outer)] bg-[var(--glass-bg)] px-2 py-1 text-xs text-[var(--glass-text-secondary)] backdrop-blur-[var(--glass-blur)]">
               <Spinner className="h-3 w-3" />
             </div>
             <div
@@ -155,13 +155,13 @@ const Mermaid: React.FC<MermaidProps> = memo(({ children, id, theme }) => {
 
     return (
       <div className="w-full overflow-hidden rounded-lg border border-border-light">
-        <div className="flex items-center gap-2 border-b border-border-light bg-surface-secondary px-4 py-2 font-sans text-xs text-text-secondary">
+        <div className="flex items-center gap-2 border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] px-4 py-2 font-sans text-xs text-[var(--glass-text-secondary)]">
           <Spinner className="h-3 w-3" />
           <span className="font-medium">{localize('com_ui_mermaid')}</span>
         </div>
         <pre
           ref={streamingCodeRef}
-          className="max-h-[350px] min-h-[150px] overflow-auto whitespace-pre-wrap bg-surface-primary-alt p-4 font-mono text-xs text-text-secondary"
+          className="max-h-[350px] min-h-[150px] overflow-auto whitespace-pre-wrap bg-transparent p-4 font-mono text-xs text-[var(--glass-text-secondary)]"
         >
           {children}
         </pre>
@@ -173,7 +173,7 @@ const Mermaid: React.FC<MermaidProps> = memo(({ children, id, theme }) => {
     return (
       <div className="w-full overflow-hidden rounded-lg border border-border-light">
         <MermaidHeader codeContent={children} showCode={showCode} onToggleCode={handleToggleCode} />
-        <div className="border-t border-border-light bg-surface-tertiary p-4">
+        <div className="border-t border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="font-semibold text-red-600 dark:text-red-400">
               {localize('com_ui_mermaid_failed')}
@@ -224,7 +224,7 @@ const Mermaid: React.FC<MermaidProps> = memo(({ children, id, theme }) => {
         onClick={handleContainerClick}
       >
         <MermaidHeader
-          className="border-b border-border-light bg-surface-secondary"
+          className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)]"
           actionsClassName="transition-opacity duration-200"
           codeContent={children}
           showCode={showCode}
@@ -234,7 +234,7 @@ const Mermaid: React.FC<MermaidProps> = memo(({ children, id, theme }) => {
           onToggleCode={handleToggleCode}
         />
         {showCode && (
-          <div className="border-b border-border-light bg-surface-secondary p-4">
+          <div className="border-b border-[var(--glass-border)] bg-[var(--glass-bg-subtle)] p-4">
             <pre className="overflow-auto whitespace-pre-wrap text-xs text-text-secondary">
               {children}
             </pre>

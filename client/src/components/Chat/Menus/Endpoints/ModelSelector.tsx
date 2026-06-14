@@ -11,7 +11,7 @@ import {
 import { ModelSelectorProvider, useModelSelectorContext } from './ModelSelectorContext';
 import { ModelSelectorChatProvider } from './ModelSelectorChatContext';
 import { getSelectedIcon, getDisplayValue } from './utils';
-import { CustomMenu as Menu } from './CustomMenu';
+import { CustomMenu as Menu, CustomMenuSeparator } from './CustomMenu';
 import DialogManager from './DialogManager';
 import { useLocalize } from '~/hooks';
 
@@ -67,7 +67,7 @@ function ModelSelectorContent() {
       description={localize('com_ui_select_model')}
       render={
         <button
-          className="my-1 flex h-11 w-full max-w-[70vw] items-center justify-center gap-2 rounded-xl border border-border-light bg-presentation px-4 py-2.5 text-base font-medium text-text-primary hover:bg-surface-active-alt"
+          className="my-1 flex h-9 w-full max-w-[70vw] items-center justify-center gap-2 rounded-lg border border-black/[0.14] bg-white/[0.28] px-3 py-1.5 text-sm font-medium text-text-primary backdrop-blur-md transition-all hover:bg-white/[0.40] hover:backdrop-blur-xl dark:border-white/[0.16] dark:bg-white/[0.06] dark:hover:bg-white/[0.12]"
           aria-label={localize('com_ui_select_model')}
         >
           {selectedIcon && React.isValidElement(selectedIcon) && (
@@ -101,14 +101,16 @@ function ModelSelectorContent() {
           renderSearchResults(searchResults, localize, searchValue)
         ) : (
           <>
-            {/* Render ungrouped modelSpecs (no group field) */}
             {renderModelSpecs(
               modelSpecs?.filter((spec) => !spec.group) || [],
               selectedValues.modelSpec || '',
             )}
-            {/* Render endpoints (will include grouped specs matching endpoint names) */}
+            {(modelSpecs?.filter((spec) => !spec.group) || []).length > 0 &&
+              (mappedEndpoints ?? []).length > 0 && <CustomMenuSeparator />}
             {renderEndpoints(mappedEndpoints ?? [])}
-            {/* Render custom groups (specs with group field not matching any endpoint) */}
+            {(mappedEndpoints ?? []).length > 0 && (modelSpecs || []).some((s) => s.group) && (
+              <CustomMenuSeparator />
+            )}
             {renderCustomGroups(modelSpecs || [], mappedEndpoints ?? [])}
           </>
         )}

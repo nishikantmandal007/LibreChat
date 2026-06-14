@@ -20,7 +20,7 @@ const PromptDetailHeader = ({ group }: PromptDetailHeaderProps) => {
   return (
     <div className="flex flex-col gap-3 py-2 sm:flex-row sm:items-center sm:gap-4">
       {group.category && (
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-secondary">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--glass-bg)]">
           <CategoryIcon category={group.category} className="h-6 w-6" />
         </div>
       )}

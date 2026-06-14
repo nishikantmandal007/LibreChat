@@ -34,7 +34,7 @@ export default function MemoryCardActions({ memory }: MemoryCardActionsProps) {
     'flex size-7 items-center justify-center rounded-md',
     'transition-colors duration-150',
     'text-text-secondary hover:text-text-primary',
-    'hover:bg-surface-tertiary',
+    'hover:bg-[var(--glass-bg-hover)]',
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-border-heavy',
   );
 

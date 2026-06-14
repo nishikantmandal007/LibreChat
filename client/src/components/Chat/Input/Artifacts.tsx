@@ -111,7 +111,7 @@ function Artifacts() {
             gutter={4}
             className={cn(
               'animate-popover-top-left z-40 flex min-w-[250px] flex-col rounded-xl',
-              'border border-border-light bg-surface-secondary shadow-lg',
+              'glass-surface shadow-lg',
             )}
             portal={true}
             unmountOnHide={true}
@@ -131,7 +131,7 @@ function Artifacts() {
                 }}
                 className={cn(
                   'mb-1 flex items-center justify-between gap-2 rounded-lg px-2 py-2',
-                  'cursor-pointer bg-surface-secondary text-text-primary outline-none transition-colors',
+                  'cursor-pointer text-[var(--glass-text)] outline-none transition-colors',
                   'hover:bg-surface-hover data-[active-item]:bg-surface-hover',
                   isShadcnEnabled && 'bg-surface-active',
                 )}
@@ -152,7 +152,7 @@ function Artifacts() {
                 }}
                 className={cn(
                   'mb-1 flex items-center justify-between gap-2 rounded-lg px-2 py-2',
-                  'cursor-pointer bg-surface-secondary text-text-primary outline-none transition-colors',
+                  'cursor-pointer text-[var(--glass-text)] outline-none transition-colors',
                   'hover:bg-surface-hover data-[active-item]:bg-surface-hover',
                   isCustomEnabled && 'bg-surface-active',
                 )}

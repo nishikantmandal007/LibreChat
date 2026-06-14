@@ -304,7 +304,7 @@ function FileHeader({
           className="flex items-center"
         >
           <span
-            className="shrink-0 rounded bg-surface-tertiary px-1.5 py-0.5 text-[11px] tabular-nums leading-none text-text-secondary"
+            className="shrink-0 rounded-lg bg-[var(--glass-bg-subtle)] px-1.5 py-0.5 text-[11px] tabular-nums leading-none text-[var(--glass-text-secondary)]"
             aria-label={`${localize('com_ui_relevance')}: ${Math.round(relevance * 100)}%`}
           >
             {Math.round(relevance * 100)}%
@@ -437,7 +437,7 @@ export default function RetrievalCall({
                   <div
                     key={`${item.fileId ?? item.fileName}-${i}`}
                     className={cn(
-                      'overflow-hidden rounded-lg border border-border-light bg-surface-secondary',
+                      'glass-surface-subtle overflow-hidden rounded-xl',
                     )}
                   >
                     <FileHeader
