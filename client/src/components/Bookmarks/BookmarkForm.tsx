@@ -113,7 +113,7 @@ const BookmarkForm = ({
                 );
               },
             })}
-            className="w-full"
+            className="w-full border border-white/[0.15] bg-white/[0.06] backdrop-blur-sm dark:border-white/[0.10] dark:bg-white/[0.04]"
             aria-invalid={!!errors.tag}
             placeholder={localize('com_ui_enter_name')}
             aria-describedby={errors.tag ? 'bookmark-tag-error' : undefined}
@@ -148,10 +148,11 @@ const BookmarkForm = ({
             disabled={false}
             placeholder={localize('com_ui_enter_description')}
             className={cn(
-              'min-h-[100px] w-full resize-none rounded-lg border border-border-light',
-              'bg-transparent px-3 py-2 text-sm text-text-primary',
+              'min-h-[100px] w-full resize-none rounded-lg',
+              'border border-white/[0.15] bg-white/[0.06] backdrop-blur-sm dark:border-white/[0.10] dark:bg-white/[0.04]',
+              'px-3 py-2 text-sm text-text-primary',
               'placeholder:text-text-tertiary',
-              'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-border-heavy',
+              'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring-primary',
             )}
             aria-labelledby="bookmark-description-label"
           />

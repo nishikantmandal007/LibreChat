@@ -12,6 +12,10 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
   const localize = useLocalize();
   const { user, isAuthenticated, logout } = useAuthContext();
   const { data: startupConfig } = useGetStartupConfig();
+  const helpAndFaqURL =
+    startupConfig?.helpAndFaqURL && startupConfig.helpAndFaqURL !== '/'
+      ? startupConfig.helpAndFaqURL
+      : 'https://www.mayadataprivacy.com/faq';
   const balanceQuery = useGetUserBalance({
     enabled: !!isAuthenticated && startupConfig?.balance?.enabled,
   });
@@ -56,13 +60,6 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
           translate: collapsed ? '4px 0' : '0 -4px',
         }}
       >
-        <div
-          className="text-token-text-secondary ml-3 mr-2 py-2 text-[0.9375rem] leading-5"
-          role="note"
-        >
-          {user?.email ?? localize('com_nav_user')}
-        </div>
-        <DropdownMenuSeparator />
         {startupConfig?.balance?.enabled === true && balanceQuery.data != null && (
           <>
             <div
@@ -82,15 +79,15 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
           <FileText className="icon-md" aria-hidden="true" />
           {localize('com_nav_my_files')}
         </Menu.MenuItem>
-        {startupConfig?.helpAndFaqURL !== '/' && (
-          <Menu.MenuItem
-            onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
-            className="select-item text-[0.9375rem] leading-5"
-          >
-            <LinkIcon aria-hidden="true" />
-            {localize('com_nav_help_faq')}
-          </Menu.MenuItem>
-        )}
+        <Menu.MenuItem
+          onClick={() => {
+            window.open(helpAndFaqURL, '_blank', 'noopener,noreferrer');
+          }}
+          className="select-item text-[0.9375rem] leading-5"
+        >
+          <LinkIcon aria-hidden="true" />
+          {localize('com_nav_help_faq')}
+        </Menu.MenuItem>
         <Menu.MenuItem
           onClick={() => setShowSettings(true)}
           className="select-item text-[0.9375rem] leading-5"
@@ -98,7 +95,6 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
           <GearIcon className="icon-md" aria-hidden="true" />
           {localize('com_nav_settings')}
         </Menu.MenuItem>
-        <DropdownMenuSeparator />
         <Menu.MenuItem onClick={() => logout()} className="select-item text-[0.9375rem] leading-5">
           <LogOut className="icon-md" aria-hidden="true" />
           {localize('com_nav_log_out')}

@@ -17,6 +17,7 @@ import {
 import { useLocalize, useAuthContext, useSubmitMessage, useResourcePermissions } from '~/hooks';
 import { useRecordPromptUsage, useDeletePromptGroup } from '~/data-provider';
 import { useLiveAnnouncer } from '~/Providers';
+import EditPromptModal from '../forms/EditPromptModal';
 import VariableDialog from '../dialogs/VariableDialog';
 import PreviewPrompt from '../dialogs/PreviewPrompt';
 import CategoryIcon from '../utils/CategoryIcon';
@@ -43,15 +44,17 @@ function ChatGroupItem({
   const menuId = useId();
   const isSharedPrompt = group.author !== user?.id && Boolean(group.authorName);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
   const [isPreviewDialogOpen, setPreviewDialogOpen] = useState(false);
   const [isVariableDialogOpen, setVariableDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const groupIsGlobal = group.isPublic === true;
 
+  const isOwnPrompt = group.author === user?.id;
   const { hasPermission } = useResourcePermissions(ResourceType.PROMPTGROUP, group._id || '');
-  const canEdit = hasPermission(PermissionBits.EDIT);
-  const canDelete = hasPermission(PermissionBits.DELETE);
+  const canEdit = isOwnPrompt || hasPermission(PermissionBits.EDIT);
+  const canDelete = isOwnPrompt || hasPermission(PermissionBits.DELETE);
 
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
@@ -63,7 +66,7 @@ function ChatGroupItem({
         isStatus: true,
       });
       if (!isChatRoute && params.promptId === group._id) {
-        navigate(`${PROMPT_PATH}/new`, { replace: true });
+        navigate('/c/new', { replace: true });
       }
     },
     onError: () => {
@@ -120,7 +123,7 @@ function ChatGroupItem({
     if (canEdit) {
       items.push({
         label: localize('com_ui_edit'),
-        onClick: () => navigate(`${PROMPT_PATH}/${group._id}`),
+        onClick: () => setEditOpen(true),
         icon: <SquarePen className="icon-sm mr-2 text-text-primary" aria-hidden="true" />,
       });
     }
@@ -132,7 +135,7 @@ function ChatGroupItem({
       });
     }
     return items;
-  }, [localize, canEdit, canDelete, group._id, navigate]);
+  }, [localize, canEdit, canDelete]);
 
   return (
     <>
@@ -234,6 +237,7 @@ function ChatGroupItem({
           });
         }}
       />
+      <EditPromptModal open={isEditOpen} onOpenChange={setEditOpen} group={group} />
       {isChatRoute && (
         <VariableDialog
           open={isVariableDialogOpen}

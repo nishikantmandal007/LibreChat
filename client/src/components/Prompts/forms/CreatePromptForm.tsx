@@ -3,9 +3,7 @@ import { FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button, TextareaAutosize, Input } from '@librechat/client';
 import { useForm, Controller, FormProvider } from 'react-hook-form';
-import { LocalStorageKeys, PermissionTypes, Permissions } from 'librechat-data-provider';
-import OpenSidebar from '~/components/Chat/Menus/OpenSidebar';
-import CategorySelector from '../fields/CategorySelector';
+import { PermissionTypes, Permissions } from 'librechat-data-provider';
 import VariablesDropdown from '../editor/VariablesDropdown';
 import PromptVariables from '../display/PromptVariables';
 import Description from '../fields/Description';
@@ -19,7 +17,6 @@ type CreateFormValues = {
   name: string;
   prompt: string;
   type: 'text' | 'chat';
-  category: string;
   oneliner?: string;
   command?: string;
 };
@@ -28,7 +25,6 @@ const defaultPrompt: CreateFormValues = {
   name: '',
   prompt: '',
   type: 'text',
-  category: '',
   oneliner: undefined,
   command: undefined,
 };
@@ -62,10 +58,7 @@ const CreatePromptForm = ({
   }, [hasAccess, navigate, onSuccess]);
 
   const methods = useForm({
-    defaultValues: {
-      ...defaultValues,
-      category: localStorage.getItem(LocalStorageKeys.LAST_PROMPT_CATEGORY) ?? '',
-    },
+    defaultValues,
   });
 
   const {
@@ -89,11 +82,8 @@ const CreatePromptForm = ({
   const promptText = watch('prompt');
 
   const onSubmit = (data: CreateFormValues) => {
-    const { name, category, oneliner, command, ...rest } = data;
-    const groupData = { name, category } as Pick<
-      CreateFormValues,
-      'name' | 'category' | 'oneliner' | 'command'
-    >;
+    const { name, oneliner, command, ...rest } = data;
+    const groupData: { name: string; oneliner?: string; command?: string } = { name };
     if ((oneliner?.length ?? 0) > 0) {
       groupData.oneliner = oneliner;
     }
@@ -114,10 +104,6 @@ const CreatePromptForm = ({
     <FormProvider {...methods}>
       <form onSubmit={handleSubmit(onSubmit)} className="w-full px-4 py-2">
         <h1 className="sr-only">{localize('com_ui_create_prompt_page')}</h1>
-        <div className="mb-2 flex items-center justify-between gap-2 sm:hidden">
-          <OpenSidebar />
-          <CategorySelector />
-        </div>
         <div className="mb-1 flex flex-col items-center justify-between font-bold sm:text-xl md:mb-0 md:text-2xl">
           <div className="flex w-full flex-col items-center justify-between sm:flex-row">
             <Controller
@@ -125,42 +111,32 @@ const CreatePromptForm = ({
               control={control}
               rules={{ required: localize('com_ui_prompt_name_required') }}
               render={({ field }) => (
-                <div className="relative mb-1 flex w-full flex-col sm:w-auto md:mb-0">
-                  <Input
-                    {...field}
-                    id="prompt-name"
-                    type="text"
-                    className="peer mr-2 w-full border border-border-medium p-2 text-2xl text-text-primary"
-                    placeholder=" "
-                    tabIndex={0}
-                    aria-label={localize('com_ui_prompt_name')}
-                    aria-required="true"
-                  />
-                  <label
-                    htmlFor="prompt-name"
-                    className="pointer-events-none absolute -top-1 left-3 origin-[0] translate-y-3 scale-100 rounded bg-presentation px-1 text-base text-text-secondary transition-transform duration-200 peer-placeholder-shown:translate-y-3 peer-placeholder-shown:scale-100 peer-focus:-translate-y-2 peer-focus:scale-75 peer-focus:text-text-primary peer-[:not(:placeholder-shown)]:-translate-y-2 peer-[:not(:placeholder-shown)]:scale-75"
-                  >
-                    {localize('com_ui_prompt_name')}*
-                  </label>
-                  <div
-                    className={cn(
-                      'mt-1 w-56 text-sm text-red-500',
-                      errors.name ? 'visible h-auto' : 'invisible h-0',
-                    )}
-                  >
-                    {errors.name ? errors.name.message : ' '}
-                  </div>
+                <div className="mb-1 flex w-full flex-col md:mb-0">
+                  <fieldset className="rounded-xl border border-white/[0.15] bg-white/[0.06] backdrop-blur-sm focus-within:border-white/[0.35] dark:border-white/[0.10] dark:bg-white/[0.04] dark:focus-within:border-white/[0.25]">
+                    <legend className="ml-2 px-1 text-xs font-medium text-text-secondary">
+                      {localize('com_ui_prompt_name')}*
+                    </legend>
+                    <input
+                      {...field}
+                      id="prompt-name"
+                      type="text"
+                      className="-mt-1 w-full border-0 bg-transparent px-2 pb-2 text-xl text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-0"
+                      tabIndex={0}
+                      aria-label={localize('com_ui_prompt_name')}
+                      aria-required="true"
+                    />
+                  </fieldset>
+                  {errors.name && (
+                    <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>
+                  )}
                 </div>
               )}
             />
-            <div className="hidden sm:block">
-              <CategorySelector />
-            </div>
           </div>
         </div>
         <div className="flex w-full flex-col gap-4 md:mt-[1.075rem]">
           <div className="flex flex-col">
-            <header className="flex items-center justify-between rounded-t-xl border border-border-medium bg-transparent p-2">
+            <header className="flex items-center justify-between rounded-t-xl border border-white/[0.12] bg-white/[0.06] p-2 backdrop-blur-md dark:border-white/[0.10] dark:bg-white/[0.04]">
               <div className="ml-1 flex items-center gap-2">
                 <FileText className="size-4 text-text-secondary" aria-hidden="true" />
                 <h2 className="text-sm font-semibold text-text-primary">
@@ -171,7 +147,7 @@ const CreatePromptForm = ({
                 <VariablesDropdown fieldName="prompt" />
               </div>
             </header>
-            <div className="min-h-32 rounded-b-xl border border-t-0 border-border-medium p-3 sm:p-4">
+            <div className="min-h-32 rounded-b-xl border border-t-0 border-white/[0.12] bg-white/[0.04] p-3 backdrop-blur-md dark:border-white/[0.08] dark:bg-white/[0.02] sm:p-4">
               <Controller
                 name="prompt"
                 control={control}

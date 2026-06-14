@@ -9,25 +9,27 @@
 
 .aisafe-sidebar-wordmark {
   font-family:
-    'Plus Jakarta Sans',
+    'Inter',
     ui-sans-serif,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  font-weight: 800;
-  letter-spacing: 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 /* Custom Variables */
 :root {
   --aisafe-font-sans:
-    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   --aisafe-font-mono:
     'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
     monospace;
+  --aisafe-font-serif:
+    'EB Garamond', Georgia, 'Times New Roman', ui-serif, serif;
   --white: #fff;
   --black: #000;
   --gray-20: #ececf1;
@@ -155,13 +157,13 @@ html {
   --switch-unchecked: 0 0% 58%;
 
   /* Liquid Glass Design Tokens */
-  --glass-bg: rgba(255, 255, 255, 0.45);
-  --glass-bg-hover: rgba(255, 255, 255, 0.58);
-  --glass-bg-active: rgba(255, 255, 255, 0.68);
-  --glass-bg-subtle: rgba(255, 255, 255, 0.25);
-  --glass-border: rgba(255, 255, 255, 0.35);
-  --glass-border-hover: rgba(255, 255, 255, 0.55);
-  --glass-border-outer: rgba(10, 10, 10, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-bg-hover: rgba(255, 255, 255, 0.82);
+  --glass-bg-active: rgba(255, 255, 255, 0.88);
+  --glass-bg-subtle: rgba(255, 255, 255, 0.45);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-border-hover: rgba(0, 0, 0, 0.18);
+  --glass-border-outer: rgba(0, 0, 0, 0.1);
   --glass-blur: 20px;
   --glass-saturate: 150%;
   --glass-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.5);
@@ -170,6 +172,10 @@ html {
   --glass-focus-ring: 0 0 0 2px rgba(56, 182, 255, 0.4);
   --glass-text: rgba(10, 10, 10, 0.85);
   --glass-text-secondary: rgba(10, 10, 10, 0.55);
+  --ease-glass: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
 }
 .dark {
   --brand-purple: #0d9488;
@@ -237,9 +243,9 @@ html {
   --glass-bg-hover: rgba(255, 255, 255, 0.12);
   --glass-bg-active: rgba(255, 255, 255, 0.16);
   --glass-bg-subtle: rgba(255, 255, 255, 0.04);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  --glass-border-outer: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-border-hover: rgba(255, 255, 255, 0.35);
+  --glass-border-outer: rgba(255, 255, 255, 0.2);
   --glass-blur: 20px;
   --glass-saturate: 150%;
   --glass-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -374,42 +380,50 @@ html {
 
 @font-face {
   font-display: swap;
-  font-family: 'Plus Jakarta Sans';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 400;
-  src: url('$fonts/PlusJakartaSans-400.woff2') format('woff2');
+  src: url('$fonts/Inter-Regular.woff2') format('woff2');
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 500;
-  src: url('$fonts/PlusJakartaSans-500.woff2') format('woff2');
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 400;
+  src: url('$fonts/Inter-Italic.woff2') format('woff2');
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Plus Jakarta Sans';
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 600;
-  src: url('$fonts/PlusJakartaSans-600.woff2') format('woff2');
+  src: url('$fonts/Inter-SemiBold.woff2') format('woff2');
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Plus Jakarta Sans';
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 600;
+  src: url('$fonts/Inter-SemiBoldItalic.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Inter';
   font-style: normal;
   font-weight: 700;
-  src: url('$fonts/PlusJakartaSans-700.woff2') format('woff2');
+  src: url('$fonts/Inter-Bold.woff2') format('woff2');
 }
 
 @font-face {
   font-display: swap;
-  font-family: 'Plus Jakarta Sans';
-  font-style: normal;
-  font-weight: 800;
-  src: url('$fonts/PlusJakartaSans-800.woff2') format('woff2');
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 700;
+  src: url('$fonts/Inter-BoldItalic.woff2') format('woff2');
 }
 
 @font-face {
@@ -3027,19 +3041,19 @@ body {
 
 .aisafe-chat-bg {
   background:
-    radial-gradient(ellipse at 10% 10%, rgba(255, 183, 77, 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 5%, rgba(186, 85, 211, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 45% 20%, rgba(56, 182, 255, 0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 30%, rgba(0, 200, 170, 0.2) 0%, transparent 50%),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 186, 73, 0.2) 0%, transparent 44%),
+    radial-gradient(ellipse at 72% 0%, rgba(125, 92, 255, 0.16) 0%, transparent 42%),
+    radial-gradient(ellipse at 54% 22%, rgba(56, 182, 255, 0.12) 0%, transparent 48%),
+    radial-gradient(ellipse at 88% 38%, rgba(0, 200, 170, 0.1) 0%, transparent 44%),
     var(--presentation) !important;
 }
 
 .dark .aisafe-chat-bg {
   background:
-    radial-gradient(ellipse at 10% 10%, rgba(255, 183, 77, 0.4) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 5%, rgba(186, 85, 211, 0.35) 0%, transparent 50%),
-    radial-gradient(ellipse at 45% 20%, rgba(56, 182, 255, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 90% 30%, rgba(0, 255, 200, 0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 18% 0%, rgba(255, 183, 77, 0.25) 0%, transparent 44%),
+    radial-gradient(ellipse at 72% 0%, rgba(125, 92, 255, 0.22) 0%, transparent 42%),
+    radial-gradient(ellipse at 54% 22%, rgba(56, 182, 255, 0.16) 0%, transparent 48%),
+    radial-gradient(ellipse at 88% 38%, rgba(0, 255, 200, 0.12) 0%, transparent 44%),
     var(--presentation) !important;
 }
 
@@ -3056,6 +3070,154 @@ body {
   100% {
     background-position: 70% 10%;
   }
+}
+
+/* ── AISafe Skill Chips ── */
+.aisafe-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 9999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  background: rgba(16, 185, 129, 0.10);
+  color: #065f46;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.12);
+  transition: all 200ms ease;
+}
+.aisafe-skill-chip:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+.dark .aisafe-skill-chip {
+  border-color: rgba(110, 231, 183, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  color: #6ee7b7;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.15);
+}
+.dark .aisafe-skill-chip:hover {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(110, 231, 183, 0.45);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+}
+.aisafe-skill-chip .skill-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 1px;
+  margin-left: 2px;
+  margin-right: -4px;
+  color: inherit;
+  opacity: 0.6;
+  transition: all 150ms ease;
+}
+.aisafe-skill-chip .skill-remove-btn:hover {
+  opacity: 1;
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.aisafe-inline-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  border-radius: 7px;
+  padding: 2px 7px;
+  background: rgba(59, 130, 246, 0.18);
+  color: #1d4ed8;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.dark .aisafe-inline-skill-chip {
+  background: rgba(96, 165, 250, 0.22);
+  color: #bfdbfe;
+}
+
+.aisafe-inline-skill-chip .skill-remove-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 1px;
+  color: inherit;
+  opacity: 0.55;
+  transition: opacity 150ms ease, background 150ms ease;
+}
+
+.aisafe-inline-skill-chip .skill-remove-btn:hover {
+  opacity: 1;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+/* ── AISafe Inspirational Quote ── */
+.aisafe-quote {
+  font-family: var(--aisafe-font-serif);
+  font-style: italic;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  opacity: 0.55;
+  text-align: center;
+  max-width: 420px;
+  margin: 0 auto;
+  transition: opacity 600ms ease;
+  letter-spacing: 0.01em;
+}
+.aisafe-quote-fade-enter {
+  opacity: 0;
+}
+.aisafe-quote-fade-active {
+  opacity: 0.55;
+}
+.dark .aisafe-quote {
+  opacity: 0.45;
+}
+.dark .aisafe-quote-fade-active {
+  opacity: 0.45;
+}
+
+/* ── AISafe Footer Links ── */
+.aisafe-footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-family: var(--aisafe-font-sans);
+  letter-spacing: 0.02em;
+}
+.aisafe-footer-links a {
+  color: rgba(0, 0, 0, 0.5);
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 200ms ease;
+}
+.aisafe-footer-links a:hover {
+  color: rgba(0, 0, 0, 0.75);
+}
+.aisafe-footer-links .footer-dot {
+  color: rgba(0, 0, 0, 0.35);
+  font-size: 8px;
+}
+.dark .aisafe-footer-links a {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+.dark .aisafe-footer-links a:hover {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+.dark .aisafe-footer-links .footer-dot {
+  color: var(--text-secondary);
+  opacity: 0.3;
 }
 
 /* ── Liquid Glass Utility Classes ── */
@@ -3095,6 +3257,22 @@ body {
 }
 .glass-input::placeholder {
   color: var(--glass-text-secondary);
+}
+.glass-input:hover {
+  border-color: var(--glass-border-hover);
+}
+.glass-dialog {
+  background: linear-gradient(180deg, var(--glass-bg-active), var(--glass-bg));
+  border: 1px solid var(--glass-border-outer);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-hover);
+  transition: all var(--duration-base) var(--ease-glass);
+}
+.glass-overlay {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 /* ── Full-viewport aurora gradient ── */
@@ -3140,15 +3318,11 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  backdrop-filter: blur(40px) saturate(180%);
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset -1px 0 0 rgba(255, 255, 255, 0.15),
-    0 12px 40px rgba(17, 24, 39, 0.08),
-    0 2px 8px rgba(17, 24, 39, 0.04);
+  background: var(--glass-bg-subtle);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-outer);
 }
 
 .aisafe-sidebar-shell::before {
@@ -3171,20 +3345,20 @@ body {
 }
 
 .aisafe-sidebar-expanded {
-  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+  border-bottom: 1px solid var(--glass-border-outer);
 }
 
 .aisafe-sidebar-nav {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--glass-bg-subtle);
 }
 
 .aisafe-sidebar-footer {
   position: relative;
   z-index: 1;
-  border-color: rgba(10, 10, 10, 0.1);
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-subtle);
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
 
 .aisafe-sidebar-nav-item {
@@ -3195,19 +3369,15 @@ body {
 
 .aisafe-sidebar-nav-item:hover,
 .aisafe-sidebar-nav-item:focus-visible {
-  border-color: rgba(10, 10, 10, 0.09);
-  background: rgba(255, 255, 255, 0.42);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.42),
-    0 10px 24px rgba(17, 24, 39, 0.08);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-hover);
 }
 
 .aisafe-sidebar-nav-item-active {
-  border-color: rgba(10, 10, 10, 0.12);
-  background: rgba(255, 255, 255, 0.54);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.62),
-    0 14px 30px rgba(17, 24, 39, 0.11);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-active);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-hover);
 }
 
 .aisafe-sidebar-wordmark {
@@ -3216,34 +3386,87 @@ body {
   text-shadow: 0 1px 18px rgba(20, 184, 166, 0.16);
 }
 
-.aisafe-hero-quote {
-  font-family: Georgia, 'Times New Roman', ui-serif, serif;
-  letter-spacing: 0;
+.aisafe-hero-quote,
+.imagegen-hero-title.split-parent {
+  font-family: var(--aisafe-font-sans);
+  font-weight: 700;
+  letter-spacing: -0.018em;
   text-wrap: balance;
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.28),
     0 18px 45px rgba(17, 24, 39, 0.12);
+}
+
+.imagegen-hero-title.split-parent {
+  display: block;
+  overflow: visible;
+  line-height: 1.16;
+}
+
+.aisafe-handwritten-quote {
+  min-height: 34px;
+  margin: 0;
+  color: color-mix(in srgb, var(--text-secondary) 86%, var(--text-primary));
+  font-family:
+    'Segoe Script', 'Lucida Handwriting', 'Apple Chancery', 'Brush Script MT', cursive;
+  font-size: clamp(17px, 1.55vw, 23px);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.aisafe-handwritten-quote::before,
+.aisafe-handwritten-quote::after {
+  color: color-mix(in srgb, var(--text-secondary) 58%, transparent);
+}
+
+.aisafe-handwritten-quote::before {
+  content: '"';
+}
+
+.aisafe-handwritten-quote::after {
+  content: '"';
+}
+
+.quote-character {
+  opacity: 0;
+}
+
+.quote-character-visible {
+  animation: handwriting-ink 260ms ease-out both;
+}
+
+@keyframes handwriting-ink {
+  from {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
 }
 
 .popover-ui,
 .aisafe-glass-dialog {
-  border: 1px solid rgba(10, 10, 10, 0.1);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.44));
-  backdrop-filter: blur(30px) saturate(165%);
-  -webkit-backdrop-filter: blur(30px) saturate(165%);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: linear-gradient(180deg, rgba(252, 253, 255, 0.94), rgba(247, 249, 255, 0.88));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.54),
-    0 24px 70px rgba(17, 24, 39, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 16px 48px rgba(17, 24, 39, 0.14);
 }
 
 .dark .aisafe-sidebar-shell {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset -1px 0 0 rgba(255, 255, 255, 0.03),
-    0 12px 40px rgba(0, 0, 0, 0.3),
-    0 2px 8px rgba(0, 0, 0, 0.15);
+  background: var(--glass-bg-subtle);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-outer);
 }
 
 .dark .aisafe-sidebar-shell::before {
@@ -3251,31 +3474,29 @@ body {
 }
 
 .dark .aisafe-sidebar-expanded {
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: var(--glass-border-outer);
 }
 
 .dark .aisafe-sidebar-nav {
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--glass-bg-subtle);
 }
 
 .dark .aisafe-sidebar-footer {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.035);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-subtle);
 }
 
 .dark .aisafe-sidebar-nav-item:hover,
 .dark .aisafe-sidebar-nav-item:focus-visible {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-hover);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-hover);
 }
 
 .dark .aisafe-sidebar-nav-item-active {
-  border-color: rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.11);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 14px 30px rgba(0, 0, 0, 0.25);
+  border-color: var(--glass-border-outer);
+  background: var(--glass-bg-active);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-hover);
 }
 
 .dark .aisafe-hero-quote {
@@ -3286,8 +3507,8 @@ body {
 
 .dark .popover-ui,
 .dark .aisafe-glass-dialog {
-  border-color: rgba(255, 255, 255, 0.1);
-  background: linear-gradient(180deg, rgba(22, 22, 24, 0.74), rgba(22, 22, 24, 0.52));
+  border-color: var(--glass-border);
+  background: linear-gradient(180deg, var(--glass-bg-active), var(--glass-bg));
 }
 
 .glass-border {
@@ -3304,11 +3525,9 @@ body {
   height: 100%;
   border-radius: 0;
   border-width: 0 1px 0 0;
-  border-color: rgba(10, 10, 10, 0.1);
+  border-color: var(--glass-border-outer);
   background: var(--glass-bg-subtle);
-  box-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.32),
-    10px 0 35px rgba(17, 24, 39, 0.08);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-outer);
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
 }
@@ -3318,22 +3537,65 @@ body {
 }
 
 .aisafe-sidebar-panel .aisafe-sidebar-nav {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg-subtle);
 }
 
 .aisafe-sidebar-panel .aisafe-sidebar-footer {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--glass-bg-subtle);
 }
 
 .dark .aisafe-sidebar-panel .aisafe-sidebar-shell {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--glass-border-outer);
   background: var(--glass-bg-subtle);
-  box-shadow:
-    inset -1px 0 0 rgba(255, 255, 255, 0.05),
-    10px 0 35px rgba(0, 0, 0, 0.24);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-outer);
 }
 
 .dark .aisafe-sidebar-panel .aisafe-sidebar-nav,
 .dark .aisafe-sidebar-panel .aisafe-sidebar-footer {
-  background: rgba(255, 255, 255, 0.035);
+  background: var(--glass-bg-subtle);
+}
+
+.voice-waveform {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 28px;
+  height: 18px;
+}
+
+.voice-waveform span {
+  width: 2px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.86;
+  animation: voice-wave 900ms ease-in-out infinite;
+}
+
+.voice-waveform span:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.voice-waveform span:nth-child(3) {
+  animation-delay: 180ms;
+}
+
+.voice-waveform span:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+.voice-waveform span:nth-child(5) {
+  animation-delay: 360ms;
+}
+
+@keyframes voice-wave {
+  0%, 100% {
+    height: 5px;
+    transform: translateY(0);
+  }
+  50% {
+    height: 17px;
+    transform: translateY(-1px);
+  }
 }
