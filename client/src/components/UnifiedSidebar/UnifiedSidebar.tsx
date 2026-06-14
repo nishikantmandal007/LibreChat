@@ -180,7 +180,7 @@ function UnifiedSidebar() {
     <SidebarChatProvider>
       <ActivePanelProvider>
         <aside
-          className="aisafe-sidebar-frame aisafe-sidebar-panel fixed left-0 top-0 z-40 h-screen overflow-hidden"
+          className="aisafe-sidebar-frame aisafe-sidebar-panel fixed left-0 top-0 z-40 h-screen overflow-hidden border-r border-border-light dark:border-white/10"
           style={{
             width: expanded ? sidebarWidth : COLLAPSED_WIDTH,
             minWidth: expanded ? EXPANDED_MIN : COLLAPSED_WIDTH,

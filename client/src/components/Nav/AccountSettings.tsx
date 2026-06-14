@@ -32,10 +32,10 @@ function AccountSettings({ collapsed = false }: { collapsed?: boolean }) {
         }
       >
         <div
-          className={collapsed ? 'size-7 flex-shrink-0' : '-ml-0.9 -mt-0.8 h-8 w-8 flex-shrink-0'}
+          className={collapsed ? 'size-9 flex-shrink-0' : '-ml-0.9 -mt-0.8 h-8 w-8 flex-shrink-0'}
         >
           <div className="relative flex">
-            <Avatar user={user} size={collapsed ? 28 : 32} />
+            <Avatar user={user} size={collapsed ? 36 : 32} />
           </div>
         </div>
         {!collapsed && (

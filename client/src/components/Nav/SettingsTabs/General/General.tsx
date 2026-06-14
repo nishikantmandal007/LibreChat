@@ -6,6 +6,8 @@ import ArchivedChats from './ArchivedChats';
 import ToggleSwitch from '../ToggleSwitch';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
+import { Monitor, Sun, Moon } from 'lucide-react';
+import { cn } from '~/utils';
 
 const toggleSwitchConfigs = [
   {
@@ -55,29 +57,44 @@ export const ThemeSelector = ({
   portal?: boolean;
 }) => {
   const localize = useLocalize();
-
-  const themeOptions = [
-    { value: 'system', label: localize('com_nav_theme_system') },
-    { value: 'dark', label: localize('com_nav_theme_dark') },
-    { value: 'light', label: localize('com_nav_theme_light') },
-  ];
-
   const labelId = 'theme-selector-label';
 
   return (
     <div className="flex items-center justify-between">
       <div id={labelId}>{localize('com_nav_theme')}</div>
 
-      <Dropdown
-        value={theme}
-        onChange={onChange}
-        options={themeOptions}
-        sizeClasses="w-[180px]"
-        testId="theme-selector"
-        className="z-50"
-        aria-labelledby={labelId}
-        portal={portal}
-      />
+      <div className="flex items-center gap-1 rounded-lg border border-border-light bg-surface-tertiary p-1 dark:border-white/10 dark:bg-gray-900/50">
+        <button
+          onClick={() => onChange('system')}
+          className={cn(
+            'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
+            theme === 'system' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+          )}
+          title={localize('com_nav_theme_system')}
+        >
+          <Monitor className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onChange('light')}
+          className={cn(
+            'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
+            theme === 'light' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+          )}
+          title={localize('com_nav_theme_light')}
+        >
+          <Sun className="h-4 w-4" />
+        </button>
+        <button
+          onClick={() => onChange('dark')}
+          className={cn(
+            'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
+            theme === 'dark' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+          )}
+          title={localize('com_nav_theme_dark')}
+        >
+          <Moon className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   );
 };
