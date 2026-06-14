@@ -68,7 +68,7 @@ export const ThemeSelector = ({
           onClick={() => onChange('system')}
           className={cn(
             'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
-            theme === 'system' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+            theme === 'system' ? 'glass-surface text-text-primary' : 'text-text-secondary hover:text-text-primary'
           )}
           title={localize('com_nav_theme_system')}
         >
@@ -78,7 +78,7 @@ export const ThemeSelector = ({
           onClick={() => onChange('light')}
           className={cn(
             'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
-            theme === 'light' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+            theme === 'light' ? 'glass-surface text-text-primary' : 'text-text-secondary hover:text-text-primary'
           )}
           title={localize('com_nav_theme_light')}
         >
@@ -88,7 +88,7 @@ export const ThemeSelector = ({
           onClick={() => onChange('dark')}
           className={cn(
             'flex h-8 w-12 items-center justify-center rounded-md transition-colors',
-            theme === 'dark' ? 'bg-white text-text-primary shadow-sm dark:bg-gray-700' : 'text-text-secondary hover:text-text-primary'
+            theme === 'dark' ? 'glass-surface text-text-primary' : 'text-text-secondary hover:text-text-primary'
           )}
           title={localize('com_nav_theme_dark')}
         >

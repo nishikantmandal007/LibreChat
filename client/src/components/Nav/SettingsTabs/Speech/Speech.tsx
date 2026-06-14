@@ -160,7 +160,7 @@ function Speech() {
           <Tabs.Trigger
             onClick={() => setAdvancedMode(false)}
             className={cn(
-              'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:bg-secondary radix-state-active:text-foreground radix-state-active:shadow-lg',
+              'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:text-foreground radix-state-active:bg-[var(--glass-bg)] radix-state-active:[backdrop-filter:blur(20px)_saturate(150%)] radix-state-active:shadow-[var(--glass-shadow-outer)] border border-transparent radix-state-active:border-[var(--glass-border-outer)]',
               isSmallScreen ? 'flex-row rounded-lg' : 'rounded-xl',
               'w-full',
             )}
@@ -173,7 +173,7 @@ function Speech() {
           <Tabs.Trigger
             onClick={() => setAdvancedMode(true)}
             className={cn(
-              'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:bg-secondary radix-state-active:text-foreground radix-state-active:shadow-lg',
+              'group m-1 flex items-center justify-center gap-2 bg-transparent px-4 py-2 text-sm text-text-secondary transition-all duration-200 ease-in-out radix-state-active:text-foreground radix-state-active:bg-[var(--glass-bg)] radix-state-active:[backdrop-filter:blur(20px)_saturate(150%)] radix-state-active:shadow-[var(--glass-shadow-outer)] border border-transparent radix-state-active:border-[var(--glass-border-outer)]',
               isSmallScreen ? 'flex-row rounded-lg' : 'rounded-xl',
               'w-full',
             )}
