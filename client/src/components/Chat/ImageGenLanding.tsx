@@ -4,13 +4,13 @@ import { SplitText } from '@librechat/client';
 import { useSubmitMessage } from '~/hooks';
 
 const SAMPLE_IMAGES = [
-  '/assets/imagegen/cosmic.jpg',
-  '/assets/imagegen/cyberpunk.jpg',
-  '/assets/imagegen/landscape.jpg',
-  '/assets/imagegen/abstract.jpg',
-  '/assets/imagegen/portrait.jpg',
-  '/assets/imagegen/nature.jpg',
-];
+  'assets/imagegen/cosmic.jpg',
+  'assets/imagegen/cyberpunk.jpg',
+  'assets/imagegen/landscape.jpg',
+  'assets/imagegen/abstract.jpg',
+  'assets/imagegen/portrait.jpg',
+  'assets/imagegen/nature.jpg',
+].map((path) => `${import.meta.env.BASE_URL}${path}`);
 
 const STARTER_PROMPTS = [
   'A serene Japanese garden at twilight with glowing lanterns and cherry blossoms',
