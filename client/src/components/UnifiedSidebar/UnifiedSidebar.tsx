@@ -135,7 +135,7 @@ function UnifiedSidebar() {
       <>
         <div
           className={cn(
-            'aisafe-sidebar-frame fixed left-0 top-0 z-[110] flex h-full',
+            'aisafe-sidebar-frame fixed left-0 top-0 z-[110] flex h-[100dvh]',
             expanded ? 'translate-x-0' : '-translate-x-full',
           )}
           style={{

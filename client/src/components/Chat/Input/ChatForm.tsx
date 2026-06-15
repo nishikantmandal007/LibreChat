@@ -198,7 +198,7 @@ const ChatForm = memo(function ChatForm({
   const baseClasses = useMemo(
     () =>
       cn(
-        'md:py-4.5 m-0 w-full resize-none py-4 text-base placeholder-black/60 bg-transparent dark:placeholder-white/60 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
+        'md:py-4.5 m-0 w-full resize-none py-2.5 text-base placeholder-black/60 bg-transparent dark:placeholder-white/60 [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)]',
         isCollapsed ? 'max-h-[52px]' : 'max-h-[45vh] md:max-h-[55vh]',
         isMoreThanThreeRows ? 'pl-5' : 'px-5',
       ),
@@ -237,7 +237,7 @@ const ChatForm = memo(function ChatForm({
           <div
             onClick={handleContainerClick}
             className={cn(
-              'relative flex w-full flex-grow flex-col overflow-hidden rounded-t-3xl border pb-4 text-text-primary transition-all duration-200 sm:rounded-3xl sm:pb-0',
+              'relative flex w-full flex-grow flex-col overflow-hidden rounded-t-3xl border pb-1.5 text-text-primary transition-all duration-200 sm:rounded-3xl sm:pb-0',
               isTextAreaFocused ? 'shadow-lg' : 'shadow-md',
               isTemporary
                 ? 'border-violet-800/60 bg-violet-950/10'

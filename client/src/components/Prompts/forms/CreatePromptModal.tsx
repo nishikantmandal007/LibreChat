@@ -43,7 +43,7 @@ export default function CreatePromptModal({ open, onOpenChange }: CreatePromptMo
           <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
             <DialogPanel
               className={cn(
-                'aisafe-glass-dialog flex h-[680px] w-full max-w-[876px] flex-col overflow-hidden rounded-xl shadow-2xl backdrop-blur-2xl animate-in',
+                'aisafe-glass-dialog flex h-[680px] max-h-[calc(100dvh-2rem)] w-full max-w-[876px] flex-col overflow-hidden rounded-xl shadow-2xl backdrop-blur-2xl animate-in',
               )}
             >
               <DialogTitle className="flex shrink-0 items-center justify-between border-b border-white/[0.10] px-6 py-4" as="div">

@@ -18,7 +18,7 @@ export default function ArchivedChats() {
         </OGDialogTrigger>
         <OGDialogTemplate
           title={localize('com_nav_archived_chats')}
-          className="h-[680px] w-full max-w-[876px]"
+          className="h-[680px] max-h-[calc(100dvh-2rem)] w-full max-w-[876px]"
           showCancelButton={false}
           main={<ArchivedChatsTable isOpen={isOpen} onOpenChange={setIsOpen} />}
         />

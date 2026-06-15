@@ -85,7 +85,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
           <div className={cn('fixed inset-0 flex w-screen items-center justify-center p-4')}>
             <DialogPanel
               className={cn(
-                'aisafe-glass-dialog flex h-[680px] flex-col overflow-hidden rounded-xl rounded-b-lg shadow-2xl backdrop-blur-2xl animate-in sm:rounded-2xl md:w-[876px]',
+                'aisafe-glass-dialog flex h-[680px] max-h-[calc(100dvh-2rem)] w-full max-w-[876px] flex-col overflow-hidden rounded-xl rounded-b-lg shadow-2xl backdrop-blur-2xl animate-in sm:rounded-2xl md:w-[876px]',
               )}
             >
               <DialogTitle

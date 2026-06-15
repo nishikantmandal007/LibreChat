@@ -27,7 +27,7 @@ function Header() {
     <div className="absolute top-0 z-10 flex h-[72px] w-full items-center justify-between bg-transparent px-2 pb-2 pt-3 font-semibold text-text-primary">
       <div className="hide-scrollbar flex w-full items-center justify-between gap-2 overflow-x-auto">
         <div className="mx-1 flex items-center">
-          <OpenSidebar className="md:hidden" />
+          {isSmallScreen && <OpenSidebar />}
           {!(navVisible && isSmallScreen) && (
             <div
               className={cn(

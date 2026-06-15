@@ -24,7 +24,7 @@ export default function Landing({
         <h1 className="aisafe-hero-quote animate-fadeIn max-w-4xl px-4 text-3xl font-bold leading-tight text-text-primary sm:text-5xl">
           {greetingText}
         </h1>
-        <InspirationalQuote className="animate-fadeIn px-4 whitespace-nowrap" />
+        <InspirationalQuote className="animate-fadeIn px-4" />
       </div>
     </div>
   );
