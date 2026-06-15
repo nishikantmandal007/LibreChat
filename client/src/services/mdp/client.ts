@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+import { MDP_INFO_STORAGE_KEY, readMDPStorageInfo } from './sessionAuth';
+
 import type { MDPApiResponse } from './types';
 
-const MDP_TOKEN_KEY = 'jwtToken';
+/** @deprecated Legacy LibreChat-only token key; use `localStorage.info.jwtToken` instead. */
+const LEGACY_MDP_TOKEN_KEY = 'mdp_jwt_token';
 const MDP_API_BASE_URL = import.meta.env.VITE_MDP_API_BASE_URL || '';
 
 export const mdpClient = axios.create({
@@ -54,7 +57,7 @@ function isJwtAuthFailure(error: unknown): boolean {
 }
 
 mdpClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(MDP_TOKEN_KEY) || import.meta.env.VITE_MDP_JWT_TOKEN;
+  const token = getMDPToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -74,22 +77,51 @@ mdpClient.interceptors.response.use(
   },
   (error) => {
     if (isJwtAuthFailure(error) && getMDPToken()) {
-      localStorage.removeItem(MDP_TOKEN_KEY);
+      clearMDPToken();
     }
     return Promise.reject(new Error(getApiErrorMessage(error)));
   },
 );
 
+function getDevFallbackToken(): string | null {
+  const devToken = import.meta.env.VITE_MDP_JWT_TOKEN;
+  return typeof devToken === 'string' && devToken.trim() ? devToken : null;
+}
+
+/** @deprecated Writes to shared MDP session (`localStorage.info`) instead of `mdp_jwt_token`. */
 export function setMDPToken(token: string): void {
-  localStorage.setItem(MDP_TOKEN_KEY, token);
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+
+  const existing = readMDPStorageInfo();
+  const info = existing ? { ...existing, jwtToken: token } : { jwtToken: token };
+  window.localStorage.setItem(MDP_INFO_STORAGE_KEY, JSON.stringify(info));
+  window.localStorage.removeItem(LEGACY_MDP_TOKEN_KEY);
 }
 
 export function getMDPToken(): string | null {
-  return localStorage.getItem(MDP_TOKEN_KEY) || import.meta.env.VITE_MDP_JWT_TOKEN || null;
+  const info = readMDPStorageInfo();
+  if (info?.jwtToken?.trim()) {
+    return info.jwtToken;
+  }
+
+  return getDevFallbackToken();
 }
 
 export function clearMDPToken(): void {
-  localStorage.removeItem(MDP_TOKEN_KEY);
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+
+  const info = readMDPStorageInfo();
+  if (info) {
+    const updated = { ...info };
+    delete updated.jwtToken;
+    window.localStorage.setItem(MDP_INFO_STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  window.localStorage.removeItem(LEGACY_MDP_TOKEN_KEY);
 }
 
 export interface MDPJwtPayload {
