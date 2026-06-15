@@ -1,6 +1,7 @@
 import 'regenerator-runtime/runtime';
 import { createRoot } from 'react-dom/client';
 import { installApiInterceptor } from './services/mdp/intercept';
+import { ensureMDPSessionFresh } from './services/mdp/sessionRefresh';
 import './locales/i18n';
 import App from './App';
 import './style.css';
@@ -14,8 +15,10 @@ installApiInterceptor();
 const container = document.getElementById('root');
 const root = createRoot(container);
 
-root.render(
-  <ApiErrorBoundaryProvider>
-    <App />
-  </ApiErrorBoundaryProvider>,
-);
+void ensureMDPSessionFresh().finally(() => {
+  root.render(
+    <ApiErrorBoundaryProvider>
+      <App />
+    </ApiErrorBoundaryProvider>,
+  );
+});

@@ -20,6 +20,7 @@ export {
 
 export {
   MDP_INFO_STORAGE_KEY,
+  clearMDPSessionAuth,
   decodeMDPJwtClaims,
   getMDPSessionAuth,
   isJwtExpired,
@@ -27,7 +28,15 @@ export {
   parseMDPStorageInfo,
   readMDPStorageInfo,
   readMDPSessionAuth,
+  updateMDPStoredJwtToken,
 } from './sessionAuth';
+
+export {
+  ensureMDPSessionFresh,
+  isMDPSessionAuthenticated,
+  refreshMDPSessionFromStorage,
+  refreshMDPSessionToken,
+} from './sessionRefresh';
 
 export {
   listPremadePrompts,

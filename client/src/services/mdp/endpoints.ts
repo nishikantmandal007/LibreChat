@@ -23,4 +23,5 @@ export const MDP_ENDPOINTS = {
   premadePrompts: `${BASE}/premade-prompts`,
   documentTemplates: `${BASE}/document-templates`,
   artifacts: `${BASE}/artifacts`,
+  modifyToken: '/mdp/app-safe-idm/modify-token',
 };

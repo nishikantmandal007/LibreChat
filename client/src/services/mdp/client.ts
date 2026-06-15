@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-import { MDP_INFO_STORAGE_KEY, readMDPStorageInfo } from './sessionAuth';
+import { MDP_INFO_STORAGE_KEY, clearMDPSessionAuth, readMDPStorageInfo, updateMDPStoredJwtToken } from './sessionAuth';
+import { ensureMDPSessionFresh } from './sessionRefresh';
 
 import type { MDPApiResponse } from './types';
 
@@ -56,7 +57,8 @@ function isJwtAuthFailure(error: unknown): boolean {
   return typeof authError === 'string' && /token|signature|authorization/i.test(authError);
 }
 
-mdpClient.interceptors.request.use((config) => {
+mdpClient.interceptors.request.use(async (config) => {
+  await ensureMDPSessionFresh();
   const token = getMDPToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -77,7 +79,7 @@ mdpClient.interceptors.response.use(
   },
   (error) => {
     if (isJwtAuthFailure(error) && getMDPToken()) {
-      clearMDPToken();
+      clearMDPSessionAuth();
     }
     return Promise.reject(new Error(getApiErrorMessage(error)));
   },
@@ -94,9 +96,7 @@ export function setMDPToken(token: string): void {
     return;
   }
 
-  const existing = readMDPStorageInfo();
-  const info = existing ? { ...existing, jwtToken: token } : { jwtToken: token };
-  window.localStorage.setItem(MDP_INFO_STORAGE_KEY, JSON.stringify(info));
+  updateMDPStoredJwtToken(token);
   window.localStorage.removeItem(LEGACY_MDP_TOKEN_KEY);
 }
 
