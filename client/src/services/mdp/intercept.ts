@@ -128,8 +128,9 @@ function localPathFromUrl(url: string): string | null {
   }
 
   const baseHref = document.querySelector('base')?.getAttribute('href') || '/';
-  if (baseHref !== '/' && path.startsWith(baseHref)) {
-    path = path.slice(baseHref.length) || '/';
+  const basePrefix = baseHref.replace(/\/+$/, '');
+  if (basePrefix && path.startsWith(`${basePrefix}/`)) {
+    path = path.slice(basePrefix.length);
   }
 
   if (path === '/health') {
