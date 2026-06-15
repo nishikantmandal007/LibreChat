@@ -71,7 +71,7 @@ const NewChatButton = memo(function NewChatButton({
       description={localize('com_ui_new_chat')}
       render={
         <a
-          href="/c/new"
+          href={`${import.meta.env.BASE_URL}c/new`}
           data-testid="new-chat-button"
           aria-label={localize('com_ui_new_chat')}
           className={layout === 'row' ? rowButtonClass : iconButtonClass}

@@ -14,7 +14,7 @@ export default function NewChat({ className }: { className?: string }) {
 
   const clickHandler: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (e.button === 0 && (e.ctrlKey || e.metaKey)) {
-      window.open('/c/new', '_blank');
+      window.open(`${import.meta.env.BASE_URL}c/new`, '_blank');
       return;
     }
     clearMessagesCache(queryClient, conversation?.conversationId);

@@ -35,7 +35,7 @@ const TwoFactorScreen: React.FC = React.memo(() => {
   const { mutate: verifyTempMutate } = useVerifyTwoFactorTempMutation({
     onSuccess: (result) => {
       if (result.token != null && result.token !== '') {
-        window.location.href = '/';
+        window.location.href = import.meta.env.BASE_URL;
       }
     },
     onMutate: () => {
