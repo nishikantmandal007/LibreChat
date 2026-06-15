@@ -3,6 +3,7 @@ import { mdpClient } from './client';
 import { MDP_ENDPOINTS } from './endpoints';
 import {
   getModelCatalogItem,
+  IMAGE_GEN_MODEL_KEY,
   MAYA_CHAT_MODEL_LABELS,
   MAYA_DEFAULT_ENDPOINT,
   MAYA_DEFAULT_MODEL,
@@ -217,10 +218,16 @@ export async function getSessionMessages(sessionId: string): Promise<TMessage[]>
       prompt.llm_response,
       promptRecord.response,
     );
-    const promptModelKey = firstString(
-      prompt.model_key,
-      promptRecord.model_key as string,
-    ) || MAYA_DEFAULT_MODEL;
+    /**
+     * Image-gen results are persisted by the backend under a chat model_key, but the
+     * UI must treat them as the image-gen model so the thread stays borderless, keeps
+     * the download action, and shows the "Image Generation" label on every flow
+     * (fresh generation and reload from history).
+     */
+    const isImageResponse = promptRecord.responseType === 'img' || prompt.responseType === 'img';
+    const promptModelKey = isImageResponse
+      ? IMAGE_GEN_MODEL_KEY
+      : firstString(prompt.model_key, promptRecord.model_key as string) || MAYA_DEFAULT_MODEL;
     const promptCatalogItem = getModelCatalogItem(promptModelKey);
     const modelLabel = promptCatalogItem?.label ?? MAYA_CHAT_MODEL_LABELS[promptModelKey] ?? promptModelKey;
     const messageEndpoint = (promptCatalogItem?.endpoint ?? MAYA_DEFAULT_ENDPOINT) as EModelEndpoint;
@@ -271,8 +278,6 @@ export async function getSessionMessages(sessionId: string): Promise<TMessage[]>
       });
     }
 
-    const isImageResponse = promptRecord.responseType === 'img' || prompt.responseType === 'img';
-
     messages.push({
       messageId: assistantMessageId,
       conversationId: sessionId,
@@ -301,10 +306,10 @@ export async function getSessionMessages(sessionId: string): Promise<TMessage[]>
   if (prompts.length > 0) {
     const lastPrompt = prompts[prompts.length - 1];
     const lastRecord = asRecord(lastPrompt);
-    const lastModelKey = firstString(
-      lastPrompt.model_key,
-      lastRecord.model_key as string,
-    ) || MAYA_DEFAULT_MODEL;
+    const lastIsImage = lastRecord.responseType === 'img' || lastPrompt.responseType === 'img';
+    const lastModelKey = lastIsImage
+      ? IMAGE_GEN_MODEL_KEY
+      : firstString(lastPrompt.model_key, lastRecord.model_key as string) || MAYA_DEFAULT_MODEL;
     const lastCatalog = getModelCatalogItem(lastModelKey);
     setConversationModel(
       sessionId,

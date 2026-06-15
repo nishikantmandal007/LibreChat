@@ -25,6 +25,7 @@ import { useModelSelectorChatContext } from './ModelSelectorChatContext';
 import useSelectMention from '~/hooks/Input/useSelectMention';
 import { shouldBlockModelSwitch, type ModelSelection } from './modelSwitchGuard';
 import { filterItems } from './utils';
+import { IMAGE_GEN_MODEL_KEY, isImageGenModel } from '~/services/mdp/modelConfig';
 import store from '~/store';
 
 type ModelSelectorContextType = {
@@ -291,6 +292,20 @@ export function ModelSelectorProvider({ children, startupConfig }: ModelSelector
 
   const handleSelectModel = useCallback(
     (endpoint: Endpoint, model: string) => {
+      /**
+       * Selecting the image-generation model mirrors the sidebar "Generate Image"
+       * action: enter image-gen mode and open its landing page instead of treating
+       * it as a normal chat model.
+       */
+      if (isImageGenModel(model)) {
+        setImageGenEnabled(true);
+        setSelectedValues({ endpoint: endpoint.value, model, modelSpec: '' });
+        newConversation({
+          template: { endpoint: EModelEndpoint.openAI, model: IMAGE_GEN_MODEL_KEY },
+          buildDefault: false,
+        });
+        return;
+      }
       setImageGenEnabled(false);
       const modelDisplayName = getModelDisplayName(endpoint, model);
       const nextSelection = {

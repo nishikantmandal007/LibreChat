@@ -9,7 +9,11 @@ import { CLOSE_SIDEBAR_ID } from '~/components/Chat/Menus/OpenSidebar';
 import { useActivePanel, resolveActivePanel, DEFAULT_PANEL } from '~/Providers';
 import { useLocalize, useNewConvo } from '~/hooks';
 import { clearMessagesCache, cn } from '~/utils';
-import { MAYA_DEFAULT_ENDPOINT, MAYA_DEFAULT_MODEL } from '~/services/mdp/modelConfig';
+import {
+  MAYA_DEFAULT_ENDPOINT,
+  MAYA_DEFAULT_MODEL,
+  isImageGenModel,
+} from '~/services/mdp/modelConfig';
 import store from '~/store';
 import AccountSettings from '~/components/Nav/AccountSettings';
 
@@ -268,7 +272,15 @@ function ExpandedPanel({
 }) {
   const localize = useLocalize();
   const { active, setActive } = useActivePanel();
+  const conversation = useRecoilValue(store.conversationByIndex(0));
   const effectiveActive = resolveActivePanel(active, links);
+  /**
+   * The rail highlight follows the actual chat state, not the persisted content
+   * panel: when the current conversation is image-gen, highlight "Generate Image"
+   * while the conversations list keeps rendering. Otherwise fall back to the
+   * active content panel.
+   */
+  const highlightId = isImageGenModel(conversation?.model) ? 'image-gen' : effectiveActive;
 
   const toggleLabel = expanded ? 'com_nav_close_sidebar' : 'com_nav_open_sidebar';
   const toggleClick = expanded ? onCollapse : onExpand;
@@ -319,7 +331,7 @@ function ExpandedPanel({
             <NavIconButton
               key={link.id}
               link={link}
-              isActive={link.id === effectiveActive}
+              isActive={link.id === highlightId}
               expanded={expanded}
               setActive={setActive}
               onExpand={onExpand}
@@ -360,7 +372,7 @@ function ExpandedPanel({
             <NavIconButton
               key={link.id}
               link={link}
-              isActive={link.id === effectiveActive}
+              isActive={link.id === highlightId}
               expanded={expanded ?? true}
               setActive={setActive}
               onExpand={onExpand}

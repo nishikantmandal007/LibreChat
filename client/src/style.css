@@ -3599,3 +3599,27 @@ body {
     transform: translateY(-1px);
   }
 }
+
+/* Smooth reveal for generated images once the final render replaces the canvas */
+@keyframes aisafeGeneratedImageReveal {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+.aisafe-generated-image {
+  animation: aisafeGeneratedImageReveal 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aisafe-generated-image {
+    animation: none;
+  }
+}

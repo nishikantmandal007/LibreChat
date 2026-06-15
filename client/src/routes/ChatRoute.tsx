@@ -120,9 +120,7 @@ export default function ChatRoute() {
         ...(preset ? { preset } : {}),
       });
 
-      if (preset?.model === 'image-gen-v1') {
-        setImageGenEnabled(true);
-      }
+      setImageGenEnabled(preset?.model === 'image-gen-v1');
 
       hasSetConversation.current = true;
     } else if (initialConvoQuery.data && endpointsQuery.data && modelsQuery.data) {
@@ -134,6 +132,8 @@ export default function ChatRoute() {
         modelsData: modelsQuery.data,
         keepLatestMessage: true,
       });
+      /* Keep image-gen mode in sync with the conversation we just loaded */
+      setImageGenEnabled(initialConvoQuery.data.model === 'image-gen-v1');
       hasSetConversation.current = true;
     } else if (
       conversationId &&

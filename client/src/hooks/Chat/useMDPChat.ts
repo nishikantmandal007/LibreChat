@@ -17,6 +17,7 @@ import { normalizeMdpLanguage } from '~/services/mdp/language';
 import {
   getModelCatalogItem,
   isImageGenModel,
+  IMAGE_GEN_MODEL_KEY,
   MAYA_CHAT_MODEL_LABELS,
   MAYA_DEFAULT_ENDPOINT,
   MAYA_DEFAULT_MODEL,
@@ -220,7 +221,12 @@ export default function useMDPChat(
         ...(manualSkills.includes(DOCUMENT_EXPORT_SKILL.name) ? [DOCUMENT_EXPORT_SKILL] : []),
       ];
       const chatEndpoint = isImageGen ? MAYA_DEFAULT_ENDPOINT : selectedEndpoint;
-      const chatModel = isImageGen ? MAYA_DEFAULT_MODEL : selectedModel;
+      /**
+       * Keep image-gen conversations tagged with the image-gen model so the thread
+       * stays in image-generation mode (header label + landing) and is restored as
+       * such on reload, instead of reverting to the default chat model.
+       */
+      const chatModel = isImageGen ? IMAGE_GEN_MODEL_KEY : selectedModel;
       const chatModelLabel = isImageGen
         ? undefined
         : (submission.conversation?.modelLabel ?? submission.endpointOption?.modelLabel);

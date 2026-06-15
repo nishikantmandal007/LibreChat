@@ -8,6 +8,7 @@ import RouteErrorBoundary from './RouteErrorBoundary';
 import dashboardRoutes from './Dashboard';
 import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
+import ChatsView from '~/components/Chats/ChatsView';
 import Search from './Search';
 import Root from './Root';
 
@@ -42,6 +43,10 @@ const buildProtectedChildren = (): RouteObject[] => {
     {
       path: 'c/:conversationId?',
       element: <ChatRoute />,
+    },
+    {
+      path: 'chats',
+      element: <ChatsView />,
     },
   ];
 

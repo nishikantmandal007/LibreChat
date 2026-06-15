@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import { MessageCircle, Palette } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
@@ -43,7 +44,12 @@ export default function useUnifiedSidebarLinks() {
   );
 
   const { newConversation } = useNewConvo(0);
+  const navigate = useNavigate();
   const setImageGenEnabled = useSetRecoilState(store.imageGenEnabled);
+
+  const onConversationsClick = useCallback(() => {
+    navigate('/chats');
+  }, [navigate]);
 
   const onImageGenClick = useCallback(() => {
     setImageGenEnabled(true);
@@ -69,6 +75,7 @@ export default function useUnifiedSidebarLinks() {
       icon: MessageCircle,
       id: 'conversations',
       Component: ConversationsSection,
+      onClick: onConversationsClick,
     };
 
     const imageGenLink: NavLink = {
@@ -81,7 +88,7 @@ export default function useUnifiedSidebarLinks() {
 
     const kept = new Set(['prompts', 'bookmarks', 'skills']);
     return [conversationLink, imageGenLink, ...sideNavLinks.filter(l => kept.has(l.id))];
-  }, [sideNavLinks, onImageGenClick]);
+  }, [sideNavLinks, onImageGenClick, onConversationsClick]);
 
   return links;
 }

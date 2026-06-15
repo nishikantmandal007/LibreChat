@@ -14,6 +14,7 @@ import HoverButtons from '~/components/Chat/Messages/HoverButtons';
 import MessageIcon from '~/components/Chat/Messages/MessageIcon';
 import SubRow from '~/components/Chat/Messages/SubRow';
 import { fontSizeAtom } from '~/store/fontSize';
+import { isImageGenModel } from '~/services/mdp/modelConfig';
 import { MessageContext } from '~/Providers';
 import store from '~/store';
 
@@ -317,7 +318,9 @@ const MessageRender = memo(function MessageRender({
           'relative flex flex-col',
           hasParallelContent ? 'w-full' : 'w-11/12',
           'agent-turn',
+          /* Image-gen responses render the image cleanly without the bordered glass box */
           !hasParallelContent &&
+            !isImageGenModel(msg?.model) &&
             'glass-surface rounded-2xl px-4 py-3 shadow-sm',
         )}
       >
