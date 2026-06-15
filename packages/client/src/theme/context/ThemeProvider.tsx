@@ -18,7 +18,7 @@ type ThemeContextType = {
 
 // Export ThemeContext so it can be imported from hooks
 export const ThemeContext = createContext<ThemeContextType>({
-  theme: 'system',
+  theme: 'light',
   setTheme: () => undefined,
   setThemeRGB: () => undefined,
   setThemeName: () => undefined,
@@ -71,7 +71,8 @@ const getInitialTheme = (): string => {
   } catch {
     // localStorage not available
   }
-  return 'system';
+  // Default to light; users can switch to dark/system and it persists.
+  return 'light';
 };
 
 /**
@@ -218,7 +219,7 @@ export function ThemeProvider({
 
   // Reset theme function
   const resetTheme = useCallback(() => {
-    setTheme('system');
+    setTheme('light');
     setThemeRGB(undefined);
     setThemeName(undefined);
     // Remove any custom CSS variables

@@ -41,7 +41,7 @@ const localStorageAtoms = {
   saveBadgesState: atomWithLocalStorage('saveBadgesState', false),
 
   // Appearance
-  ambientGradient: atomWithLocalStorage('aisafeAmbientGradient', false),
+  ambientGradient: atomWithLocalStorage('aisafeAmbientGradient', true),
 
   // Beta features settings
   modularChat: atomWithLocalStorage('modularChat', true),
