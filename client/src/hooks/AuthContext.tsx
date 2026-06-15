@@ -6,6 +6,8 @@ import type * as t from 'librechat-data-provider';
 import type { ReactNode } from 'react';
 import { TAuthConfig, TAuthContext } from '~/common';
 import store from '~/store';
+import { readMDPSessionAuth, clearMDPSessionAuth } from '~/services/mdp/sessionAuth';
+import { ensureMDPSessionFresh } from '~/services/mdp/sessionRefresh';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -33,22 +35,75 @@ const AuthContextProvider = ({
   children: ReactNode;
 }) => {
   const [user, setUser] = useRecoilState(store.user);
-  const [token] = useState<string | undefined>('guest-session');
+  const [token, setToken] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const setQueriesEnabled = useSetRecoilState<boolean>(store.queriesEnabled);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    setUser(GUEST_USER);
-    setIsAuthenticated(true);
-    setQueriesEnabled(true);
+    const initializeAuth = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Ensure session is fresh (refresh if expired)
+        const isFresh = await ensureMDPSessionFresh();
+        
+        if (!isFresh) {
+          setIsAuthenticated(false);
+          setQueriesEnabled(false);
+          setIsLoading(false);
+          return;
+        }
 
-    const path = window.location.pathname;
-    if (path === '/login' || path === '/' || path === '/register') {
-      navigate('/c/new', { replace: true });
-    }
+        const sessionResult = readMDPSessionAuth();
+        
+        if (!sessionResult.ok) {
+          setIsAuthenticated(false);
+          setQueriesEnabled(false);
+          setIsLoading(false);
+          return;
+        }
+
+        const session = sessionResult.session;
+        
+        // Build LibreChat user from MDP session
+        const mdpUser: t.TUser = {
+          id: session.userId?.toString() || session.claims.sub,
+          email: session.userEmailId || session.claims.preferred_username,
+          name: session.fname && session.lname 
+            ? `${session.fname} ${session.lname}` 
+            : session.userEmailId || session.claims.preferred_username,
+          username: session.userEmailId || session.claims.preferred_username,
+          role: SystemRoles.USER,
+          provider: 'mdp',
+          avatar: '',
+          createdAt: new Date(0).toISOString(),
+          updatedAt: new Date(0).toISOString(),
+        };
+
+        setUser(mdpUser);
+        setToken(session.jwtToken);
+        setIsAuthenticated(true);
+        setQueriesEnabled(true);
+
+        // Redirect from auth pages to chat if authenticated
+        const path = window.location.pathname;
+        if (path === '/login' || path === '/' || path === '/register') {
+          navigate('/c/new', { replace: true });
+        }
+      } catch (err) {
+        console.error('Auth initialization failed:', err);
+        setIsAuthenticated(false);
+        setQueriesEnabled(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, [setUser, setQueriesEnabled, navigate]);
 
   const login = useCallback(
@@ -60,9 +115,14 @@ const AuthContextProvider = ({
 
   const logout = useCallback(
     (_redirect?: string) => {
-      navigate('/c/new', { replace: true });
+      clearMDPSessionAuth();
+      setUser(GUEST_USER);
+      setToken(undefined);
+      setIsAuthenticated(false);
+      setQueriesEnabled(false);
+      navigate('/login', { replace: true });
     },
-    [navigate],
+    [navigate, setUser, setQueriesEnabled],
   );
 
   const memoedValue = useMemo(
@@ -78,8 +138,9 @@ const AuthContextProvider = ({
         [SystemRoles.ADMIN]: roleDefaults[SystemRoles.ADMIN],
       },
       isAuthenticated,
+      isLoading,
     }),
-    [user, error, isAuthenticated, token, login, logout],
+    [user, error, isAuthenticated, token, login, logout, isLoading],
   );
 
   return <AuthContext.Provider value={memoedValue}>{children}</AuthContext.Provider>;
