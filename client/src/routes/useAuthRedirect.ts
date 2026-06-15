@@ -58,14 +58,13 @@ export default function useAuthRedirect() {
         sessionStorage.setItem(REDIRECT_AFTER_LOGIN_KEY, sanitizedPath);
       }
 
-      // Redirect to MDP login
-      window.location.href = '/login';
+      navigate('/login', { replace: true });
     }, 300);
 
     return () => {
       clearTimeout(timeout);
     };
-  }, [isAuthenticated, isLoading, location]);
+  }, [isAuthenticated, isLoading, location, navigate]);
 
   return {
     user,

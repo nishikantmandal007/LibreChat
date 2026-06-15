@@ -8,6 +8,7 @@ import { TAuthConfig, TAuthContext } from '~/common';
 import store from '~/store';
 import { readMDPSessionAuth, clearMDPSessionAuth } from '~/services/mdp/sessionAuth';
 import { ensureMDPSessionFresh } from '~/services/mdp/sessionRefresh';
+import { toRouterBasename } from '~/utils/baseHref';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -89,8 +90,13 @@ const AuthContextProvider = ({
         setIsAuthenticated(true);
         setQueriesEnabled(true);
 
-        // Redirect from auth pages to chat if authenticated
-        const path = window.location.pathname;
+        // Redirect from auth pages to chat if authenticated (base-path aware)
+        const basename = toRouterBasename(import.meta.env.BASE_URL);
+        const rawPath = window.location.pathname;
+        const path =
+          basename !== '/' && rawPath.startsWith(basename)
+            ? rawPath.slice(basename.length) || '/'
+            : rawPath;
         if (path === '/login' || path === '/' || path === '/register') {
           navigate('/c/new', { replace: true });
         }
