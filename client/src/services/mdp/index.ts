@@ -19,6 +19,17 @@ export {
 } from './auth';
 
 export {
+  MDP_INFO_STORAGE_KEY,
+  decodeMDPJwtClaims,
+  getMDPSessionAuth,
+  isJwtExpired,
+  isValidMDPStorageInfo,
+  parseMDPStorageInfo,
+  readMDPStorageInfo,
+  readMDPSessionAuth,
+} from './sessionAuth';
+
+export {
   listPremadePrompts,
   getPremadePrompt,
   createPremadePrompt,
