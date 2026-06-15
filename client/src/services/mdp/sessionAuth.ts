@@ -62,7 +62,7 @@ function isOptionalNumber(value: unknown): value is number | undefined {
 }
 
 function isOptionalBoolean(value: unknown): value is boolean | undefined {
-  return value === undefined || typeof value === 'boolean';
+  return value === undefined || value === null || typeof value === 'boolean';
 }
 
 /** Validate parsed JSON matches the expected MDP `info` object shape. */
@@ -222,4 +222,32 @@ export function readMDPSessionAuth(options?: { skewMs?: number }): MDPSessionAut
   }
 
   return getMDPSessionAuth(parsed, options);
+}
+
+export function updateMDPStoredJwtToken(jwtToken: string): void {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+
+  const existing = readMDPStorageInfo();
+  const info = existing ? { ...existing, jwtToken } : { jwtToken };
+  window.localStorage.setItem(MDP_INFO_STORAGE_KEY, JSON.stringify(info));
+}
+
+/** Clear shared MDP auth fields from `localStorage.info`. */
+export function clearMDPSessionAuth(): void {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return;
+  }
+
+  const info = readMDPStorageInfo();
+  if (info) {
+    const updated = { ...info };
+    delete updated.jwtToken;
+    delete updated.refreshToken;
+    delete updated.authentication;
+    window.localStorage.setItem(MDP_INFO_STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  window.localStorage.removeItem('mdp_jwt_token');
 }

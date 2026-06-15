@@ -42,6 +42,10 @@ describe('sessionAuth', () => {
       expect(isValidMDPStorageInfo(validInfo)).toBe(true);
     });
 
+    it('accepts null isPasswordExpired from mdp-ui-new', () => {
+      expect(isValidMDPStorageInfo({ ...validInfo, isPasswordExpired: null })).toBe(true);
+    });
+
     it('rejects non-objects and malformed fields', () => {
       expect(isValidMDPStorageInfo(null)).toBe(false);
       expect(isValidMDPStorageInfo('jwt')).toBe(false);
