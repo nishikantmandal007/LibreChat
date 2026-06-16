@@ -54,6 +54,10 @@ export default function ChatRoute() {
 
   const modelsQuery = useGetModelsQuery({
     enabled: isAuthenticated,
+    // 'always' is load-bearing: the query's initialData is LibreChat's default
+    // full model list, so we must force a backend /chat-models fetch on mount to
+    // replace it with the curated MDP catalog (incl. Image Generation). Do NOT
+    // weaken this to staleTime-based refetch or the default list leaks through.
     refetchOnMount: 'always',
   });
   const initialConvoQuery = useGetConvoIdQuery(conversationId, {

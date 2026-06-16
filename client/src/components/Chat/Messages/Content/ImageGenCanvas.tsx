@@ -2,11 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { PixelCard } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import { cn } from '~/utils';
+import Image from './Image';
 
-const SIZE = 512;
 const UPDATE_INTERVAL = 200;
 const DURATION = 25000;
 const TOTAL_STEPS = DURATION / UPDATE_INTERVAL;
+/** Mid-tone palette stays visible on both light and dark backgrounds
+ *  (the default PixelCard palette is near-white and vanishes on light theme). */
+const PIXEL_COLORS = '#cbd5e1,#94a3b8,#64748b';
 
 function ProgressLabel({ progress }: { progress: number }) {
   const localize = useLocalize();
@@ -60,7 +63,10 @@ export default function ImageGenCanvas({
         setProgress(0.9);
       } else {
         const ratio = step / TOTAL_STEPS;
-        const mapped = ratio < 0.8 ? Math.pow(ratio, 1.1) : 0.8 + (1 - Math.pow(1 - (ratio - 0.8) / 0.2, 2)) * 0.2;
+        const mapped =
+          ratio < 0.8
+            ? Math.pow(ratio, 1.1)
+            : 0.8 + (1 - Math.pow(1 - (ratio - 0.8) / 0.2, 2)) * 0.2;
         setProgress(0.1 + mapped * 0.8);
       }
     }, UPDATE_INTERVAL);
@@ -90,25 +96,30 @@ export default function ImageGenCanvas({
       <div className="mb-2 flex h-5 items-center gap-2">
         <ProgressLabel progress={progress} />
       </div>
-      <div className="relative" style={{ width: SIZE, height: SIZE, maxWidth: '100%' }}>
-        <div
-          className="absolute inset-0 transition-opacity duration-500"
-          style={{ opacity: showImage ? 0 : 1 }}
-        >
-          <PixelCard
-            variant="default"
-            progress={progress}
-            randomness={0.6}
-            width={`${SIZE}px`}
-            height={`${SIZE}px`}
-          />
-        </div>
-        {hasRealImage && (
-          <img
-            src={imageUrl}
-            alt="Generated"
-            className="absolute inset-0 h-full w-full rounded-lg object-contain transition-opacity duration-500"
-            style={{ opacity: showImage ? 1 : 0 }}
+      <div className="relative w-full max-w-lg">
+        {/* Loading animation — fades out once the image is ready */}
+        {!(hasRealImage && showImage) && (
+          <div
+            className="aspect-square w-full transition-opacity duration-500"
+            style={{ opacity: showImage ? 0 : 1 }}
+          >
+            <PixelCard
+              variant="default"
+              colors={PIXEL_COLORS}
+              progress={progress}
+              randomness={0.6}
+              width="100%"
+              height="100%"
+            />
+          </div>
+        )}
+        {/* Final image: clickable → DialogImage lightbox (X top-left + download),
+            sized by the shared Image component (max-w-lg / max-h-[45vh]). */}
+        {hasRealImage && showImage && (
+          <Image
+            imagePath={imageUrl}
+            altText="Generated image"
+            className="w-fit border-0 shadow-none"
           />
         )}
       </div>

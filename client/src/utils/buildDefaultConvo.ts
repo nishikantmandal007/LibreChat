@@ -8,6 +8,7 @@ import {
 import type { TConversation, EndpointSchemaKey } from 'librechat-data-provider';
 import { clearModelForNonEphemeralAgent } from './endpoints';
 import { getLocalStorageItems } from './localStorage';
+import { IMAGE_GEN_MODEL_KEY } from '~/services/mdp/modelConfig';
 
 const buildDefaultConvo = ({
   models,
@@ -34,13 +35,15 @@ const buildDefaultConvo = ({
   }
 
   const availableModels = models;
-  const rawModel =
+  const model =
     conversation.model ?? lastConversationSetup?.model ?? lastSelectedModel?.[endpoint] ?? '';
-  const model = rawModel === 'image-gen-v1' ? 'gpt-4o' : rawModel;
 
   let possibleModels: string[];
 
-  if (availableModels.includes(model)) {
+  // Keep the image-gen pseudo-model as a valid candidate even though it isn't in
+  // the endpoint's available chat models, so a refresh / URL-param restore keeps
+  // "Image Generation" selected instead of falling back to the default chat model.
+  if (model && (availableModels.includes(model) || model === IMAGE_GEN_MODEL_KEY)) {
     possibleModels = [model, ...availableModels];
   } else {
     possibleModels = [...availableModels];

@@ -1,6 +1,5 @@
-import React, { memo, useMemo, useRef, useEffect, useState, useCallback } from 'react';
+import React, { memo, useMemo, useRef, useEffect } from 'react';
 import { useRecoilValue } from 'recoil';
-import { Download } from 'lucide-react';
 import { useToastContext } from '@librechat/client';
 import { PermissionTypes, Permissions, apiBaseUrl } from 'librechat-data-provider';
 import Mermaid, { MermaidErrorBoundary } from '~/components/Messages/Content/Mermaid';
@@ -11,6 +10,7 @@ import { useCodeBlockContext } from '~/Providers';
 import { handleDoubleClick, triggerDownload } from '~/utils';
 import { useLocalize } from '~/hooks';
 import store from '~/store';
+import Image from './Image';
 
 type TCodeProps = {
   inline?: boolean;
@@ -204,8 +204,6 @@ export const img: React.ElementType = memo(function MarkdownImage({
   className,
   style,
 }: TImageProps) {
-  const localize = useLocalize();
-  const [downloading, setDownloading] = useState(false);
   // Get the base URL from the API endpoints
   const baseURL = apiBaseUrl();
 
@@ -224,50 +222,22 @@ export const img: React.ElementType = memo(function MarkdownImage({
 
   const isGenerated = alt === GENERATED_IMAGE_ALT;
 
-  const handleDownload = useCallback(async () => {
-    if (!fixedSrc || downloading) {
-      return;
-    }
-    const filename = `ai-safe-image-${Date.now()}.png`;
-    setDownloading(true);
-    try {
-      // Fetch as a blob so cross-origin (signed GCS) URLs download instead of navigating.
-      const response = await fetch(fixedSrc, { mode: 'cors' });
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      triggerDownload(blobUrl, filename);
-    } catch {
-      // CORS / network fallback: open the image so the user can save it manually.
-      window.open(fixedSrc, '_blank', 'noopener,noreferrer');
-    } finally {
-      setDownloading(false);
-    }
-  }, [fixedSrc, downloading]);
-
   if (!isGenerated) {
     return <img src={fixedSrc} alt={alt} title={title} className={className} style={style} />;
   }
 
+  // Generated images reuse the shared lightbox Image: clicking opens DialogImage
+  // (X top-left + download-to-disk), and sizing is capped (max-w-lg / max-h-[45vh])
+  // so they no longer render full-width. Image resolves the URL the same way as
+  // fixedSrc, so we pass the raw src. `w-fit` makes the wrapper hug the image
+  // (no empty bordered card around portrait images); border/shadow removed for a
+  // clean inline look.
   return (
-    <div className="group relative my-2 inline-block max-w-full overflow-hidden rounded-xl">
-      <img
-        src={fixedSrc}
-        alt={alt}
-        title={title}
-        className="aisafe-generated-image block h-auto max-w-full rounded-xl"
-        style={style}
-      />
-      <button
-        type="button"
-        onClick={handleDownload}
-        disabled={downloading}
-        aria-label={localize('com_ui_download')}
-        title={localize('com_ui_download')}
-        className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/55 text-white opacity-0 shadow-md backdrop-blur-sm transition-opacity duration-200 hover:bg-black/70 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 group-hover:opacity-100 disabled:cursor-not-allowed"
-      >
-        <Download className="h-4 w-4" aria-hidden="true" />
-      </button>
-    </div>
+    <Image
+      imagePath={src ?? ''}
+      altText={alt || 'Generated image'}
+      className="w-fit border-0 shadow-none"
+    />
   );
 });
 img.displayName = 'MarkdownImage';

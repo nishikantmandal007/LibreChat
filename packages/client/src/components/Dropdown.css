@@ -7,6 +7,13 @@
   border-radius: 1rem;
   padding: 0.5rem;
   color: var(--glass-text);
+  /* Opaque surface so menu items stay readable over any content. The glass
+     tokens (e.g. 8% white in dark theme) leave the menu see-through, and a
+     nested backdrop-filter is neutralized when rendered inside a glass modal
+     (e.g. the export dialog), so we use a solid surface + border + shadow. */
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--glass-border-outer);
+  box-shadow: var(--glass-shadow-inset), var(--glass-shadow-outer);
   transform-origin: top;
   opacity: 0;
   transition-property: opacity, scale, translate;
