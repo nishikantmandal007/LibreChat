@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
 import { easings } from '@react-spring/web';
 import { SplitText } from '@librechat/client';
-import { useSubmitMessage } from '~/hooks';
+import type { TranslationKeys } from '~/hooks';
+import { useLocalize, useSubmitMessage } from '~/hooks';
 
 const SAMPLE_IMAGES = [
   'assets/imagegen/cosmic.jpg',
@@ -12,14 +13,15 @@ const SAMPLE_IMAGES = [
   'assets/imagegen/nature.jpg',
 ].map((path) => `${import.meta.env.BASE_URL}${path}`);
 
-const STARTER_PROMPTS = [
-  'A serene Japanese garden at twilight with glowing lanterns and cherry blossoms',
-  'An underwater crystal city with bioluminescent jellyfish floating above',
-  'A cozy mountain cabin surrounded by aurora borealis in the night sky',
-  'Abstract fluid art with iridescent colors flowing like liquid metal',
+const STARTER_PROMPT_KEYS: TranslationKeys[] = [
+  'com_ui_imagegen_starter_1',
+  'com_ui_imagegen_starter_2',
+  'com_ui_imagegen_starter_3',
+  'com_ui_imagegen_starter_4',
 ];
 
 export default function ImageGenLanding() {
+  const localize = useLocalize();
   const { submitMessage } = useSubmitMessage();
 
   const handleCardClick = useCallback(
@@ -47,7 +49,7 @@ export default function ImageGenLanding() {
 
       <div className="relative z-10 my-auto flex w-full flex-col items-center gap-5 px-4 pb-16 pt-14 sm:gap-6 sm:pb-20 sm:pt-16">
         <SplitText
-          text="Bring your imagination to life"
+          text={localize('com_ui_imagegen_hero_title')}
           className="imagegen-hero-title max-w-4xl px-2 text-3xl font-bold leading-[1.16] text-text-primary sm:text-5xl"
           delay={50}
           textAlign="center"
@@ -58,16 +60,19 @@ export default function ImageGenLanding() {
           rootMargin="0px"
         />
         <div className="mt-2 grid w-full max-w-2xl grid-cols-1 gap-3 sm:mt-4 sm:grid-cols-2">
-          {STARTER_PROMPTS.map((prompt) => (
-            <button
-              key={prompt}
-              type="button"
-              onClick={() => handleCardClick(prompt)}
-              className="bg-surface-primary/70 rounded-xl border border-border-medium px-4 py-3 text-left text-sm text-text-secondary backdrop-blur-sm transition-colors hover:border-border-heavy hover:bg-surface-hover hover:text-text-primary"
-            >
-              {prompt}
-            </button>
-          ))}
+          {STARTER_PROMPT_KEYS.map((key) => {
+            const prompt = localize(key);
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleCardClick(prompt)}
+                className="bg-surface-primary/70 rounded-xl border border-border-medium px-4 py-3 text-left text-sm text-text-secondary backdrop-blur-sm transition-colors hover:border-border-heavy hover:bg-surface-hover hover:text-text-primary"
+              >
+                {prompt}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

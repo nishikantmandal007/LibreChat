@@ -285,7 +285,7 @@ const ChatForm = memo(function ChatForm({
                     onBlur={handleTextareaBlur}
                     aria-label={localize('com_ui_message_input')}
                     onClick={handleFocusOrClick}
-                    style={{ height: 56, overflowY: 'auto' }}
+                    style={{ height: 57, overflowY: 'auto' }}
                     className={cn(
                       baseClasses,
                       removeFocusRings,

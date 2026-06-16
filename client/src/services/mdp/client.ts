@@ -85,11 +85,6 @@ mdpClient.interceptors.response.use(
   },
 );
 
-function getDevFallbackToken(): string | null {
-  const devToken = import.meta.env.VITE_MDP_JWT_TOKEN;
-  return typeof devToken === 'string' && devToken.trim() ? devToken : null;
-}
-
 /** @deprecated Writes to shared MDP session (`localStorage.info`) instead of `mdp_jwt_token`. */
 export function setMDPToken(token: string): void {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -106,7 +101,7 @@ export function getMDPToken(): string | null {
     return info.jwtToken;
   }
 
-  return getDevFallbackToken();
+  return null;
 }
 
 export function clearMDPToken(): void {

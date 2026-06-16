@@ -1,11 +1,12 @@
 import React, { useState, useRef } from 'react';
 import * as Tabs from '@radix-ui/react-tabs';
 import { SettingsTabValues } from 'librechat-data-provider';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, UserRound } from 'lucide-react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { GearIcon, useMediaQuery } from '@librechat/client';
 import type { TDialogProps } from '~/common';
 import { General, Chat } from './SettingsTabs';
+import MDPAccountInfo from './SettingsTabs/Account/MDPAccountInfo';
 import { useLocalize, TranslationKeys } from '~/hooks';
 import { cn } from '~/utils';
 
@@ -16,7 +17,11 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
   const tabRefs = useRef({});
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    const tabs: SettingsTabValues[] = [SettingsTabValues.GENERAL, SettingsTabValues.CHAT];
+    const tabs: SettingsTabValues[] = [
+      SettingsTabValues.GENERAL,
+      SettingsTabValues.CHAT,
+      SettingsTabValues.ACCOUNT,
+    ];
     const currentIndex = tabs.indexOf(activeTab);
 
     switch (event.key) {
@@ -53,6 +58,11 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
       value: SettingsTabValues.CHAT,
       icon: <MessageSquare className="icon-sm" aria-hidden="true" />,
       label: 'com_nav_setting_chat',
+    },
+    {
+      value: SettingsTabValues.ACCOUNT,
+      icon: <UserRound className="icon-sm" aria-hidden="true" />,
+      label: 'com_nav_setting_account',
     },
   ];
 
@@ -118,11 +128,11 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                   <span className="sr-only">{localize('com_ui_close_settings')}</span>
                 </button>
               </DialogTitle>
-              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 md:w-[876px]">
+              <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 pb-6 md:w-[876px]">
                 <Tabs.Root
                   value={activeTab}
                   onValueChange={handleTabChange}
-                  className="flex flex-col gap-10 md:flex-row"
+                  className="flex min-h-0 flex-1 flex-col gap-10 md:flex-row"
                   orientation="vertical"
                 >
                   <Tabs.List
@@ -131,7 +141,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                       'min-w-auto max-w-auto relative -ml-[8px] flex flex-shrink-0 flex-col flex-nowrap overflow-auto sm:max-w-none',
                       isSmallScreen
                         ? 'flex-row rounded-xl bg-white/[0.24] dark:bg-white/[0.06]'
-                        : 'sticky top-0 h-full',
+                        : 'sticky top-0 h-full self-stretch border-r border-black/[0.14] pr-5 dark:border-white/[0.16]',
                     )}
                     onKeyDown={handleKeyDown}
                   >
@@ -142,7 +152,7 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                           'group relative z-10 m-1 flex items-center justify-start gap-2 rounded-xl px-2 py-1.5 transition-all duration-200 ease-in-out',
                           isSmallScreen
                             ? 'flex-1 justify-center text-nowrap p-1 px-3 text-sm text-text-secondary radix-state-active:bg-surface-hover radix-state-active:text-text-primary'
-                            : 'bg-transparent text-text-secondary radix-state-active:bg-white/[0.28] radix-state-active:text-text-primary dark:radix-state-active:bg-white/[0.10]',
+                            : 'bg-transparent text-text-secondary hover:bg-black/[0.04] radix-state-active:bg-black/[0.06] radix-state-active:font-medium radix-state-active:text-text-primary radix-state-active:shadow-sm dark:hover:bg-white/[0.06] dark:radix-state-active:bg-white/[0.16]',
                         )}
                         value={value}
                         ref={(el) => (tabRefs.current[value] = el)}
@@ -158,6 +168,9 @@ export default function Settings({ open, onOpenChange }: TDialogProps) {
                     </Tabs.Content>
                     <Tabs.Content value={SettingsTabValues.CHAT} tabIndex={-1}>
                       <Chat />
+                    </Tabs.Content>
+                    <Tabs.Content value={SettingsTabValues.ACCOUNT} tabIndex={-1}>
+                      <MDPAccountInfo />
                     </Tabs.Content>
                   </div>
                 </Tabs.Root>

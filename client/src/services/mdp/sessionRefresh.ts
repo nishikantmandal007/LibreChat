@@ -7,11 +7,6 @@ import {
 
 let refreshInFlight: Promise<string | null> | null = null;
 
-function getDevFallbackToken(): string | null {
-  const devToken = import.meta.env.VITE_MDP_JWT_TOKEN;
-  return typeof devToken === 'string' && devToken.trim() ? devToken : null;
-}
-
 function extractJwtFromModifyTokenResponse(data: unknown): string | null {
   if (!data || typeof data !== 'object') {
     return null;
@@ -75,10 +70,6 @@ export async function refreshMDPSessionFromStorage(): Promise<string | null> {
 
 /** Refresh expired JWTs before MDP API calls or app startup. */
 export async function ensureMDPSessionFresh(): Promise<boolean> {
-  if (getDevFallbackToken() && !readMDPSessionAuth().ok) {
-    return true;
-  }
-
   const sessionResult = readMDPSessionAuth();
   if (!sessionResult.ok) {
     return false;
@@ -93,10 +84,6 @@ export async function ensureMDPSessionFresh(): Promise<boolean> {
 }
 
 export function isMDPSessionAuthenticated(): boolean {
-  if (getDevFallbackToken() && !readMDPSessionAuth().ok) {
-    return true;
-  }
-
   const sessionResult = readMDPSessionAuth();
   return sessionResult.ok && !sessionResult.session.isExpired;
 }

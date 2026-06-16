@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { RecoilRoot } from 'recoil';
 import { DndProvider } from 'react-dnd';
 import { RouterProvider } from 'react-router-dom';
@@ -9,6 +9,10 @@ import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-qu
 import { ScreenshotProvider, useApiErrorBoundary } from './hooks';
 import WakeLockManager from '~/components/System/WakeLockManager';
 import { getThemeFromEnv } from './utils/getThemeFromEnv';
+import {
+  hydrateQueryClientFromStorage,
+  subscribeQueryClientPersist,
+} from './utils/queryCachePersister';
 import { initializeFontSize } from '~/store/fontSize';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
@@ -16,29 +20,39 @@ import { router } from './routes';
 const App = () => {
   const { setError } = useApiErrorBoundary();
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        // Always attempt network requests, even when navigator.onLine is false
-        // This is needed because localhost is reachable without WiFi
-        networkMode: 'always',
+  // Create the client once (stable across renders) and hydrate any persisted,
+  // allow-listed queries (prompts/skills/config) from localStorage *before* the
+  // first render, so a page reload serves cached data instead of re-hitting the DB.
+  const [queryClient] = useState(() => {
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: {
+          // Always attempt network requests, even when navigator.onLine is false
+          // This is needed because localhost is reachable without WiFi
+          networkMode: 'always',
+        },
+        mutations: {
+          networkMode: 'always',
+        },
       },
-      mutations: {
-        networkMode: 'always',
-      },
-    },
-    queryCache: new QueryCache({
-      onError: (error) => {
-        if (error?.response?.status === 401) {
-          setError(error);
-        }
-      },
-    }),
+      queryCache: new QueryCache({
+        onError: (error) => {
+          if (error?.response?.status === 401) {
+            setError(error);
+          }
+        },
+      }),
+    });
+    hydrateQueryClientFromStorage(client);
+    return client;
   });
 
   useEffect(() => {
     initializeFontSize();
   }, []);
+
+  // Persist allow-listed queries back to localStorage as the cache changes.
+  useEffect(() => subscribeQueryClientPersist(queryClient), [queryClient]);
 
   // Load theme from environment variables if available
   const envTheme = getThemeFromEnv();

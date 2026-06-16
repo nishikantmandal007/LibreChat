@@ -432,6 +432,7 @@ export const usePromptGroupsInfiniteQuery = (
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
     },
   );
@@ -449,6 +450,7 @@ export const useGetPromptGroup = (
       refetchOnReconnect: false,
       refetchOnMount: false,
       retry: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
       enabled: config?.enabled !== undefined ? config.enabled : true,
     },
@@ -467,6 +469,7 @@ export const useGetPrompts = (
       refetchOnReconnect: false,
       refetchOnMount: false,
       retry: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
       enabled: config?.enabled !== undefined ? config.enabled : true,
     },
@@ -485,6 +488,7 @@ export const useGetAllPromptGroups = <TData = t.AllPromptGroupsResponse>(
       refetchOnReconnect: false,
       refetchOnMount: false,
       retry: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
     },
   );

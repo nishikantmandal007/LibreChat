@@ -18,14 +18,8 @@ describe('mdp client token', () => {
     expect(getMDPToken()).toBe('info-jwt-token');
   });
 
-  it('falls back to VITE_MDP_JWT_TOKEN when info is absent', () => {
-    const devToken = import.meta.env.VITE_MDP_JWT_TOKEN;
-    if (!devToken) {
-      expect(getMDPToken()).toBeNull();
-      return;
-    }
-
-    expect(getMDPToken()).toBe(devToken);
+  it('returns null when localStorage.info is absent', () => {
+    expect(getMDPToken()).toBeNull();
   });
 
   it('writes tokens to localStorage.info instead of mdp_jwt_token', () => {

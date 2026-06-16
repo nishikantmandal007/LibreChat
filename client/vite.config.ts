@@ -32,7 +32,7 @@ const NODE_POLYFILL_SHIMS: Record<string, string> = {
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, path.resolve(__dirname, '..'), ['VITE_']);
   const mdpApiUrl = env.VITE_MDP_API_URL || process.env.VITE_MDP_API_URL || 'http://localhost:4000';
-  const configuredBase = env.VITE_BASE_HREF?.trim() || (command === 'serve' ? '/' : '/newaisafe/');
+  const configuredBase = env.VITE_BASE_HREF?.trim() || '/newaisafe/';
 
   return {
     base: configuredBase,

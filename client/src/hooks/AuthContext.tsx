@@ -9,6 +9,7 @@ import store from '~/store';
 import { readMDPSessionAuth, clearMDPSessionAuth } from '~/services/mdp/sessionAuth';
 import { ensureMDPSessionFresh } from '~/services/mdp/sessionRefresh';
 import { toRouterBasename } from '~/utils/baseHref';
+import { clearPersistedQueryCache } from '~/utils/queryCachePersister';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -122,6 +123,7 @@ const AuthContextProvider = ({
   const logout = useCallback(
     (_redirect?: string) => {
       clearMDPSessionAuth();
+      clearPersistedQueryCache();
       setUser(GUEST_USER);
       setToken(undefined);
       setIsAuthenticated(false);

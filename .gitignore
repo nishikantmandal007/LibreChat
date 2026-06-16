@@ -1,5 +1,14 @@
 ### node etc ###
 
+# Python (scripts/ tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Internal / non-shippable docs & AI-generated assets
+PRODUCT_STRATEGY.md
+ChatGPT Image*.png
+
 # Logs
 data-node
 meili_data*

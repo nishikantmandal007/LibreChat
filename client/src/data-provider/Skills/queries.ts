@@ -35,6 +35,7 @@ export const useListSkillsQuery = (
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
     },
   );
@@ -72,6 +73,7 @@ export const useSkillsInfiniteQuery = (
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
     },
   );
@@ -162,6 +164,7 @@ export const useGetSkillStatesQuery = (
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 min — serve from cache without refetching
       ...config,
     },
   );
