@@ -46,6 +46,7 @@ type MeetingTypeKey =
   | 'benefits_initial'
   | 'general_case_note';
 
+
 type AttachedNotesFile = {
   id: string;
   name: string;
@@ -66,6 +67,8 @@ const TEXT: LocaleText = {
     details: 'Dokumentdaten',
     settings: 'Einstellungen',
     clientCase: 'Kundin / Fallnummer',
+    clientName: 'Name Klientin',
+    clientNameHint: 'z. B. Müller, Anna',
     caseWorker: 'Fallbearbeitung',
     meetingType: 'Gesprächsart',
     model: 'Modell',
@@ -107,6 +110,8 @@ const TEXT: LocaleText = {
     details: 'Document details',
     settings: 'Settings',
     clientCase: 'Client / Case Number',
+    clientName: 'Client Name',
+    clientNameHint: 'e.g. Thomas, Jasmine',
     caseWorker: 'Case Worker',
     meetingType: 'Meeting Type',
     model: 'Model',
@@ -273,6 +278,10 @@ function getMarkdownArtifact(artifacts: MDPArtifact[]): MDPArtifact | undefined 
   return artifacts.find((artifact) => getArtifactFormat(artifact).includes('markdown'));
 }
 
+function getPdfPreviewArtifact(artifacts: MDPArtifact[]): MDPArtifact | undefined {
+  return artifacts.find((artifact) => getArtifactFormat(artifact).includes('pdf'));
+}
+
 function isProcessingStatus(status?: MayaSafeFileStatus): boolean {
   return Boolean(status && ['uploading', 'scanning', 'anonymizing', 'indexing'].includes(status));
 }
@@ -280,12 +289,14 @@ function isProcessingStatus(status?: MayaSafeFileStatus): boolean {
 function buildMeetingPrompt({
   caseNumber,
   caseWorker,
+  clientName,
   meetingTypeNumber,
   meetingTypeLabel,
   outputLanguage,
 }: {
   caseNumber: string;
   caseWorker: string;
+  clientName: string;
   meetingTypeNumber: number;
   meetingTypeLabel: string;
   outputLanguage: OutputLanguage;
@@ -295,16 +306,23 @@ function buildMeetingPrompt({
       ? 'Ausgabesprache: Deutsch.'
       : 'Ausgabesprache: English. Keep German legal and Jobcenter terms where they are part of the template.';
 
-  return `Gesprächstyp: ${meetingTypeNumber} - ${meetingTypeLabel}
-Transkript:
-Das Transkript liegt als angehängte anonymisierte TXT-Datei vor. Verwende ausschließlich dieses angehängte sichere TXT-Dokument als Transkriptquelle.
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-Zusätzliche Kontextdaten, soweit für die Dokumentation relevant:
-- Kundin / Fallnummer: ${caseNumber.trim() || '[nicht angegeben]'}
-- Fallbearbeitung: ${caseWorker.trim() || '[nicht angegeben]'}
+  return `Meeting Type: ${meetingTypeNumber} - ${meetingTypeLabel}
+Transcript:
+The transcript is attached as an anonymized TXT file. Use only that attached document as the transcript source.
+
+Provided context (use these values directly in the output):
+- Case Number: ${caseNumber.trim() || '[not provided]'}
+- Caseworker: ${caseWorker.trim() || '[not provided]'}
+- Client Name: ${clientName.trim() || '[extract from transcript]'}
+- Date of Contact: ${dateStr}
+- Time of Contact: ${timeStr}
 - ${languageInstruction}
 
-Erstelle die Gesprächsdokumentation genau nach dem Backend-Systemprompt für Jobcenter Meeting Documentation. Gib OUTPUT 1 und OUTPUT 2 aus.`;
+Generate the case contact note following the system prompt exactly.`;
 }
 
 function makeNotesFileName(meetingTypeLabel: string): string {
@@ -351,6 +369,7 @@ export default function MeetingNotes() {
 
   const [caseNumber, setCaseNumber] = useState('');
   const [caseWorker, setCaseWorker] = useState('');
+  const [clientName, setClientName] = useState('');
   const [meetingType, setMeetingType] = useState<MeetingTypeKey>('integration_counseling');
   const [meetingTemplate, setMeetingTemplate] = useState<DocumentTemplate | null>(null);
   const [isTemplateLoading, setIsTemplateLoading] = useState(true);
@@ -487,15 +506,18 @@ export default function MeetingNotes() {
         return;
       }
       const nextDocxArtifact = getDocxArtifact(nextArtifacts);
-      const previewFilename = nextDocxArtifact?.filename ?? `${safeFilename(meetingTypeLabel)}.md`;
+      const pdfArtifact = getPdfPreviewArtifact(nextArtifacts);
+      const baseName = safeFilename(meetingTypeLabel);
+      const previewFilename = pdfArtifact?.filename ?? nextDocxArtifact?.filename ?? `${baseName}.md`;
       setSafeFilePreview({
         fileId: `meeting-notes-${nextDocxArtifact?.artifact_id ?? nextSessionId ?? 'preview'}`,
         filename: previewFilename,
         safeFilename: previewFilename,
         status: 'ready',
         statusLabel: t('ready'),
-        mimeType: 'text/markdown',
-        previewText: content,
+        mimeType: pdfArtifact ? 'application/pdf' : 'text/markdown',
+        previewAnonymizedUrl: pdfArtifact?.inline_url ?? pdfArtifact?.download_url,
+        previewText: pdfArtifact ? undefined : content,
         downloadUrl: nextDocxArtifact?.download_url,
         previewOnly: true,
       });
@@ -651,6 +673,7 @@ export default function MeetingNotes() {
       const prompt = buildMeetingPrompt({
         caseNumber,
         caseWorker,
+        clientName,
         meetingTypeNumber: selectedMeetingType.number,
         meetingTypeLabel: promptMeetingTypeLabel,
         outputLanguage,
@@ -703,6 +726,7 @@ export default function MeetingNotes() {
   }, [
     caseNumber,
     caseWorker,
+    clientName,
     ensureReadyAttachment,
     hasProcessingFile,
     isAttaching,
@@ -941,7 +965,7 @@ export default function MeetingNotes() {
                 className="focus:border-brand h-10 w-full rounded-md border border-border-light bg-surface-primary-alt px-3 text-sm outline-none transition-colors placeholder:text-text-secondary"
               />
             </label>
-            <label className="block">
+            <label className="mb-3 block">
               <span className="mb-2 block text-xs font-semibold uppercase text-text-secondary">
                 {t('caseWorker')}
               </span>
@@ -952,6 +976,20 @@ export default function MeetingNotes() {
                   setError(null);
                 }}
                 placeholder={t('workerHint')}
+                className="focus:border-brand h-10 w-full rounded-md border border-border-light bg-surface-primary-alt px-3 text-sm outline-none transition-colors placeholder:text-text-secondary"
+              />
+            </label>
+            <label className="mb-3 block">
+              <span className="mb-2 block text-xs font-semibold uppercase text-text-secondary">
+                {t('clientName')}
+              </span>
+              <input
+                value={clientName}
+                onChange={(event) => {
+                  setClientName(event.target.value);
+                  setError(null);
+                }}
+                placeholder={t('clientNameHint')}
                 className="focus:border-brand h-10 w-full rounded-md border border-border-light bg-surface-primary-alt px-3 text-sm outline-none transition-colors placeholder:text-text-secondary"
               />
             </label>

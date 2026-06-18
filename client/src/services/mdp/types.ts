@@ -61,6 +61,7 @@ export interface MDPChatResponse {
     filename?: string;
     download_url?: string;
     preview_url?: string;
+    inline_url?: string;
     metadata?: Record<string, unknown>;
     created_at?: string;
   }>;
